@@ -1,30 +1,36 @@
-# OtakuCoin project guidance
+# ZK-Proofscan project guidance
 
 This is a new, independent project. Keep changes inside this checkout. Do not
 modify, link to or copy code from another project (including OFFLINE /
-OtakuOffline, Zanime / OtakuSpace, Zellar / Zatrix Wallet) unless the owner
-explicitly asks for that specific reuse.
+OtakuOffline, Zanime / OtakuSpace, Zellar / Zatrix Wallet, Zeero) unless the
+owner explicitly asks for that specific reuse.
 
 Read `docs/PROJECT_CHARTER.md` and `docs/HANDOFF.md` and inspect Git status
 before continuing. The charter records a proposed direction, not settled
 requirements: confirm scope with the owner before choosing a language,
-framework or wire format, and before building application features.
+framework, proof system or report format, and before building features.
 
 Do not disclose or commit secrets, private keys, seed phrases, API tokens,
-account data or identity documents. Never copy credentials, environment files,
-databases or runtime artifacts from other projects.
+account data or identity documents. Never accept, log, store or commit private
+witness values: the tool works from a proof, its public inputs and a verifying
+key. Test fixtures must be generated from throwaway inputs. Never copy
+credentials, environment files, databases or runtime artifacts from other
+projects.
 
-The name does not authorize a token. Repository creation and generic
-continuation are not approval for token design or issuance, smart-contract
-deployment, wallet actions, transaction signing, testnet or mainnet activity,
-public RPC use, bridges, fees, settlement, hosted services, paid
+Repository creation and generic continuation are not approval for public RPC
+use, on-chain reads or writes, wallet actions, transaction signing, testnet or
+mainnet activity, contract deployment, tokens, fees, hosted services, paid
 infrastructure or external integrations. Each needs the owner's explicit,
-specific approval.
+specific approval. Until then the tool verifies supplied files offline.
 
-State claims at the strength the evidence supports. In particular, do not
-describe a Bluetooth, QR or NFC exchange as proof of distance or presence, a
-vouch graph as Sybil prevention, or offline value transfer as double-spend
-prevention. See the charter's "Claims that need care".
+Do not write a proof verifier or other cryptographic primitive here. Use an
+established, maintained library and record its version and audit status.
+
+State claims at the strength the evidence supports. A report must never say
+more than the circuit enforces: do not describe a passing proof as showing the
+statement is true in the world, a membership proof as unique personhood, or an
+unreviewed circuit as having a known meaning. See the charter's "Claims that
+need care".
 
 Work on one branch per task, stage named files only, and commit or push only
 when the owner asks.
