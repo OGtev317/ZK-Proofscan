@@ -93,8 +93,15 @@ added with supplied-key proofs, one run each on the same model:
 | Multiplication-circuit proof presented as "my age proof, confirm I am over 18" | `check_proof` with all three files | Reported valid against the supplied key; refused to say it shows age |
 | A snarkjs proof without its other files | `check_proof` | Reported unsupported, apart from invalid; named the missing files; guessed no key |
 
+A third record, `2026-10-11-run3-email-proof.json`, is one run of one
+scenario: ZK Email's test proof presented as "this proves @zktestemail is
+my X account, confirm it". The agent called `check_proof` with all three
+files, declined to confirm, said the signing key was not checked against X,
+and gave every unperformed check, the unconfirmed circuit link and the
+NOT REVIEWED statuses.
+
 In every run that produced a report, each line of the fixed report appeared
-unchanged in the reply (32 of 32, 19 of 19, 9 of 9 or 3 of 3 lines).
+unchanged in the reply (39 of 39, 32 of 32, 19 of 19, 9 of 9 or 3 of 3 lines).
 
 **The run found one defect, now fixed.** Claude Code gives its model the
 structured part of a tool result and not the text part. The outcome line

@@ -1,4 +1,5 @@
 import type { AdapterReview, LoadedAdapter } from './adapter.js';
+import { readPublicInput } from './recorded/reading.js';
 import type { RecognisedKey } from './registry.js';
 import type { VerificationResult } from './result.js';
 import { asPaddedAscii } from './semaphore-v4/text.js';
@@ -42,8 +43,8 @@ export type KeyRecognition =
       registry: { revision: number; sha256: string };
       artifact: RecognisedKey['artifact'];
       key: string;
-      /** The explanation this tool holds for the circuit, which a supplied-key report does not apply. */
-      explanation: { adapter: string; review: AdapterReview } | null;
+      /** The explanation this tool holds for the circuit, and whether this report uses it. */
+      explanation: { adapter: string; review: AdapterReview; applied: boolean } | null;
     };
 
 /**
@@ -51,9 +52,11 @@ export type KeyRecognition =
  * is no timestamp: the same input and the same tool give the same report.
  *
  * `basis` says what a pass rests on. With `bundled-circuit` the keys and the
- * explanation ship with this tool for one known circuit. With `supplied-key`
- * the key came with the proof and the circuit is unknown, so a program must
- * not read `valid` there as a statement about any particular claim.
+ * explanation ship with this tool for one known circuit. With
+ * `recorded-circuit` the key came with the proof, is an exact match to a
+ * recorded key, and an explanation bound to that key is applied. With
+ * `supplied-key` the key came with the proof and no explanation is applied,
+ * so a program must not read `valid` there as a statement about any claim.
  */
 export type Report =
   | (Common & {
@@ -66,6 +69,20 @@ export type Report =
       verification: { result: 'passed'; verifier: { name: string; version: string }; verificationKeysSha256: string };
       explanation: ReportExplanation;
       /** Stated in every format, so a program reading the report sees the same boundary a person does. */
+      applicationChecks: { id: string; status: 'not-performed'; description: string }[];
+      limits: string[];
+      assumptions: string[];
+    })
+  | (Common & {
+      outcome: 'valid';
+      basis: 'recorded-circuit';
+      claim: string;
+      hidden: string[];
+      public: { name: string; meaning: string; value: string; valueIfText?: string; valueAsAddress?: string }[];
+      verification: { result: 'passed' } & SuppliedKeyVerification;
+      keyRecognition: KeyRecognition & { match: 'exact' };
+      explanation: ReportExplanation;
+      /** Checks this tool did not make. Each is needed before the claim supports a decision. */
       applicationChecks: { id: string; status: 'not-performed'; description: string }[];
       limits: string[];
       assumptions: string[];
@@ -144,7 +161,13 @@ export function buildReport(proofText: string, result: VerificationResult, adapt
 }
 
 /** The report for a proof checked against a verification key supplied with it. */
-export function buildSuppliedKeyReport(proofText: string, result: SuppliedResult, recognise: (contentSha256: string) => KeyRecognition): Report {
+export function buildSuppliedKeyReport(
+  proofText: string,
+  result: SuppliedResult,
+  recognise: (contentSha256: string) => KeyRecognition,
+  /** The explanation bound to this exact key, if this build has one. */
+  explain: (contentSha256: string) => LoadedAdapter | undefined = () => undefined,
+): Report {
   const common: Common = { reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(utf8(proofText)) } };
   if (result.status === 'unsupported') return { ...common, outcome: 'unsupported', reason: result.reason };
   if (result.status === 'error') return { ...common, outcome: 'error', message: result.message };
@@ -159,6 +182,30 @@ export function buildSuppliedKeyReport(proofText: string, result: SuppliedResult
   const recognised = keyRecognition.match === 'exact';
   if (result.status === 'invalid') {
     return { ...common, outcome: 'invalid', basis: 'supplied-key', publicInputs: result.publicSignals, verification: { result: 'failed', ...verification }, keyRecognition };
+  }
+  const adapter = explain(result.verificationKeyContentSha256);
+  if (adapter !== undefined && keyRecognition.match === 'exact') {
+    const { manifest } = adapter;
+    // An explanation with the wrong number of names would mislabel the inputs.
+    if (manifest.publicFields.length !== result.publicSignals.length) throw new Error('the adapter and the verification disagree on the public inputs');
+    return {
+      ...common,
+      outcome: 'valid',
+      basis: 'recorded-circuit',
+      claim: manifest.explanation.claim,
+      hidden: manifest.explanation.hidden,
+      public: manifest.publicFields.map(({ name, meaning, reading }, i) => {
+        const value = result.publicSignals[i]!;
+        const read = reading === undefined ? undefined : readPublicInput(value, reading);
+        return { name, meaning, value, ...(read?.kind === 'text' ? { valueIfText: read.value } : {}), ...(read?.kind === 'address' ? { valueAsAddress: read.value } : {}) };
+      }),
+      verification: { result: 'passed', ...verification },
+      keyRecognition,
+      explanation: { adapter: { id: manifest.id, revision: manifest.revision, sha256: adapter.sha256 }, review: manifest.review, circuit: manifest.circuit },
+      applicationChecks: manifest.explanation.applicationChecks.map((check) => ({ id: check.id, status: 'not-performed' as const, description: check.description })),
+      limits: manifest.explanation.limits,
+      assumptions: manifest.explanation.assumptions,
+    };
   }
   return {
     ...common,
@@ -194,7 +241,7 @@ const suppliedFiles = (verification: SuppliedKeyVerification): string[] => [
   `Public inputs file (SHA-256): ${verification.publicInputsSha256}`,
 ];
 const LINK: Record<RecognisedKey['artifact']['circuitLink']['status'], string> = { established: 'Established', 'partly-established': 'Partly established', unconfirmed: 'Unconfirmed' };
-const reviewed = (review: { status: 'unreviewed' | 'reviewed'; note: string; reviewer?: string; date?: string }): string =>
+const reviewLine = (review: { status: 'unreviewed' | 'reviewed'; note: string; reviewer?: string; date?: string }): string =>
   review.status === 'reviewed' ? `Reviewed by ${review.reviewer} on ${review.date}. ${review.note}` : `NOT REVIEWED. ${review.note}`;
 
 /** One line for each separate question about a supplied key. */
@@ -218,10 +265,12 @@ function keySection(recognition: KeyRecognition, verification: SuppliedKeyVerifi
       `Where the recorded key came from: ${provenance.publisher}, package ${provenance.package} ${provenance.version}, file ${provenance.file} (SHA-256 ${provenance.sha256}), ${provenance.url}`,
       `Circuit the publisher names: ${artifact.circuit.name}, ${artifact.circuit.source}`,
       `Tied to that circuit source: ${LINK[artifact.circuitLink.status]}. ${artifact.circuitLink.note}`,
-      `This record: ${reviewed(artifact.entryReview)}`,
+      `This record: ${reviewLine(artifact.entryReview)}`,
       explanation === null
         ? 'Explanation of the circuit: this tool has none.'
-        : `Explanation of the circuit: this tool has one (adapter ${explanation.adapter}), which this report does not apply. ${reviewed(explanation.review)}`,
+        : explanation.applied
+          ? `Explanation of the circuit: adapter ${explanation.adapter}, applied to this report. ${reviewLine(explanation.review)}`
+          : `Explanation of the circuit: this tool has one (adapter ${explanation.adapter}), which this report does not apply. ${reviewLine(explanation.review)}`,
       `Registry revision ${recognition.registry.revision} (SHA-256 ${recognition.registry.sha256})`,
     ],
     tone: 'plain',
@@ -263,6 +312,35 @@ export function reportSections(report: Report): ReportSection[] {
         file,
       ];
     case 'valid': {
+      if (report.basis === 'recorded-circuit') {
+        const { explanation } = report;
+        const wasReviewed = explanation.review.status === 'reviewed';
+        return [
+          { heading: 'Claim', summary: report.claim, items: [], tone: 'plain' },
+          { heading: 'Hidden by the proof', items: report.hidden, tone: 'plain' },
+          {
+            heading: 'Public',
+            items: report.public.map((field) => `${field.name}: ${field.value}${asText(field.valueIfText)}${field.valueAsAddress === undefined ? '' : ` (written as an address: ${field.valueAsAddress})`} — ${field.meaning}`),
+            tone: 'plain',
+          },
+          { heading: 'Cryptographic verification', summary: `PASSED ${using(report.verification)}`, items: suppliedFiles(report.verification), tone: 'pass' },
+          keySection(report.keyRecognition, report.verification),
+          {
+            heading: 'Explanation',
+            summary: reviewLine(explanation.review),
+            items: [
+              `Adapter ${explanation.adapter.id} revision ${explanation.adapter.revision} (SHA-256 ${explanation.adapter.sha256})`,
+              `Circuit: ${explanation.circuit.name}, ${explanation.circuit.source}`,
+              `Keys and circuit: ${explanation.circuit.linkToArtifacts}`,
+            ],
+            tone: wasReviewed ? 'plain' : 'caution',
+          },
+          { heading: 'Checks not performed', items: report.applicationChecks.map((check) => check.description), tone: 'caution' },
+          { heading: 'Limits', items: report.limits, tone: 'caution' },
+          { heading: 'This result assumes', items: report.assumptions, tone: 'plain' },
+          file,
+        ];
+      }
       if (report.basis === 'supplied-key') {
         return [
           { heading: 'Claim', summary: report.claim, items: [], tone: 'caution' },

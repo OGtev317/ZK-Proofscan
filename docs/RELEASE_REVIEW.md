@@ -33,7 +33,10 @@ still blocks one. **Nothing has been released, published or hosted.**
 7. **Supplied-key proofs (added after this review).** Their fixed wording
    has had no qualified review; PLONK and FFLONK verification in snarkjs has
    had less scrutiny than Groth16; and one value in an FFLONK proof is not
-   read by the verifier. See [the formats](FORMATS.md).
+   read by the verifier. The Proof of Twitter explanation is an unreviewed
+   draft for a demonstration circuit whose setup is undocumented, and the
+   registry entries have had no maintainer review. See
+   [the formats](FORMATS.md).
 
 ## Owner decisions still open
 

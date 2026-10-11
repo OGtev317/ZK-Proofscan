@@ -1,4 +1,5 @@
 import type { ProofInputs } from './inputs.js';
+import type { BoundRecordedCircuit } from './recorded/bind.js';
 import type { KeyRegistry } from './registry.js';
 import { buildSuppliedKeyReport, TOOL, type KeyRecognition, type Report } from './report.js';
 import type { BoundSemaphoreV4 } from './semaphore-v4/bind.js';
@@ -12,6 +13,8 @@ export interface Scanning {
   semaphoreV4: BoundSemaphoreV4;
   suppliedKey: SuppliedKeyEngine;
   registry: KeyRegistry;
+  /** Explanations bound to single recorded keys. */
+  recorded: BoundRecordedCircuit[];
 }
 
 const unsupported = (proof: string, reason: string): Report => ({ reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(utf8(proof)) }, outcome: 'unsupported', reason });
@@ -35,14 +38,29 @@ export async function scan(inputs: ProofInputs, scanning: Scanning): Promise<Rep
   if (publicInputs === undefined || verificationKey === undefined) {
     return unsupported(proof, 'a proof checked with its own verification key needs both a public inputs file and a verification key file');
   }
-  const { registry, semaphoreV4 } = scanning;
+  const { registry, semaphoreV4, recorded } = scanning;
+  const result = await verifySuppliedKey({ proof, publicInputs, verificationKey }, scanning.suppliedKey);
+  // An explanation is applied only for the exact key it is bound to, on the proof system it was written for.
+  const explain = (contentSha256: string): BoundRecordedCircuit | undefined =>
+    (result.status === 'valid' || result.status === 'invalid') && result.protocol === 'groth16' && result.curve === 'bn128'
+      ? recorded.find((bound) => bound.keyContentSha256 === contentSha256)
+      : undefined;
   const recognise = (contentSha256: string): KeyRecognition => {
     const found = registry.find(contentSha256);
     if (found === undefined) return { match: 'none' };
-    // The only explanation this build holds. Its review status is reported, never upgraded.
-    const { manifest } = semaphoreV4.adapter;
-    const explanation = found.artifact.explanationAdapter === manifest.id ? { adapter: manifest.id, review: manifest.review } : null;
+    const named = found.artifact.explanationAdapter;
+    const bound = explain(contentSha256);
+    // Review status is reported as the adapter states it, never upgraded.
+    const explanation =
+      bound !== undefined && bound.artifactId === found.artifact.id && bound.adapter.manifest.id === named
+        ? { adapter: bound.adapter.manifest.id, review: bound.adapter.manifest.review, applied: true }
+        : named === semaphoreV4.adapter.manifest.id
+          ? { adapter: named, review: semaphoreV4.adapter.manifest.review, applied: false }
+          : null;
     return { match: 'exact', registry: { revision: registry.revision, sha256: registry.sha256 }, artifact: found.artifact, key: found.label, explanation };
   };
-  return buildSuppliedKeyReport(proof, await verifySuppliedKey({ proof, publicInputs, verificationKey }, scanning.suppliedKey), recognise);
+  return buildSuppliedKeyReport(proof, result, recognise, (contentSha256) => {
+    const bound = explain(contentSha256);
+    return bound !== undefined && registry.find(contentSha256)?.artifact.id === bound.artifactId ? bound.adapter : undefined;
+  });
 }

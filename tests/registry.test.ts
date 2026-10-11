@@ -42,7 +42,7 @@ describe('key registry', () => {
     const registry = loadKeyRegistry(registryBytes);
     expect(registry.sha256).toBe(KEY_REGISTRY_SHA256);
     const [artifact] = registry.artifacts;
-    expect(registry.artifacts).toHaveLength(1);
+    expect(registry.artifacts.map((entry) => entry.id)).toEqual(['semaphore-v4-verification-keys', 'zk-email-proof-of-twitter-verification-key']);
     expect(artifact!.provenance.sha256).toBe(SEMAPHORE_V4_KEYS_SHA256);
     expect(artifact!.explanationAdapter).toBe(scanning.semaphoreV4.adapter.manifest.id);
     expect(artifact!.circuit.source).toBe(scanning.semaphoreV4.adapter.manifest.circuit.source);
@@ -72,6 +72,7 @@ describe('key registry', () => {
     for (const bad of [
       (r: any) => { r.artifacts[0].keys[1].contentSha256 = r.artifacts[0].keys[0].contentSha256; },
       (r: any) => { r.artifacts.push(r.artifacts[0]); },
+      (r: any) => { r.artifacts[1].keys[0].contentSha256 = r.artifacts[0].keys[0].contentSha256; },
       (r: any) => { r.artifacts[0].entryReview = { status: 'reviewed', note: 'Looks fine.' }; },
       (r: any) => { r.artifacts[0].entryReview = { status: 'unreviewed', note: 'x', reviewer: 'A', date: '2026-10-11' }; },
       (r: any) => { r.artifacts[0].circuitLink.status = 'certain'; },
@@ -100,9 +101,9 @@ describe('a supplied key that is on record', () => {
     expect(report.keyRecognition).toMatchObject({
       match: 'exact',
       key: 'tree depth 3',
-      registry: { revision: 1, sha256: KEY_REGISTRY_SHA256 },
+      registry: { revision: 2, sha256: KEY_REGISTRY_SHA256 },
       artifact: { id: 'semaphore-v4-verification-keys', circuitLink: { status: 'partly-established' }, entryReview: { status: 'unreviewed' } },
-      explanation: { adapter: 'semaphore-v4', review: { status: 'unreviewed' } },
+      explanation: { adapter: 'semaphore-v4', review: { status: 'unreviewed' }, applied: false },
     });
     const shown = renderReport(report);
     for (const line of [

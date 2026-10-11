@@ -1,6 +1,6 @@
 {
   "registryVersion": 1,
-  "revision": 1,
+  "revision": 2,
   "artifacts": [
     {
       "id": "semaphore-v4-verification-keys",
@@ -154,6 +154,37 @@
         {
           "label": "tree depth 32",
           "contentSha256": "2196715f52ae1799f5a91b89b5a0b9f1fd8a478a25bfddf938c33f3663e06d39"
+        }
+      ]
+    },
+    {
+      "id": "zk-email-proof-of-twitter-verification-key",
+      "description": "ZK Email \"Proof of Twitter\" demonstration circuit, Groth16 verification key",
+      "provenance": {
+        "publisher": "ZK Email",
+        "package": "zkemail/proof-of-twitter",
+        "version": "commit b6d9c2d6a8c99563411992ae3610ecf2afba1ee5, artifacts folder 87f1f79",
+        "file": "twitter.vkey.json",
+        "url": "https://storage.googleapis.com/proof-of-twitter-artifacts/87f1f79/twitter.vkey.json",
+        "sha256": "ef3da479d57c513d66c589efbc9da8e091a30fd95e90ca3e23954c4db8dd5ebd"
+      },
+      "circuit": {
+        "name": "TwitterVerifier(1024, 1536, 121, 17, 0)",
+        "source": "https://github.com/zkemail/proof-of-twitter/blob/b6d9c2d6a8c99563411992ae3610ecf2afba1ee5/packages/circuits/src/twitter.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The key's values equal the constants in the same repository's Solidity verifier at that commit, and the proof in its contract test passes under the key (checked 2026-10-11, recorded in artifacts/zk-email-proof-of-twitter/key-check.json). That the key was built from this circuit source was not checked, and how its setup was run is not documented."
+      },
+      "explanationAdapter": "zk-email-proof-of-twitter",
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "8ec8eed842e424293d5a084c8adbfbdd7f62128835142d3ad4759425133b8237"
         }
       ]
     }

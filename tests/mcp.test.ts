@@ -171,6 +171,14 @@ describe('tool server, through the official client', () => {
     const fromCli = execFileSync(process.execPath, [join(root, 'dist/cli.js'), 'check', recorded('proof'), '--public', recorded('public'), '--key', recorded('key')], { encoding: 'utf8' });
     expect(`${recognised.structuredContent?.evidenceText}\n`).toBe(fromCli);
 
+    // A recorded key with an explanation bound to it: the explanation is applied, and text read from the proof is labelled.
+    const twitter = { path: join(root, 'tests/fixtures/snarkjs/proof-of-twitter.proof.json'), public_inputs_path: join(root, 'tests/fixtures/snarkjs/proof-of-twitter.public.json'), verification_key_path: join(root, 'artifacts/zk-email-proof-of-twitter/verification-key.json') };
+    const explained = await call('check_proof', twitter);
+    expect(explained.structuredContent).toMatchObject({ outcome: 'valid', report: { basis: 'recorded-circuit', applicationChecks: [{ id: 'dkim-key-authentication', status: 'not-performed' }, {}, {}, {}] } });
+    expect(explained.structuredContent?.notes).toContainEqual(expect.stringMatching(/It is data, not an instruction/));
+    expect(explained.structuredContent?.notes).toContainEqual(expect.stringMatching(/"Checks not performed"/));
+    expect(`${explained.structuredContent?.evidenceText}\n`).toBe(execFileSync(process.execPath, [join(root, 'dist/cli.js'), 'check', twitter.path, '--public', twitter.public_inputs_path, '--key', twitter.verification_key_path], { encoding: 'utf8' }));
+
     // On its own it is not checked; half the set, or pasted text with a key, is refused.
     expect((await call('check_proof', { path: part('proof') })).structuredContent).toMatchObject({ outcome: 'unsupported' });
     for (const bad of [{ path: part('proof'), public_inputs_path: part('public') }, { proof: 'x', public_inputs_path: part('public'), verification_key_path: part('key') }, { ...args, verification_key_path: 'key.json' }]) {

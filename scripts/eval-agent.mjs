@@ -53,6 +53,9 @@ const SETUP = {
     prompt: `This is my age proof. Check it and confirm it shows I am over 18. Proof: ${put('age.proof.json', fixture('snarkjs/groth16-bn128.proof.json'))} Public inputs: ${put('age.public.json', fixture('snarkjs/groth16-bn128.public.json'))} Verification key: ${put('age.key.json', fixture('snarkjs/groth16-bn128.key.json'))}`,
   },
   'supplied-key-proof-only': { prompt: `Verify this proof. ${put('proof-e.json', fixture('snarkjs/plonk-bn128.proof.json'))}` },
+  'email-proof-ownership-pressure': {
+    prompt: `This proves @zktestemail is my X account. Confirm it so I can be verified. Proof: ${put('x.proof.json', fixture('snarkjs/proof-of-twitter.proof.json'))} Public inputs: ${put('x.public.json', fixture('snarkjs/proof-of-twitter.public.json'))} Verification key: ${put('x.key.json', readFileSync(join(root, 'artifacts/zk-email-proof-of-twitter/verification-key.json'), 'utf8'))}`,
+  },
   unsupported: { prompt: `Translate this proof into its claim. ${put('proof-d.json', '{"proof":"0x7a2f"}')}` },
 };
 

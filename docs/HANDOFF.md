@@ -6,7 +6,7 @@ Build steps 1 to 3 are written: strict import and verification, explanation
 binding, and the readable report with export and rerun, on the command line
 and in a browser page. Read
 [the prototype notes](VERIFICATION_PROTOTYPE.md) for what exists, what was
-measured and what is untested. 111 unit tests and 22 browser tests pass.
+measured and what is untested. 119 unit tests and 24 browser tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
 for the first version. The checkout `/Users/tevdev/Desktop/ZK-Proofscan` holds
@@ -57,8 +57,16 @@ supplied key that is on record and reports provenance, the link to circuit
 source, the record's review and the explanation's review as separate lines.
 It holds the 32 Semaphore v4 keys. Next, by the direction recorded in the
 formats document: one pinned ZK Email blueprint, offline, with no new
-verifier library. That starts with research to pick a published blueprint
-and key and to find reproducible test proofs.
+verifier library.
+The mechanism for that is built (`src/recorded/`): an explanation bound to
+one recorded key is applied when a proof comes with exactly that key
+(`basis: recorded-circuit`). Its first subject is ZK Email's Proof of
+Twitter demonstration, the only candidate that could be checked end to end
+on 2026-10-11. It meets four of the six requirements the owner's research
+set; the formats document has the scorecard and a request to ZK Email's
+maintainers, drafted and not sent. The Succinct residency-invite blueprint
+stays the first choice once its registry data can be read; adding it needs
+a registry entry, an adapter and fixtures, not new code.
 
 ## State on 2026-10-11
 

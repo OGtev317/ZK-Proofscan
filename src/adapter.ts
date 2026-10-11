@@ -25,7 +25,8 @@ export interface AdapterManifest {
   verifier: VerifierIdentity;
   artifacts: AdapterArtifact[];
   circuit: { name: string; source: string; linkToArtifacts: string };
-  publicFields: { name: string; meaning: string }[];
+  /** `reading` names a fixed way to also show a public input, as a reading aid only. */
+  publicFields: { name: string; meaning: string; reading?: PublicReading }[];
   explanation: {
     claim: string;
     hidden: string[];
@@ -36,6 +37,8 @@ export interface AdapterManifest {
   };
   review: AdapterReview;
 }
+
+export type PublicReading = 'packed-ascii' | 'ethereum-address';
 
 export interface LoadedAdapter {
   manifest: AdapterManifest;
@@ -99,7 +102,14 @@ const readManifest = object<AdapterManifest>({
   verifier: object<VerifierIdentity>({ name: text, version: text }),
   artifacts: list(object<AdapterArtifact>({ role: text, sha256: hash, source: text })),
   circuit: object({ name: text, source: text, linkToArtifacts: text }),
-  publicFields: list(object({ name: text, meaning: text })),
+  publicFields: list(object({
+    name: text,
+    meaning: text,
+    reading: (value, where) => {
+      if (value !== 'packed-ascii' && value !== 'ethereum-address') throw new AdapterError(`${where} is not a known reading`);
+      return value;
+    },
+  }, ['reading'])),
   explanation: object({
     claim: text,
     hidden: list(text),

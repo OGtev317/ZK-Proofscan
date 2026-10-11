@@ -1,0 +1,52 @@
+{
+  "id": "zk-email-proof-of-twitter",
+  "revision": 1,
+  "format": "snarkjs-groth16-bn128",
+  "verifier": { "name": "snarkjs", "version": "0.7.6" },
+  "artifacts": [
+    {
+      "role": "verification-key",
+      "sha256": "ef3da479d57c513d66c589efbc9da8e091a30fd95e90ca3e23954c4db8dd5ebd",
+      "source": "https://storage.googleapis.com/proof-of-twitter-artifacts/87f1f79/twitter.vkey.json"
+    }
+  ],
+  "circuit": {
+    "name": "TwitterVerifier(1024, 1536, 121, 17, 0)",
+    "source": "https://github.com/zkemail/proof-of-twitter/blob/b6d9c2d6a8c99563411992ae3610ecf2afba1ee5/packages/circuits/src/twitter.circom",
+    "linkToArtifacts": "Unconfirmed. The key's values equal the constants in the same repository's Solidity verifier at that commit, and the proof in its contract test passes under the key (checked 2026-10-11). Circuit source alone cannot recreate a Groth16 key: that needs the setup files, and how the setup was run is not documented."
+  },
+  "publicFields": [
+    { "name": "signing key hash", "meaning": "A hash of the RSA public key the email's signature was checked against. The key itself is not public." },
+    { "name": "username", "meaning": "The characters that follow the words \"email was meant for @\" in the email body, packed into one number.", "reading": "packed-ascii" },
+    { "name": "address", "meaning": "A number chosen by whoever made the proof. The proof cannot be reused with a different one.", "reading": "ethereum-address" }
+  ],
+  "explanation": {
+    "claim": "Someone had an email that carries a valid signature under the RSA key whose hash is shown, and whose body contains the words \"email was meant for @\" followed by the username shown. The proof is tied to the address shown.",
+    "hidden": [
+      "The rest of the email, including its sender, recipient, subject and date.",
+      "The signing key. Only its hash is public."
+    ],
+    "applicationChecks": [
+      { "id": "dkim-key-authentication", "description": "Whether the signing key belongs to x.com or to any other domain. Anyone can sign an email with a key of their own, so until the key hash is checked against the domain's published keys, nothing ties this email to X." },
+      { "id": "address-belongs-to-presenter", "description": "Whether the address shown belongs to whoever presents this proof." },
+      { "id": "proof-unused", "description": "Whether this proof, or another proof made from the same email, has been presented before." },
+      { "id": "email-freshness", "description": "When the email was sent. The date is hidden, and an old email works as well as a new one." }
+    ],
+    "limits": [
+      "This does not establish that the email came from X. That rests on the signing key, which was not checked, and this circuit does not look at the sender address.",
+      "This does not establish that whoever made the proof controls that X account or the mailbox the email went to, now or at any time. It shows that someone had a copy of such an email.",
+      "This does not establish unique personhood: one person can hold many such emails, and a copy of an email can be shared.",
+      "This is a demonstration circuit published by ZK Email, not a blueprint from its registry. This tool knows of no audit of this circuit as a whole; audits of the parts it is built from do not cover it."
+    ],
+    "assumptions": [
+      "The Groth16 proof system, the BN254 curve, RSA signatures and SHA-256 are sound.",
+      "The setup that produced this verification key was performed honestly. This tool has no record of how it was run.",
+      "The verification key belongs to the named circuit, and that circuit, with the email-verification library it includes, enforces the claim above.",
+      "The verifier library is correct."
+    ]
+  },
+  "review": {
+    "status": "unreviewed",
+    "note": "Draft written from reading twitter.circom at the named commit. The email-verification library it includes (@zk-email/circuits 6.1.3) was not read. No qualified person has reviewed it against the circuit."
+  }
+}

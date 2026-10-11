@@ -1,0 +1,21 @@
+{
+  "checked": "2026-10-11",
+  "commit": "b6d9c2d6a8c99563411992ae3610ecf2afba1ee5",
+  "publishedKey": {
+    "url": "https://storage.googleapis.com/proof-of-twitter-artifacts/87f1f79/twitter.vkey.json",
+    "sha256": "ef3da479d57c513d66c589efbc9da8e091a30fd95e90ca3e23954c4db8dd5ebd",
+    "equalsBundledFile": true
+  },
+  "verifierContract": {
+    "url": "https://raw.githubusercontent.com/zkemail/proof-of-twitter/b6d9c2d6a8c99563411992ae3610ecf2afba1ee5/packages/contracts/src/Verifier.sol",
+    "sha256": "3783fe1b90e92e84e7c73f7b5c3b4bb0d79e2d94a03af770e7688deb2c52b8fa",
+    "constants": 22,
+    "keyValuesEqualConstants": true
+  },
+  "contractTest": {
+    "url": "https://raw.githubusercontent.com/zkemail/proof-of-twitter/b6d9c2d6a8c99563411992ae3610ecf2afba1ee5/packages/contracts/test/TestTwitter.t.sol",
+    "sha256": "786102135309a79771a618614ec616d1396e3c5cca33c689d72ac8a6a7ca179e",
+    "holdsEveryFixtureNumber": true
+  },
+  "notChecked": "That the key was built from the circuit source, and that its setup was run honestly."
+}

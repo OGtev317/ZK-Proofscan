@@ -4,15 +4,16 @@ Written 2026-10-11. The owner asked for the idea to cover as many proof
 formats as possible. This file records what is supported, the rule every
 format follows, and what each further format would need.
 
-## Two bases for a result
+## Three bases for a result
 
 Every `valid` or `invalid` report carries a `basis`, because a pass means
-very different things in the two cases.
+very different things in each case.
 
 | Basis | What the tool has | What a pass says |
 | --- | --- | --- |
 | `bundled-circuit` | Verification keys pinned by hash, and an explanation written for that one circuit | The circuit's claim, in the adapter's wording |
-| `supplied-key` | Only the key the user gave with the proof | The proof fits that key. The circuit is unknown, so nothing about meaning |
+| `recorded-circuit` | The user's key is an exact match to a recorded key, and an explanation is bound to that key | The circuit's claim, in the adapter's wording, with the key's provenance stated |
+| `supplied-key` | Only the key the user gave with the proof | The proof fits that key. No explanation is applied, so nothing about meaning |
 
 A supplied key is never used for a bundled format, so it cannot stand in for
 the pinned keys. A program reading reports must check `basis` before
@@ -23,6 +24,7 @@ treating `valid` as a statement about any claim.
 | Format | Basis | Files | Verifier |
 | --- | --- | --- | --- |
 | Semaphore v4 membership proof | `bundled-circuit` | Proof | snarkjs 0.7.6, Groth16 on BN254 |
+| ZK Email "Proof of Twitter" demonstration | `recorded-circuit` | Proof, public inputs, and the published verification key | snarkjs 0.7.6, Groth16 on BN254 |
 | snarkjs Groth16 on BN254 or BLS12-381 | `supplied-key` | Proof, public inputs, verification key | snarkjs 0.7.6 |
 | snarkjs PLONK on BN254 | `supplied-key` | Proof, public inputs, verification key | snarkjs 0.7.6 |
 | snarkjs FFLONK on BN254 | `supplied-key` | Proof, public inputs, verification key | snarkjs 0.7.6 |
@@ -65,6 +67,71 @@ not; a recorded key is still named when the proof fails under it; the
 file of all 32 keys is not accepted as a key; a forged export claiming a
 reviewed record is noticed; the command line, the tool server and the page
 give the same text.
+
+### A recorded key with an explanation: Proof of Twitter
+
+One recorded key has an explanation bound to it: ZK Email's Proof of
+Twitter demonstration, at commit `b6d9c2d` of `zkemail/proof-of-twitter`.
+It is a demonstration circuit, not a blueprint from ZK Email's registry,
+and "ZK Email" in general is not supported.
+
+A report keeps four things apart, as the research asked:
+
+| Check | Where the report states it | For this circuit today |
+| --- | --- | --- |
+| The mathematics | "Cryptographic verification" | Performed |
+| Which circuit, and who reviewed what | "Verification key" and "Explanation" | Key recognised; link to circuit source unconfirmed; record and wording NOT REVIEWED |
+| That the email's signing key belongs to the domain | "Checks not performed" | Not performed. Nothing ties the email to X until it is |
+| Application rules: presenter, reuse, freshness | "Checks not performed" | Not performed |
+
+The claim is that someone had an email with a valid signature under the
+key whose hash is shown, containing "email was meant for @" and the
+username shown. It is not that the email came from X, that anyone controls
+the account or the mailbox, or that the person is unique. The circuit does
+not look at the sender address.
+
+Binding: a lock names the adapter file by hash; the adapter names the
+published key file by hash; the registry records that file, names the
+adapter for it and holds the key's content hash. With any link exchanged,
+binding fails at start. A key differing in any value gets no explanation.
+
+Tested with the proof hard-coded in that repository's own contract test:
+it passes; a changed proof number, each changed public input and a
+same-shaped different username are rejected with no claim; a different
+key, including one differing only where the verifier does not read, gets
+no explanation; nine exchanged links refuse to bind; six forged exports
+are noticed; the command line, tool server and page agree.
+
+#### Against the qualification gate
+
+The owner's research set six requirements for an evidence package. This
+demonstration meets four, and the report states the two gaps.
+
+| Requirement | Proof of Twitter |
+| --- | --- |
+| 1. Exact identity: blueprint ID, version, framework, configuration | **Not met.** No blueprint ID or version. Identified by repository commit, artifact folder and circuit parameters |
+| 2. Public fixture: key, proof and ordered public signals, redistributable | Met. Key published by ZK Email; proof and signals in the MIT-licensed repository's test |
+| 3. Source evidence: circuit, dependency and compiler versions, signal mapping, setup provenance | **Partly.** Circuit source, dependency versions and signal order are in the repository. The compiler version used and how the setup was run are not documented |
+| 4. Local results: valid passes, altered and mismatched fail | Met |
+| 5. Reviewed wording, or explicitly NOT REVIEWED | Explicitly NOT REVIEWED |
+| 6. Offline rerun without registry, Gmail, remote proving or chain | Met |
+
+The first choice remains ZK Email's Succinct residency-invite blueprint
+(version 3), with the Luma registration example second. Neither could be
+qualified on 2026-10-11: the registry's listing and lookup returned errors.
+Either would be added as registry and adapter data, with no new code.
+
+A request the owner could send to ZK Email's maintainers (drafted here,
+not sent):
+
+> Please provide a version-pinned Circom/Groth16 blueprint with a
+> redistributable verification key, a matching public proof and public
+> signals, the generated circuit source, dependency versions and setup
+> provenance. We need offline verification fixtures only: no private email
+> or witness.
+
+"Reproducible" means the same proof verifies again. Proving is randomised,
+so a newly made proof has different bytes.
 
 ### How the three files are read
 
@@ -114,8 +181,13 @@ sizes equal the verifier's own.
 - Whether snarkjs checks that points lie in the right subgroup was not
   examined, for either curve.
 - The supplied-key wording has had no qualified review.
-- An AI agent was run once on two supplied-key scenarios (see
-  [the agent notes](LOCAL_AGENT.md)); that is not a measure of reliability.
+- An AI agent was run once on two supplied-key scenarios and one
+  email-proof scenario (see [the agent notes](LOCAL_AGENT.md)); that is not
+  a measure of reliability.
+- For Proof of Twitter: the circuit was not compiled, the proving key was
+  not examined, and the email-verification library the circuit includes was
+  not read. Checking the signing key against a domain's published keys is
+  not built; it would need a network lookup, which is out of this milestone.
 
 ## What comes next, and what each needs
 

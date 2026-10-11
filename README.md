@@ -11,7 +11,9 @@ report. Instead of `0x7a2f…3b1c — Verified`, a report states:
 
 **Status: prototype.** A command-line tool and a browser page check
 Semaphore v4 proofs against bundled keys, and Groth16, PLONK and FFLONK
-proofs written by snarkjs against a key the user supplies. They show the
+proofs written by snarkjs against a key the user supplies. A supplied key
+that matches a recorded one is named, and one such key, for a ZK Email
+demonstration circuit, has an explanation. They show the
 report above and export evidence another person can rerun. See
 [the formats](docs/FORMATS.md) for what each kind of result does and does
 not say. A local tool server lets an AI agent run

@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { bindRecordedCircuit } from '../recorded/bind.js';
 import { loadKeyRegistry } from '../registry.js';
 import type { Scanning } from '../scan.js';
 import { bindSemaphoreV4, type AdapterLock, type BoundSemaphoreV4 } from '../semaphore-v4/bind.js';
@@ -18,8 +19,20 @@ export async function bundledSemaphoreV4(): Promise<BoundSemaphoreV4> {
 }
 
 /** Everything this build checks with. */
-export const bundledScanning = async (): Promise<Scanning> => ({
-  semaphoreV4: await bundledSemaphoreV4(),
-  suppliedKey: snarkjsSuppliedKeyEngine,
-  registry: loadKeyRegistry(await file('registry/keys.json')),
-});
+/** Adapters for circuits whose key the user supplies and the registry records. */
+export const RECORDED_ADAPTERS = ['zk-email-proof-of-twitter'] as const;
+
+export async function bundledScanning(): Promise<Scanning> {
+  const registry = loadKeyRegistry(await file('registry/keys.json'));
+  const recorded = await Promise.all(
+    RECORDED_ADAPTERS.map(async (id) =>
+      bindRecordedCircuit({
+        adapterBytes: await file(`adapters/${id}/adapter.json`),
+        lock: JSON.parse(new TextDecoder().decode(await file(`adapters/${id}/lock.json`))) as AdapterLock,
+        registry,
+        verifier: snarkjsSuppliedKeyEngine.identity,
+      }),
+    ),
+  );
+  return { semaphoreV4: await bundledSemaphoreV4(), suppliedKey: snarkjsSuppliedKeyEngine, registry, recorded };
+}

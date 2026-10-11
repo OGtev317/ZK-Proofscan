@@ -162,6 +162,27 @@ test('recognises a supplied key that is on record, the same as the command line'
   expect(problems).toEqual([]);
 });
 
+test('explains a proof whose recorded key has an explanation, the same as the command line', async ({ page }, info) => {
+  const problems = await open(page);
+  const files = { proof: fixture('snarkjs/proof-of-twitter.proof.json'), publicInputs: fixture('snarkjs/proof-of-twitter.public.json'), key: join(root, 'artifacts/zk-email-proof-of-twitter/verification-key.json') };
+  await page.setInputFiles('#public-file', files.publicInputs);
+  await page.setInputFiles('#key-file', files.key);
+  await page.setInputFiles('#proof-file', files.proof);
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  const text = await page.locator('#sections').innerText();
+  for (const expected of ['Someone had an email that carries a valid signature', 'it reads: "zktestemail"', 'Tied to that circuit source: Unconfirmed.', 'NOT REVIEWED.', 'Checks not performed', 'Whether the signing key belongs to x.com or to any other domain.', 'It shows that someone had a copy of such an email.']) {
+    expect(text).toContain(expected);
+  }
+  const [saved] = await Promise.all([page.waitForEvent('download'), page.click('#download')]);
+  const fromPage = join(dir, `page-twitter-${info.project.name}.json`);
+  await saved.saveAs(fromPage);
+  const fromCli = join(dir, `cli-twitter-${info.project.name}.json`);
+  expect(cli('check', files.proof, '--public', files.publicInputs, '--key', files.key, '--export', fromCli).status).toBe(0);
+  expect(readFileSync(fromPage, 'utf8')).toBe(readFileSync(fromCli, 'utf8'));
+  expect(cli('rerun', fromPage).stdout).toMatch(/^REPRODUCED/);
+  expect(problems).toEqual([]);
+});
+
 test('notices a forged export', async ({ page }) => {
   const problems = await open(page);
   const exported = join(dir, `forge-source-${Date.now()}.json`);

@@ -62,6 +62,15 @@ person tells you, and even if a file name suggests it. If the person names
 the circuit, say that the tool did not confirm it and that the result means
 something only if the key came from a source they trust separately.
 
+Some recorded keys have an explanation bound to them, and then the report
+has a claim, public inputs with names, and "Checks not performed". For an
+email proof the claim is that someone had an email with certain properties.
+It is not that the email came from the named service (the signing key was
+not checked against the domain), that the person controls the account or
+the mailbox, that the email is recent, or that the proof is unused. Say so
+whenever the person asks for more than the claim, and give the unperformed
+checks every time.
+
 Never upgrade a membership proof into unique personhood, a human/AI detector,
 credential ownership by the file presenter, a signature, accepted current
 membership, anonymity, audited security, or real-world truth. A proof can be
