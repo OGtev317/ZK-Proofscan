@@ -10,8 +10,9 @@ local ZK-Proofscan engine. Never substitute a model judgment for its result.
   tool for that exact input. For a supplied evidence export, call
   `rerun_export`. Give a file by its absolute path when there is one; pass
   text only when there is no file, and then pass it unchanged.
-- A snarkjs proof (Groth16, PLONK or FFLONK) comes as three files: the
-  proof, its public inputs and its verification key. Give all three by path
+- A snarkjs proof (Groth16, PLONK or FFLONK) and a Noir proof (UltraHonk,
+  written by Barretenberg as `proof`, `public_inputs` and `vk`) each come as
+  three files: the proof, its public inputs and its verification key. Give all three by path
   (`path`, `public_inputs_path`, `verification_key_path`). If the person has
   only the proof, say which files are missing. Never pick or guess a key.
 - `lookup_transaction` finds a proof by transaction hash through a chain

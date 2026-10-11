@@ -1,12 +1,11 @@
 import { isAbsolute } from 'node:path';
 import { presentCheck, presentRerun } from '../agent/presentation.js';
 import { MAX_EXPORT_CHARACTERS } from '../export.js';
-import type { ProofInputs } from '../inputs.js';
+import { MAX_PROOF_PART_CHARACTERS, type ProofInputs } from '../inputs.js';
 import { CHAINS } from '../chain/rpc.js';
 import { renderChainSource } from '../chain/source.js';
 import { checkFile, checkText, lookupAndCheck, message, renderRerun, rerunFile, rerunText, saveExport } from '../node/run.js';
 import type { Report } from '../report.js';
-import { MAX_SUPPLIED_PROOF_CHARACTERS } from '../supplied-key/importer.js';
 
 export interface ToolResult {
   content: { type: 'text'; text: string }[];
@@ -80,13 +79,13 @@ function source(args: Record<string, string>, textKey: string, limit: number): {
 const proofInput = {
   path: { type: 'string', description: PATH },
   proof: { type: 'string', description: 'The exact text of the proof file, if there is no file to point to.' },
-  public_inputs_path: { type: 'string', description: 'Only for a snarkjs proof checked with its own key: absolute path of its public inputs file (public.json). Needs "path" and "verification_key_path".' },
-  verification_key_path: { type: 'string', description: 'Only for a snarkjs proof checked with its own key: absolute path of its verification key file. Needs "path" and "public_inputs_path".' },
+  public_inputs_path: { type: 'string', description: 'Only for a proof checked with its own key: absolute path of its public inputs file (public.json from snarkjs, or public_inputs from Barretenberg). Needs "path" and "verification_key_path".' },
+  verification_key_path: { type: 'string', description: 'Only for a proof checked with its own key: absolute path of its verification key file (verification_key.json from snarkjs, or vk from Barretenberg). Needs "path" and "public_inputs_path".' },
 } as const;
 
 /** Runs the check the arguments describe. `inputs` is absent when a file could not be read. */
 async function checked(args: Record<string, string>): Promise<{ report: Report; inputs?: ProofInputs } | { refused: ToolResult }> {
-  const from = source(args, 'proof', MAX_SUPPLIED_PROOF_CHARACTERS);
+  const from = source(args, 'proof', MAX_PROOF_PART_CHARACTERS);
   if ('refused' in from) return from;
   const { public_inputs_path: publicInputs, verification_key_path: verificationKey } = args;
   if (publicInputs === undefined && verificationKey === undefined) {
@@ -102,7 +101,7 @@ const check: Tool = {
   name: 'check_proof',
   title: 'Check a proof',
   description:
-    'Verifies a proof on this machine and returns the evidence report: the claim, what is hidden, what is public, the verification result, and what was not checked. Uses no network. Two kinds of proof: a Semaphore v4 membership proof (one file, checked against keys bundled with this tool), and a Groth16, PLONK or FFLONK proof written by snarkjs (three files: proof, public inputs and verification key), which is checked against the key you give and whose circuit this tool does not know. The outcome is one of valid, invalid, unsupported (not a proof this tool reads; nothing was checked) and error (the check could not run). Only "invalid" means the proof is wrong.',
+    'Verifies a proof on this machine and returns the evidence report: the claim, what is hidden, what is public, the verification result, and what was not checked. Uses no network. Two kinds of proof: a Semaphore v4 membership proof (one file, checked against keys bundled with this tool), and a proof that comes as three files (proof, public inputs and verification key): Groth16, PLONK or FFLONK written by snarkjs, or UltraHonk written by Barretenberg for a Noir program. A three-file proof is checked against the key you give, and unless that key is on record this tool does not know its circuit. Give binary files by path, never as text. The outcome is one of valid, invalid, unsupported (not a proof this tool reads; nothing was checked) and error (the check could not run). Only "invalid" means the proof is wrong.',
   inputSchema: { type: 'object', properties: proofInput, additionalProperties: false },
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   async call(args) {

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { StringDecoder } from 'node:string_decoder';
 import { handle, PARSE_ERROR, type Response } from './mcp/protocol.js';
-import { stopSnarkjs } from './snarkjs-engine.js';
+import { stopEngines } from './node/stop.js';
 
 // A Model Context Protocol server over standard input and output: one JSON
 // message per line. Standard output carries protocol messages only.
@@ -48,5 +48,5 @@ process.stdin.on('data', (chunk: Buffer) => {
 });
 process.stdin.on('end', () => {
   if (!skipping) accept(buffer);
-  void queue.then(stopSnarkjs);
+  void queue.then(stopEngines);
 });

@@ -3,10 +3,9 @@ import { lookupTransaction } from '../chain/lookup.js';
 import { CHAINS, httpRpc, rpcUrlFromEnvironment } from '../chain/rpc.js';
 import { renderChainSource, type ChainSource } from '../chain/source.js';
 import { MAX_EXPORT_CHARACTERS, rerunExport, writeExport, type RerunResult } from '../export.js';
-import { MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, type ProofInputs } from '../inputs.js';
+import { MAX_PROOF_PART_CHARACTERS, binaryPart, isBinaryPart, MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, type ProofInputs } from '../inputs.js';
 import { renderReport, unreadReport, type Report } from '../report.js';
 import { scan } from '../scan.js';
-import { MAX_SUPPLIED_PROOF_CHARACTERS } from '../supplied-key/importer.js';
 import { bundledScanning, recordedKeyText } from './bundled.js';
 
 export const message = (error: unknown): string => (error instanceof Error ? error.message : String(error));
@@ -18,6 +17,24 @@ async function readText(path: string, limit: number): Promise<string> {
   // A byte-order mark is kept, and then refused as not JSON, so the hash in
   // the report is always the hash of the file's exact bytes.
   return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(await readFile(path));
+}
+
+/**
+ * Reads one file of a check as a part. Text stays text. A file that is not
+ * text (not UTF-8, or holding control characters no text format uses) is
+ * carried as its bytes, as is a text file that happens to begin like one.
+ */
+async function readPart(path: string, limit: number): Promise<string> {
+  if ((await stat(path)).size > limit * 4) throw new TooLarge();
+  const bytes = await readFile(path);
+  let text: string | undefined;
+  try {
+    text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
+  } catch {
+    text = undefined;
+  }
+  // eslint-disable-next-line no-control-regex
+  return text === undefined || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(text) || isBinaryPart(text) ? binaryPart(bytes) : text;
 }
 
 /** Checks proof text with the bundled adapter, keys and verifier. Never throws. */
@@ -40,7 +57,7 @@ export interface ProofPaths {
 export async function checkFile(paths: ProofPaths): Promise<{ report: Report; inputs?: ProofInputs }> {
   const read = async (path: string, limit: number, what: string): Promise<string> => {
     try {
-      return await readText(path, limit);
+      return await readPart(path, limit);
     } catch (error) {
       // Text and JSON output must agree, including when nothing could be checked.
       throw error instanceof TooLarge ? unreadReport('unsupported', `the ${what} is too large`) : unreadReport('error', `could not read the ${what}: ${message(error)}`);
@@ -50,7 +67,7 @@ export async function checkFile(paths: ProofPaths): Promise<{ report: Report; in
   try {
     inputs = {
       // The largest proof text any format accepts; each format applies its own limit after this.
-      proof: await read(paths.proof, MAX_SUPPLIED_PROOF_CHARACTERS, 'file'),
+      proof: await read(paths.proof, MAX_PROOF_PART_CHARACTERS, 'file'),
       ...(paths.publicInputs === undefined ? {} : { publicInputs: await read(paths.publicInputs, MAX_PUBLIC_INPUTS_CHARACTERS, 'public inputs file') }),
       ...(paths.verificationKey === undefined ? {} : { verificationKey: await read(paths.verificationKey, MAX_VERIFICATION_KEY_CHARACTERS, 'verification key file') }),
     };

@@ -1,10 +1,11 @@
-import type { ProofInputs } from './inputs.js';
+import { isBinaryPart, partBytes, type ProofInputs } from './inputs.js';
+import { verifyUltraHonk, type UltraHonkEngine } from './noir/verify.js';
 import type { BoundRecordedCircuit } from './recorded/bind.js';
 import type { KeyRegistry } from './registry.js';
 import { buildSuppliedKeyReport, TOOL, type KeyRecognition, type Report } from './report.js';
 import type { BoundSemaphoreV4 } from './semaphore-v4/bind.js';
 import { scanSemaphoreV4 } from './semaphore-v4/scan.js';
-import { sha256Hex, utf8 } from './sha256.js';
+import { sha256Hex } from './sha256.js';
 import type { SuppliedKeyEngine } from './supplied-key/verify.js';
 import { verifySuppliedKey } from './supplied-key/verify.js';
 
@@ -15,9 +16,11 @@ export interface Scanning {
   registry: KeyRegistry;
   /** Explanations bound to single recorded keys. */
   recorded: BoundRecordedCircuit[];
+  /** Absent where Barretenberg is not available, such as the browser page. */
+  ultraHonk?: UltraHonkEngine;
 }
 
-const unsupported = (proof: string, reason: string): Report => ({ reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(utf8(proof)) }, outcome: 'unsupported', reason });
+const unsupported = (proof: string, reason: string): Report => ({ reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(partBytes(proof)) }, outcome: 'unsupported', reason });
 
 /**
  * Checks one proof. A proof that comes with public inputs and a verification
@@ -39,7 +42,14 @@ export async function scan(inputs: ProofInputs, scanning: Scanning): Promise<Rep
     return unsupported(proof, 'a proof checked with its own verification key needs both a public inputs file and a verification key file');
   }
   const { registry, semaphoreV4, recorded } = scanning;
-  const result = await verifySuppliedKey({ proof, publicInputs, verificationKey }, scanning.suppliedKey);
+  // A binary proof with a key is an UltraHonk proof as Barretenberg writes it; a text one is snarkjs's.
+  let result;
+  if (isBinaryPart(proof)) {
+    if (scanning.ultraHonk === undefined) return unsupported(proof, 'this is a binary proof, which this build cannot check; use the command line');
+    result = await verifyUltraHonk({ proof, publicInputs, verificationKey }, scanning.ultraHonk);
+  } else {
+    result = await verifySuppliedKey({ proof, publicInputs, verificationKey }, scanning.suppliedKey);
+  }
   // An explanation is applied only for the exact key it is bound to, on the proof system it was written for.
   const explain = (contentSha256: string): BoundRecordedCircuit | undefined =>
     (result.status === 'valid' || result.status === 'invalid') && result.protocol === 'groth16' && result.curve === 'bn128'

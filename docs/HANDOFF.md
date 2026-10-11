@@ -6,7 +6,7 @@ Build steps 1 to 3 are written: strict import and verification, explanation
 binding, and the readable report with export and rerun, on the command line
 and in a browser page. Read
 [the prototype notes](VERIFICATION_PROTOTYPE.md) for what exists, what was
-measured and what is untested. 134 unit tests and 24 browser tests pass.
+measured and what is untested. 146 unit tests and 24 browser tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
 for the first version. The checkout `/Users/tevdev/Desktop/ZK-Proofscan` holds
@@ -94,5 +94,10 @@ on any chain. `zk-proofscan lookup` and the `lookup_transaction` tool are
 built for that and tested against a stand-in provider only; no key was
 configured, so no real chain has been read. Read [the lookup notes](LOOKUP.md).
 Wallet actions, signing, transactions, deployment, hosted services and paid
-infrastructure are not approved. Not verified: whether the name "ZK-Proofscan" or "Proofscan" is
+infrastructure are not approved.
+
+Also on 2026-10-11 the owner approved adding verifier libraries so that the
+first test release covers four kinds of proof: snarkjs, Groth16, Noir and
+Starknet. Noir is built with `@aztec/bb.js` 5.2.1 on the command line and
+tool server; read "Noir proofs" in the formats document. Not verified: whether the name "ZK-Proofscan" or "Proofscan" is
 already used by another product.

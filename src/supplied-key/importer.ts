@@ -3,7 +3,10 @@ import { MAX_PUBLIC_INPUTS, MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_C
 
 export const MAX_SUPPLIED_PROOF_CHARACTERS = 16_384;
 
-export type Protocol = 'groth16' | 'plonk' | 'fflonk';
+/** The proof systems snarkjs writes, which this file reads. */
+export type SnarkjsProtocol = 'groth16' | 'plonk' | 'fflonk';
+/** Every proof system a supplied key can be for. */
+export type Protocol = SnarkjsProtocol | 'ultrahonk';
 export type Curve = 'bn128' | 'bls12381';
 
 const FIELDS: Record<Curve, { base: bigint; scalar: bigint }> = {
@@ -11,10 +14,10 @@ const FIELDS: Record<Curve, { base: bigint; scalar: bigint }> = {
   bls12381: { base: BLS12_381_BASE_FIELD, scalar: BLS12_381_SCALAR_FIELD },
 };
 /** The proof systems and curves snarkjs verifies. */
-const CURVES: Record<Protocol, readonly Curve[]> = { groth16: ['bn128', 'bls12381'], plonk: ['bn128'], fflonk: ['bn128'] };
+const CURVES: Record<SnarkjsProtocol, readonly Curve[]> = { groth16: ['bn128', 'bls12381'], plonk: ['bn128'], fflonk: ['bn128'] };
 
 export interface SuppliedKeyProof {
-  protocol: Protocol;
+  protocol: SnarkjsProtocol;
   curve: Curve;
   /** Passed to the verifier exactly as read, after every value was checked. */
   proof: Record<string, unknown>;
@@ -55,7 +58,7 @@ const record = (shape: Record<string, Check>): Check => (value) => {
   return names.length === Object.keys(shape).length && names.every((name) => Object.hasOwn(shape, name) && shape[name]!(value[name]));
 };
 
-function shapes(curve: Curve, protocol: Protocol): { proof: Check; key: (value: unknown) => boolean } {
+function shapes(curve: Curve, protocol: SnarkjsProtocol): { proof: Check; key: (value: unknown) => boolean } {
   const { base, scalar } = FIELDS[curve];
   const fq: Check = (value) => parseCanonical(value, base) !== undefined;
   const fr: Check = (value) => parseCanonical(value, scalar) !== undefined;

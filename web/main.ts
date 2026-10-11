@@ -1,7 +1,6 @@
 import { MAX_EXPORT_CHARACTERS, writeExport } from '../src/export.js';
-import { MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, type ProofInputs } from '../src/inputs.js';
+import { MAX_PROOF_PART_CHARACTERS, MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, type ProofInputs } from '../src/inputs.js';
 import { reportSections, unreadReport, type Report } from '../src/report.js';
-import { MAX_SUPPLIED_PROOF_CHARACTERS } from '../src/supplied-key/importer.js';
 import type { Request, Response } from './protocol.js';
 
 const $ = <T extends HTMLElement>(id: string): T => {
@@ -129,7 +128,7 @@ proofFile.addEventListener('change', () => {
   const file = proofFile.files?.[0];
   if (!file) return;
   void busy('Checking on this device…', async () => {
-    const text = await readFile(file, MAX_SUPPLIED_PROOF_CHARACTERS);
+    const text = await readFile(file, MAX_PROOF_PART_CHARACTERS);
     proofText.value = text;
     await check(text);
   });

@@ -5,7 +5,7 @@ import type { Curve, Protocol } from './importer.js';
 // circuit, because no circuit is known here. It is a draft: no qualified
 // person has reviewed it.
 
-export const SYSTEM_NAME: Record<Protocol, string> = { groth16: 'Groth16', plonk: 'PLONK', fflonk: 'FFLONK' };
+export const SYSTEM_NAME: Record<Protocol, string> = { groth16: 'Groth16', plonk: 'PLONK', fflonk: 'FFLONK', ultrahonk: 'UltraHonk' };
 export const CURVE_NAME: Record<Curve, string> = { bn128: 'BN254', bls12381: 'BLS12-381' };
 
 const CLAIM = 'Whoever made this proof knew private inputs that, together with the public inputs below, satisfy the circuit this verification key was made for.';
@@ -20,7 +20,7 @@ export const SUPPLIED_KEY = {
   publicNote: 'What each public input means depends on the circuit, which this tool does not know.',
   review: 'General wording for any circuit. No circuit was examined, and no qualified person has reviewed this wording.',
   limits(protocol: Protocol, recognised: boolean): string[] {
-    return [recognised ? RECOGNISED_KEY : UNKNOWN_KEY, ...GENERAL_LIMITS, ...(protocol === 'fflonk' ? [FFLONK_INV] : [])];
+    return [recognised ? RECOGNISED_KEY : UNKNOWN_KEY, ...GENERAL_LIMITS, ...(protocol === 'fflonk' ? [FFLONK_INV] : []), ...(protocol === 'ultrahonk' ? [ULTRAHONK_VERSION] : [])];
   },
   assumptions(protocol: Protocol, curve: Curve): string[] {
     return [
@@ -32,6 +32,9 @@ export const SUPPLIED_KEY = {
     ];
   },
 } as const;
+
+const ULTRAHONK_VERSION =
+  'UltraHonk proofs and keys change between versions of Barretenberg. A proof made with another version may fail here without being wrong, and this tool cannot tell which version made a proof.';
 
 // Measured: snarkjs 0.7.6 accepts an FFLONK proof whatever "inv" holds.
 const FFLONK_INV =

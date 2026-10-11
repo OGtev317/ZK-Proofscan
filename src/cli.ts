@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { checkFile, lookupAndCheck, message, renderLookup, renderRerun, rerunCode, rerunFile, saveExport, type ProofPaths } from './node/run.js';
-import { stopSnarkjs } from './snarkjs-engine.js';
+import { stopEngines } from './node/stop.js';
 import { renderReport, type Report } from './report.js';
 
 const USAGE = `Usage:
@@ -98,5 +98,5 @@ try {
   console.log(`Not checked: the verification could not be completed (${message(error)}).\nThis says nothing about whether a proof is valid.`);
   process.exitCode = EXIT.error;
 } finally {
-  await stopSnarkjs();
+  await stopEngines();
 }

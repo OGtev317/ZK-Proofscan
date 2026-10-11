@@ -45,7 +45,8 @@ describe('command line', () => {
     const result = cli('check', join(dir, 'missing.json'));
     expect(result.status).toBe(3);
     expect(result.stdout).toMatch(/could not be completed/);
-    expect(cli('check', file('binary.json', Buffer.from([0xff, 0xfe, 0x00]) as never)).status).toBe(3);
+    // A file that is not text is read as bytes, and is then not a supported proof.
+    expect(cli('check', file('binary.json', Buffer.from([0xff, 0xfe, 0x00]) as never)).status).toBe(2);
   });
 
   it('reports the SHA-256 of the exact file, and refuses a byte-order mark', () => {
@@ -61,7 +62,7 @@ describe('command line', () => {
     const missing = cli('check', '--json', join(dir, 'missing.json'));
     expect(missing.status).toBe(3);
     expect(JSON.parse(missing.stdout)).toMatchObject({ outcome: 'error', message: expect.stringMatching(/could not read the file/) });
-    const huge = cli('check', '--json', file('huge.json', 'x'.repeat(70_000)));
+    const huge = cli('check', '--json', file('huge.json', 'x'.repeat(300_000)));
     expect(huge.status).toBe(2);
     expect(JSON.parse(huge.stdout)).toMatchObject({ outcome: 'unsupported', reason: 'the file is too large' });
     const junk = cli('check', '--json', file('junk2.json', 'junk'));

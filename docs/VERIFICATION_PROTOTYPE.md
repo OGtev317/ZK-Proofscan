@@ -148,6 +148,7 @@ report also shows that text as a reading aid.
 | `src/scan.ts` | Chooses between a bundled format and a supplied key |
 | `src/registry.ts`, `registry/` | Recorded keys a supplied key can be recognised against |
 | `src/chain/` | Read-only lookup of a proof by transaction, through a provider |
+| `src/noir/`, `src/node/noir-engine.ts` | UltraHonk proofs written by Barretenberg, checked offline |
 | `src/recorded/` | Binds an explanation to one recorded key and reads public inputs as text or an address |
 | `src/supplied-key/` | Strict reading, verification and fixed wording for a proof with its own key |
 | `src/cli.ts` | Command line |
@@ -173,6 +174,7 @@ What blocks a release is listed in [the release review](RELEASE_REVIEW.md).
 | --- | --- | --- | --- |
 | `snarkjs` | 0.7.6 | GPL-3.0 | Groth16 verification |
 | `@noble/hashes` | 2.4.0 | MIT | keccak256 and SHA-256 |
+| `@aztec/bb.js` | 5.2.1 | MIT | UltraHonk verification for Noir proofs. About 150 MB installed, most of it native programs this tool does not use |
 | `@semaphore-protocol/proof`, `identity`, `group` | 4.14.3 | MIT | Tests and fixture generation only |
 | `@modelcontextprotocol/sdk` | 1.32.1 | MIT | Tests only: the client that drives the tool server |
 
@@ -202,7 +204,7 @@ No audit status has been confirmed for snarkjs 0.7.6 or for this code.
 
 ## Tested
 
-134 automated tests on macOS with Node 26.3.0:
+146 automated tests on macOS with Node 26.3.0:
 
 - Three real proofs, at tree depths 1, 3 and 10, each made from throwaway
   identities; each is rejected under a neighbouring depth.

@@ -3,7 +3,8 @@ import { readPublicInput } from './recorded/reading.js';
 import type { RecognisedKey } from './registry.js';
 import type { VerificationResult } from './result.js';
 import { asPaddedAscii } from './semaphore-v4/text.js';
-import { sha256Hex, utf8 } from './sha256.js';
+import { partBytes } from './inputs.js';
+import { sha256Hex } from './sha256.js';
 import { CURVE_NAME, SUPPLIED_KEY, SYSTEM_NAME } from './supplied-key/explanation.js';
 import type { Curve, Protocol } from './supplied-key/importer.js';
 import type { SuppliedResult } from './supplied-key/verify.js';
@@ -24,7 +25,7 @@ interface Common {
 
 interface SuppliedKeyVerification {
   verifier: { name: string; version: string };
-  proofSystem: { protocol: Protocol; curve: Curve };
+  proofSystem: { protocol: Protocol; curve: Curve; variant?: string };
   verificationKeySha256: string;
   verificationKeyContentSha256: string;
   publicInputsSha256: string;
@@ -116,7 +117,7 @@ export function unreadReport(outcome: 'unsupported' | 'error', detail: string): 
 }
 
 export function buildReport(proofText: string, result: VerificationResult, adapter: LoadedAdapter): Report {
-  const common: Common = { reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(utf8(proofText)) } };
+  const common: Common = { reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(partBytes(proofText)) } };
   if (result.status === 'unsupported') return { ...common, outcome: 'unsupported', reason: result.reason };
   if (result.status === 'error') return { ...common, outcome: 'error', message: result.message };
 
@@ -168,12 +169,12 @@ export function buildSuppliedKeyReport(
   /** The explanation bound to this exact key, if this build has one. */
   explain: (contentSha256: string) => LoadedAdapter | undefined = () => undefined,
 ): Report {
-  const common: Common = { reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(utf8(proofText)) } };
+  const common: Common = { reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(partBytes(proofText)) } };
   if (result.status === 'unsupported') return { ...common, outcome: 'unsupported', reason: result.reason };
   if (result.status === 'error') return { ...common, outcome: 'error', message: result.message };
   const verification: SuppliedKeyVerification = {
     verifier: result.verifier,
-    proofSystem: { protocol: result.protocol, curve: result.curve },
+    proofSystem: { protocol: result.protocol, curve: result.curve, ...(result.variant === undefined ? {} : { variant: result.variant }) },
     verificationKeySha256: result.verificationKeySha256,
     verificationKeyContentSha256: result.verificationKeyContentSha256,
     publicInputsSha256: result.publicInputsSha256,
@@ -235,7 +236,7 @@ const NOTHING = 'This says nothing about whether a proof is valid.';
 const asText = (text: string | undefined): string => (text === undefined ? '' : ` (if this number encodes text, it reads: ${JSON.stringify(text)})`);
 
 const using = (verification: SuppliedKeyVerification): string =>
-  `using ${verification.verifier.name} ${verification.verifier.version}, against the verification key supplied with the proof (${SYSTEM_NAME[verification.proofSystem.protocol]} on ${CURVE_NAME[verification.proofSystem.curve]}).`;
+  `using ${verification.verifier.name} ${verification.verifier.version}, against the verification key supplied with the proof (${SYSTEM_NAME[verification.proofSystem.protocol]} on ${CURVE_NAME[verification.proofSystem.curve]}${verification.proofSystem.variant === undefined ? '' : `, variant ${verification.proofSystem.variant}`}).`;
 const suppliedFiles = (verification: SuppliedKeyVerification): string[] => [
   `Verification key file (SHA-256): ${verification.verificationKeySha256}`,
   `Public inputs file (SHA-256): ${verification.publicInputsSha256}`,

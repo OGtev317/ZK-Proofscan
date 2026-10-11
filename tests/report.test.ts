@@ -129,7 +129,7 @@ describe('export and rerun', () => {
 
   it('refuses exports it cannot read without running anything', async () => {
     const never = async (): Promise<Report> => { throw new Error('must not run'); };
-    for (const bad of ['nope', '[]', '{}', '{"exportVersion":2,"proof":"x","report":{}}', '{"exportVersion":1,"proof":5,"report":{}}', '{"exportVersion":1,"proof":"x","report":[]}', `{"exportVersion":1,"proof":"${'x'.repeat(17_000)}","report":{}}`, '{"exportVersion":1,"proof":"x","publicInputs":5,"report":{}}', '{"exportVersion":1,"proof":"x","verificationKey":[],"report":{}}', ' '.repeat(800_000)]) {
+    for (const bad of ['nope', '[]', '{}', '{"exportVersion":2,"proof":"x","report":{}}', '{"exportVersion":1,"proof":5,"report":{}}', '{"exportVersion":1,"proof":"x","report":[]}', `{"exportVersion":1,"proof":"${'x'.repeat(70_000)}","report":{}}`, '{"exportVersion":1,"proof":"x","publicInputs":5,"report":{}}', '{"exportVersion":1,"proof":"x","verificationKey":[],"report":{}}', ' '.repeat(800_000)]) {
       expect(await rerunExport(bad, never)).toMatchObject({ reproduced: false, kind: 'unreadable' });
     }
   });

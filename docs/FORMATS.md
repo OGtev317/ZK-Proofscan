@@ -28,6 +28,7 @@ treating `valid` as a statement about any claim.
 | snarkjs Groth16 on BN254 or BLS12-381 | `supplied-key` | Proof, public inputs, verification key | snarkjs 0.7.6 |
 | snarkjs PLONK on BN254 | `supplied-key` | Proof, public inputs, verification key | snarkjs 0.7.6 |
 | snarkjs FFLONK on BN254 | `supplied-key` | Proof, public inputs, verification key | snarkjs 0.7.6 |
+| Noir (UltraHonk on BN254, written by Barretenberg) | `supplied-key` | `proof`, `public_inputs`, `vk`, all binary | `@aztec/bb.js` 5.2.1. Command line and tool server only |
 
 ```sh
 node dist/cli.js check proof.json --public public.json --key verification_key.json
@@ -133,6 +134,45 @@ not sent):
 "Reproducible" means the same proof verifies again. Proving is randomised,
 so a newly made proof has different bytes.
 
+### Noir proofs
+
+Added 2026-10-11 after the owner approved adding verifier libraries. A Noir
+program is proved by a backend, and this reads the usual one: UltraHonk
+proofs written by Barretenberg. The verifier is Aztec's `@aztec/bb.js`
+5.2.1 (MIT), in its WebAssembly build.
+
+```sh
+node dist/cli.js check target/proof --public target/public_inputs --key target/vk
+```
+
+- **Four ways of making a proof are tried**: `evm`, `evm-no-zk`,
+  `noir-recursive` and `noir-recursive-no-zk`. They differ in the hash used
+  and in whether the proof hides its witness. The files do not say which
+  they are, each is a complete verification, and the report names the one
+  that passed. A key serves one hash family, with and without hiding.
+- **No network.** The library downloads its setup files on first use. The
+  files are instead stored in `artifacts/aztec-crs`, pinned by hash, and a
+  test fails if anything is fetched during a check. The package also ships a
+  native program that fetches its own files; it is never used.
+- **One verification, one instance.** Measured: an instance fed thousands
+  of malformed inputs eventually fails with a memory error. Every
+  verification therefore runs in a new instance, so no input can affect the
+  check of another. It costs about 0.1 s.
+- **Unread key bytes are refused.** Measured by flipping every byte of a
+  key: the verifier ignores the first 24 bytes of each of a key's three
+  opening numbers. A key with anything but zero there is refused. Flipping
+  a sample of proof bytes found none that went unnoticed.
+- **Files are binary**, so they travel as bytes: the report's hashes are of
+  the files' exact bytes, and an export carries them in base64.
+
+Not tested or not done: one tiny circuit; the fixtures were made with
+`bb.js`, and files written by the `bb` command-line program were not
+tried; proofs are tied to the Barretenberg version, and a proof from
+another version may fail here without being wrong; the `starknet` and
+rollup variants are not checked (this build of the library refused to make
+a `starknet` proof); no audit status is confirmed for this version; the
+browser page does not check Noir proofs.
+
 ### How the three files are read
 
 - Each file must be JSON that can be read only one way: no escapes, no
@@ -231,7 +271,6 @@ its own fixtures and input rules. This project does not write verifiers.
 
 | System | Likely verifier | Open questions |
 | --- | --- | --- |
-| Noir | Depends on the proving backend; the language does not fix a format | Which backend the customer's proofs use |
 | gnark Groth16 and PLONK | None known in JavaScript | Proof encoding differs from snarkjs; converting it is new code that needs review |
 | RISC Zero receipts | Rust crate; receipts can also be wrapped in Groth16 | Whether the wrapped form can use the verifier already here, and how the program is bound |
 | SP1 proofs | Succinct's verifier; offers STARK, Groth16 and PLONK forms | The same |

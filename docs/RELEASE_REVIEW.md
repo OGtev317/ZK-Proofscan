@@ -37,6 +37,10 @@ still blocks one. **Nothing has been released, published or hosted.**
    draft for a demonstration circuit whose setup is undocumented, and the
    registry entries have had no maintainer review. See
    [the formats](FORMATS.md).
+8. **Noir verification (added after this review).** No audit status is
+   confirmed for `@aztec/bb.js` 5.2.1; its setup files are as Aztec's server
+   sent them and were not compared with the ceremony's record; and files
+   written by the `bb` command-line program were not tried.
 
 ## Owner decisions still open
 

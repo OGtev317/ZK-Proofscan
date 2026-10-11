@@ -21,11 +21,14 @@
     "fixtures": "node scripts/make-fixture.mjs"
   },
   "dependencies": {
+    "@aztec/bb.js": "5.2.1",
     "@noble/hashes": "2.4.0",
     "snarkjs": "0.7.6"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "1.32.1",
+    "@noir-lang/noir_js": "1.0.0-rc.3",
+    "@noir-lang/noir_wasm": "1.0.0-rc.3",
     "@playwright/test": "1.64.0",
     "@semaphore-protocol/group": "4.14.3",
     "@semaphore-protocol/identity": "4.14.3",

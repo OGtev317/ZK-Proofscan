@@ -11,8 +11,10 @@ The verification keys in `artifacts/semaphore-v4/` are copied from
 
 | Package | Version | Declared licence |
 | --- | --- | --- |
+| @aztec/bb.js | 5.2.1 | MIT |
 | @iden3/bigarray | 0.0.2 | GPL-3.0 |
 | @iden3/binfileutils | 0.0.12 | GPL-3.0 |
+| @msgpackr-extract/msgpackr-extract-darwin-arm64 | 3.0.4 | MIT |
 | @noble/hashes | 1.8.0 | MIT |
 | @noble/hashes | 2.4.0 | MIT |
 | async | 3.2.6 | MIT |
@@ -22,19 +24,28 @@ The verification keys in `artifacts/semaphore-v4/` are copied from
 | brace-expansion | 2.1.7 | MIT |
 | check-types | 11.2.3 | MIT |
 | circom_runtime | 0.1.28 | Apache-2.0 |
+| comlink | 4.4.2 | Apache-2.0 |
+| commander | 12.1.0 | MIT |
+| detect-libc | 2.1.2 | Apache-2.0 |
 | ejs | 3.1.10 | Apache-2.0 |
 | fastfile | 0.0.20 | GPL-3.0 |
 | ffjavascript | 0.3.0 | GPL-3.0 |
 | ffjavascript | 0.3.1 | GPL-3.0 |
 | filelist | 1.0.6 | Apache-2.0 |
 | hoopy | 0.1.4 | MIT |
+| idb-keyval | 6.3.0 | Apache-2.0 |
 | jake | 10.9.4 | Apache-2.0 |
 | logplease | 1.2.15 | MIT |
 | minimatch | 5.1.9 | ISC |
+| msgpackr | 1.12.1 | MIT |
+| msgpackr-extract | 3.0.4 | MIT |
+| node-gyp-build-optional-packages | 5.2.2 | MIT |
+| pako | 2.2.0 | (MIT AND Zlib) |
 | picocolors | 1.1.1 | ISC |
 | r1csfile | 0.0.48 | GPL-3.0 |
 | snarkjs | 0.7.6 | GPL-3.0 |
 | tryer | 1.0.1 | MIT |
+| tslib | 2.7.0 | 0BSD |
 | wasmbuilder | 0.0.16 | GPL-3.0 |
 | wasmcurves | 0.2.2 | GPL-3.0 |
 | web-worker | 1.2.0 | Apache-2.0 |

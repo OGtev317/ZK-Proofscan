@@ -1,18 +1,20 @@
-import type { ProofInputs } from '../inputs.js';
+import { partBytes, type ProofInputs } from '../inputs.js';
 import { keyContentSha256 } from '../registry.js';
 import type { VerifierIdentity } from '../result.js';
-import { sha256Hex, utf8 } from '../sha256.js';
-import { importSuppliedKey, type Curve, type Protocol } from './importer.js';
+import { sha256Hex } from '../sha256.js';
+import { importSuppliedKey, type Curve, type Protocol, type SnarkjsProtocol } from './importer.js';
 
 /** A verifier for the proof systems snarkjs implements, called with a caller-supplied key. */
 export interface SuppliedKeyEngine {
   identity: VerifierIdentity;
-  verify(protocol: Protocol, key: unknown, publicSignals: string[], proof: unknown): Promise<boolean>;
+  verify(protocol: SnarkjsProtocol, key: unknown, publicSignals: string[], proof: unknown): Promise<boolean>;
 }
 
 export interface SuppliedChecked {
   protocol: Protocol;
   curve: Curve;
+  /** For a proof system with several ways of making a proof, the one this proof verified under. */
+  variant?: string;
   verifier: VerifierIdentity;
   /** Of the key file's exact bytes. */
   verificationKeySha256: string;
@@ -42,9 +44,9 @@ export async function verifySuppliedKey(inputs: Required<ProofInputs>, engine: S
       protocol,
       curve,
       verifier: engine.identity,
-      verificationKeySha256: sha256Hex(utf8(inputs.verificationKey)),
+      verificationKeySha256: sha256Hex(partBytes(inputs.verificationKey)),
       verificationKeyContentSha256: keyContentSha256(key),
-      publicInputsSha256: sha256Hex(utf8(inputs.publicInputs)),
+      publicInputsSha256: sha256Hex(partBytes(inputs.publicInputs)),
       publicSignals,
     };
     const passed = await engine.verify(protocol, key, publicSignals, proof);

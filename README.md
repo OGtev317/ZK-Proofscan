@@ -11,7 +11,8 @@ report. Instead of `0x7a2f…3b1c — Verified`, a report states:
 
 **Status: prototype.** A command-line tool and a browser page check
 Semaphore v4 proofs against bundled keys, and Groth16, PLONK and FFLONK
-proofs written by snarkjs against a key the user supplies. A supplied key
+proofs written by snarkjs, and UltraHonk proofs of Noir programs, against a
+key the user supplies. A supplied key
 that matches a recorded one is named, and one such key, for a ZK Email
 demonstration circuit, has an explanation. A proof can also be looked up
 by transaction hash through a chain data provider and then checked locally;
