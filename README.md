@@ -11,8 +11,9 @@ report. Instead of `0x7a2f…3b1c — Verified`, a report states:
 
 **Status: prototype.** A command-line tool and a browser page check one
 supported format, Semaphore v4 proofs, show the report above, and export
-evidence another person can rerun. Nothing is hosted. The explanation wording is a draft that no qualified person
-has reviewed, and reports say so. The code is unaudited and unreleased. Read
+evidence another person can rerun. A local tool server lets an AI agent run
+the same check. Nothing is hosted. The explanation wording is a draft that no
+qualified person has reviewed, and reports say so. The code is unaudited and unreleased. Read
 [the charter](docs/PROJECT_CHARTER.md), [the handoff](docs/HANDOFF.md) and
 [the prototype notes](docs/VERIFICATION_PROTOTYPE.md). What blocks a release
 is in [the release review](docs/RELEASE_REVIEW.md).

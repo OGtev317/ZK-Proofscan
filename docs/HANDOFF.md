@@ -6,7 +6,7 @@ Build steps 1 to 3 are written: strict import and verification, explanation
 binding, and the readable report with export and rerun, on the command line
 and in a browser page. Read
 [the prototype notes](VERIFICATION_PROTOTYPE.md) for what exists, what was
-measured and what is untested. 50 unit tests and 12 browser tests pass.
+measured and what is untested. 64 unit tests and 12 browser tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
 for the first version. The checkout `/Users/tevdev/Desktop/ZK-Proofscan` holds
@@ -23,6 +23,15 @@ Everything that can be done without other people is done. What remains needs
 a qualified reviewer for the adapter wording, an independent security review,
 real-device browser checks and owner decisions on hosting and publishing.
 Nothing is released or hosted.
+
+## Agent work (2026-10-11)
+
+The owner approved building an AI agent as a way to use the tool, on the
+condition that the agent never verifies and never supplies the claim wording.
+Step 1, a local tool server (`src/mcp.ts`), is written on the branch
+`feat/mcp-server`; see "Tool server for AI agents" in the prototype notes.
+Step 2 is the agent definition and step 3 is tests of the agent's behaviour
+with a real model. A hosted chat version is not approved.
 
 ## State on 2026-10-11
 

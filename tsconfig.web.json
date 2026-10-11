@@ -2,5 +2,5 @@
   "extends": "./tsconfig.json",
   "compilerOptions": { "lib": ["ES2022", "DOM", "DOM.Iterable"], "module": "ESNext", "moduleResolution": "Bundler", "types": ["vite/client"] },
   "include": ["web", "src"],
-  "exclude": ["src/cli.ts", "src/node"]
+  "exclude": ["src/cli.ts", "src/mcp.ts", "src/mcp", "src/node"]
 }

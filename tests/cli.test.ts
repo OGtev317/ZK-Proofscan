@@ -1,10 +1,10 @@
-import { execFileSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { plus, text, validText } from './helpers.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -15,10 +15,6 @@ const file = (name: string, content: string): string => {
   return path;
 };
 const cli = (...args: string[]) => spawnSync(process.execPath, [join(root, 'dist/cli.js'), ...args], { encoding: 'utf8', timeout: 60_000 });
-
-beforeAll(() => {
-  execFileSync(process.execPath, [join(root, 'node_modules/typescript/bin/tsc'), '-p', 'tsconfig.build.json'], { cwd: root });
-}, 120_000);
 
 describe('command line', () => {
   it('exits 0 for a valid proof and names what was not checked', () => {
