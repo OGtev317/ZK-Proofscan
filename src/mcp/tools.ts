@@ -35,13 +35,15 @@ const hasQuotedText = (report: Report): boolean =>
   report.outcome === 'valid' && (report.proofFile.messageIfText !== undefined || report.proofFile.scopeIfText !== undefined);
 
 /**
- * `evidenceText` is the fixed report, for a host that shows it to the person
- * directly instead of trusting a model to repeat it.
+ * A client may give its model the text part or the structured part, and
+ * Claude Code gives the structured part. Both therefore say the same thing:
+ * `notes` are the lines above the report, and `evidenceText` is the fixed
+ * report, which a host can also show to the person directly.
  */
 function reportResult(report: Report, extra: string[] = []): ToolResult {
   const shown = presentCheck(report);
-  const lines = [`Outcome: ${OUTCOME[report.outcome]}`, ...(hasQuotedText(report) ? [QUOTED] : []), ...extra, '', shown.evidenceText];
-  return { content: [{ type: 'text', text: lines.join('\n') }], structuredContent: { ...shown, report } };
+  const notes = [`Outcome: ${OUTCOME[report.outcome]}`, ...(hasQuotedText(report) ? [QUOTED] : []), ...extra];
+  return { content: [{ type: 'text', text: [...notes, '', shown.evidenceText].join('\n') }], structuredContent: { notes, ...shown, report } };
 }
 
 const refuse = (reason: string): ToolResult => ({ content: [{ type: 'text', text: `Not run: ${reason}.` }], isError: true });
@@ -125,9 +127,13 @@ const rerun: Tool = {
     }
     // Only the report from this run is returned; the recorded one never is.
     const fresh = !result.reproduced && result.kind === 'unreadable' ? undefined : result.report;
-    const quoted = fresh !== undefined && hasQuotedText(fresh);
-    const structured = { ...presentRerun(result), ...(fresh === undefined ? {} : { report: fresh }) };
-    return { content: [{ type: 'text', text: `${quoted ? `${QUOTED}\n\n` : ''}${renderRerun(result)}` }], structuredContent: structured };
+    const shown = presentRerun(result);
+    const full = renderRerun(result);
+    // Everything `renderRerun` says above the report itself.
+    const above = 'fresh' in shown ? full.slice(0, full.lastIndexOf(shown.fresh.evidenceText)).trim() : full;
+    const notes = [...above.split('\n').filter((line) => line !== ''), ...(fresh !== undefined && hasQuotedText(fresh) ? [QUOTED] : [])];
+    const text = 'fresh' in shown ? [...notes, '', shown.fresh.evidenceText].join('\n') : full;
+    return { content: [{ type: 'text', text }], structuredContent: { notes, ...shown, ...(fresh === undefined ? {} : { report: fresh }) } };
   },
 };
 

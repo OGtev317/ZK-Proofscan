@@ -64,6 +64,8 @@ work; the agent itself is described in [the agent notes](LOCAL_AGENT.md).
 | `write_export` | The same check, then saves proof and report to a new file | One new file; never overwrites |
 | `rerun_export` | Repeats the check inside an export and compares | Nothing |
 
+- A client may give its model the text part of a result or the structured
+  part; Claude Code gives the structured part. Both carry the same lines.
 - Each result carries the same report text as the command line and the same
   JSON report, so an agent has no wording of its own to supply. The fixed
   text is also in the structured result as `evidenceText`, for a host that
@@ -192,7 +194,7 @@ No audit status has been confirmed for snarkjs 0.7.6 or for this code.
 
 ## Tested
 
-74 automated tests on macOS with Node 26.3.0:
+75 automated tests on macOS with Node 26.3.0:
 
 - Three real proofs, at tree depths 1, 3 and 10, each made from throwaway
   identities; each is rejected under a neighbouring depth.
@@ -223,9 +225,9 @@ and cross-reruns between page and command line, and a forged export.
   Safari on a Mac or an iPhone, in Firefox, or on Windows.
 - The page has had no accessibility review beyond labelled controls and a
   live status line.
-- The tool server has not been connected to a real agent. Nothing here
-  measures whether a model follows the server's instructions, keeps the
-  report's wording, or resists text planted in a proof.
+- The tool server was used by a real model once, in eight scenarios; see
+  [the agent notes](LOCAL_AGENT.md). That is one run on one model, with no
+  other tools available to it.
 - `check_proof` reads any file path the agent gives it and reports that
   file's SHA-256, or that it could not be read. An agent could use this to
   learn whether a file exists and to confirm a guess at its content.

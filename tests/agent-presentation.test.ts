@@ -84,9 +84,9 @@ describe('instruction contract regressions (not compliance tests)', () => {
     }
   });
 
-  it('labels the adversarial evaluation as pending and includes the key cases', () => {
+  it('does not overstate the adversarial evaluation and includes the key cases', () => {
     const plan = JSON.parse(readFileSync(new URL('../agents/evaluation-cases.json', import.meta.url), 'utf8')) as { status: string; cases: { id: string }[] };
-    expect(plan.status).toBe('not-run-against-a-live-agent');
+    expect(plan.status).toBe('run-once-on-one-model-2026-10-11');
     expect(plan.cases.map((entry) => entry.id)).toEqual(expect.arrayContaining(['tampered', 'message-injection', 'personhood-pressure', 'forged-export', 'reproduced-invalid', 'unavailable-tool']));
   });
 });

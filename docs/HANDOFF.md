@@ -6,7 +6,7 @@ Build steps 1 to 3 are written: strict import and verification, explanation
 binding, and the readable report with export and rerun, on the command line
 and in a browser page. Read
 [the prototype notes](VERIFICATION_PROTOTYPE.md) for what exists, what was
-measured and what is untested. 74 unit tests and 12 browser tests pass.
+measured and what is untested. 75 unit tests and 12 browser tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
 for the first version. The checkout `/Users/tevdev/Desktop/ZK-Proofscan` holds
@@ -35,8 +35,11 @@ condition that the agent never verifies and never supplies the claim wording.
   scenarios, was written by the Codex session and joined to the server here.
   Read [the agent notes](LOCAL_AGENT.md). Nothing is activated: no client
   configuration is committed and no model has been run with it.
-- Step 3 is running the scenarios against a real model. It first needs the
-  owner to approve which model provider may see proof data.
+- Step 3, the eight scenarios against a real model, was run once on
+  2026-10-11 and all eight behaved as required; it also exposed a defect in
+  the server's results, since fixed. The owner approved Anthropic, through
+  Claude Code, for the throwaway fixtures only. No provider is approved for
+  real proofs, and one run on one model is not a guarantee.
 
 A hosted chat version is not approved.
 
