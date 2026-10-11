@@ -1,10 +1,13 @@
 import { readFile, stat, writeFile } from 'node:fs/promises';
+import { lookupTransaction } from '../chain/lookup.js';
+import { CHAINS, httpRpc, rpcUrlFromEnvironment } from '../chain/rpc.js';
+import { renderChainSource, type ChainSource } from '../chain/source.js';
 import { MAX_EXPORT_CHARACTERS, rerunExport, writeExport, type RerunResult } from '../export.js';
 import { MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, type ProofInputs } from '../inputs.js';
 import { renderReport, unreadReport, type Report } from '../report.js';
 import { scan } from '../scan.js';
 import { MAX_SUPPLIED_PROOF_CHARACTERS } from '../supplied-key/importer.js';
-import { bundledScanning } from './bundled.js';
+import { bundledScanning, recordedKeyText } from './bundled.js';
 
 export const message = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
@@ -58,7 +61,34 @@ export async function checkFile(paths: ProofPaths): Promise<{ report: Report; in
 }
 
 /** Writes an export, never over an existing file: that file may be someone's evidence. */
-export const saveExport = (path: string, inputs: ProofInputs, report: Report): Promise<void> => writeFile(path, writeExport(inputs, report), { flag: 'wx' });
+export const saveExport = (path: string, inputs: ProofInputs, report: Report, source?: ChainSource): Promise<void> =>
+  writeFile(path, writeExport(inputs, report, source), { flag: 'wx' });
+
+export type LookedUp =
+  | { kind: 'checked'; source: ChainSource; inputs: ProofInputs; report: Report }
+  /** Nothing was checked, and the reason is not a fault in any proof. */
+  | { kind: 'not-checked'; reason: string };
+
+/**
+ * Finds a proof in a transaction and checks it here. Read-only, and only
+ * when the operator has configured a provider in the environment.
+ */
+export async function lookupAndCheck(chainName: string, transaction: string, env: Record<string, string | undefined>): Promise<LookedUp> {
+  const chain = CHAINS.find((known) => known.name === chainName);
+  if (chain === undefined) return { kind: 'not-checked', reason: `the chain must be one of ${CHAINS.map((known) => known.name).join(', ')}` };
+  const address = rpcUrlFromEnvironment(chain, env);
+  if (address === undefined) return { kind: 'not-checked', reason: 'no chain data provider is configured; set ALCHEMY_API_KEY or ZK_PROOFSCAN_RPC_URL in the environment' };
+  let found;
+  try {
+    found = await lookupTransaction({ chain, transaction, rpc: httpRpc(address), keyText: recordedKeyText });
+  } catch (error) {
+    return { kind: 'not-checked', reason: message(error) };
+  }
+  if (!found.found) return { kind: 'not-checked', reason: found.reason };
+  return { kind: 'checked', source: found.source, inputs: found.inputs, report: await checkText(found.inputs) };
+}
+
+export const renderLookup = (source: ChainSource, report: Report): string => `${renderChainSource(source)}\n\n${renderReport(report)}`;
 
 export async function rerunText(text: string): Promise<RerunResult> {
   const scanning = await bundledScanning();
@@ -73,12 +103,14 @@ export async function rerunFile(path: string): Promise<RerunResult> {
 }
 
 export function renderRerun(result: RerunResult): string {
-  if (result.reproduced) return `REPRODUCED: checking the proof again gave the same report (outcome: ${result.report.outcome}).\n\n${renderReport(result.report)}`;
-  if (result.kind === 'unreadable') return `Not rerun: ${result.reason}.`;
+  if (!result.reproduced && result.kind === 'unreadable') return `Not rerun: ${result.reason}.`;
+  // A source in an export is repeated as recorded, and marked as unchecked.
+  const source = result.source === undefined ? '' : `${renderChainSource(result.source, true)}\n\n`;
+  if (result.reproduced) return `REPRODUCED: checking the proof again gave the same report (outcome: ${result.report.outcome}).\n\n${source}${renderReport(result.report)}`;
   return [
     `NOT REPRODUCED: checking the proof again gave a different report.\nSections that differ: ${result.fields.join(', ')}.`,
     'A difference in "tool", "reportVersion", "basis" or "explanation" can mean a different version of this tool made the export.\n',
-    `Report from this run:\n${renderReport(result.report)}`,
+    `${source}Report from this run:\n${renderReport(result.report)}`,
   ].join('\n');
 }
 

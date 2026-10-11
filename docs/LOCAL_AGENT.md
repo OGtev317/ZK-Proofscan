@@ -110,6 +110,9 @@ never saw them. Both parts now carry them, and a test holds them equal.
 
 What this does not show:
 
+- `lookup_transaction` has not been exercised by a model, and the tool list
+  in the activation example below predates it.
+
 - The first eight scenarios were not repeated after the instructions and
   tool descriptions changed for supplied-key proofs. Each record holds the
   SHA-256 of the instructions it was run with.

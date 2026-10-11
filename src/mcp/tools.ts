@@ -2,7 +2,9 @@ import { isAbsolute } from 'node:path';
 import { presentCheck, presentRerun } from '../agent/presentation.js';
 import { MAX_EXPORT_CHARACTERS } from '../export.js';
 import type { ProofInputs } from '../inputs.js';
-import { checkFile, checkText, message, renderRerun, rerunFile, rerunText, saveExport } from '../node/run.js';
+import { CHAINS } from '../chain/rpc.js';
+import { renderChainSource } from '../chain/source.js';
+import { checkFile, checkText, lookupAndCheck, message, renderRerun, rerunFile, rerunText, saveExport } from '../node/run.js';
 import type { Report } from '../report.js';
 import { MAX_SUPPLIED_PROOF_CHARACTERS } from '../supplied-key/importer.js';
 
@@ -168,7 +170,38 @@ const rerun: Tool = {
   },
 };
 
-const TOOLS: readonly Tool[] = [check, write, rerun];
+const FROM_PROVIDER = 'The lines under "Source" are what a chain data provider reported. This tool did not check them, so say "according to the provider". Whether the chain accepted the transaction is the contract\'s decision and is separate from this tool\'s check of the proof.';
+
+const lookup: Tool = {
+  name: 'lookup_transaction',
+  title: 'Find and check a proof in a transaction',
+  description:
+    `Asks the chain data provider the operator configured for one transaction, reads a zero-knowledge proof out of it if it is a call this tool knows, and checks that proof on this machine. Read-only: it sends the transaction hash to the provider and nothing to the chain. Chains: ${CHAINS.map((chain) => chain.name).join(', ')}. The provider is trusted only for where the proof was found; the proof itself is verified here.`,
+  inputSchema: {
+    type: 'object',
+    properties: {
+      chain: { type: 'string', description: `One of: ${CHAINS.map((chain) => chain.name).join(', ')}.` },
+      transaction: { type: 'string', description: 'The transaction hash: 0x followed by 64 hex digits.' },
+    },
+    additionalProperties: false,
+  },
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+  async call(args) {
+    if (args.chain === undefined || args.transaction === undefined) return refuse('give "chain" and "transaction"');
+    const found = await lookupAndCheck(args.chain, args.transaction, process.env);
+    if (found.kind === 'not-checked') {
+      return { content: [{ type: 'text', text: `Not checked: ${found.reason}.\nThis says nothing about whether a proof is valid.` }], structuredContent: { lookup: 'not-checked', reason: found.reason } };
+    }
+    const result = reportResult(found.report, [FROM_PROVIDER]);
+    const sourceText = renderChainSource(found.source);
+    return {
+      content: [{ type: 'text', text: `${sourceText}\n\n${result.content[0]!.text}` }],
+      structuredContent: { ...result.structuredContent, source: found.source, sourceText },
+    };
+  },
+};
+
+const TOOLS: readonly Tool[] = [check, write, rerun, lookup];
 
 export const listTools = (): Omit<Tool, 'call'>[] => TOOLS.map(({ call: _call, ...described }) => described);
 

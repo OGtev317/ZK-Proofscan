@@ -147,6 +147,7 @@ report also shows that text as a reading aid.
 | `web/` | Browser page and verification worker |
 | `src/scan.ts` | Chooses between a bundled format and a supplied key |
 | `src/registry.ts`, `registry/` | Recorded keys a supplied key can be recognised against |
+| `src/chain/` | Read-only lookup of a proof by transaction, through a provider |
 | `src/recorded/` | Binds an explanation to one recorded key and reads public inputs as text or an address |
 | `src/supplied-key/` | Strict reading, verification and fixed wording for a proof with its own key |
 | `src/cli.ts` | Command line |
@@ -201,7 +202,7 @@ No audit status has been confirmed for snarkjs 0.7.6 or for this code.
 
 ## Tested
 
-119 automated tests on macOS with Node 26.3.0:
+134 automated tests on macOS with Node 26.3.0:
 
 - Three real proofs, at tree depths 1, 3 and 10, each made from throwaway
   identities; each is rejected under a neighbouring depth.

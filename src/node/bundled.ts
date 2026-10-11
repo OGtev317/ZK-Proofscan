@@ -19,6 +19,16 @@ export async function bundledSemaphoreV4(): Promise<BoundSemaphoreV4> {
 }
 
 /** Everything this build checks with. */
+/** Recorded key files kept in this repository, by registry artifact. */
+const RECORDED_KEY_FILES: Record<string, string> = { 'zk-email-proof-of-twitter-verification-key': 'artifacts/zk-email-proof-of-twitter/verification-key.json' };
+
+/** The text of a recorded key file, for a proof that was looked up without one. */
+export async function recordedKeyText(artifactId: string): Promise<string> {
+  const path = RECORDED_KEY_FILES[artifactId];
+  if (path === undefined) throw new Error('no recorded key file for that call');
+  return new TextDecoder('utf-8', { fatal: true }).decode(await file(path));
+}
+
 /** Adapters for circuits whose key the user supplies and the registry records. */
 export const RECORDED_ADAPTERS = ['zk-email-proof-of-twitter'] as const;
 

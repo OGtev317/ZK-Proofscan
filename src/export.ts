@@ -1,4 +1,5 @@
 import { ordered } from './canonical.js';
+import { readChainSource, type ChainSource } from './chain/source.js';
 import { MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, type ProofInputs } from './inputs.js';
 import type { Report } from './report.js';
 import { MAX_SUPPLIED_PROOF_CHARACTERS } from './supplied-key/importer.js';
@@ -9,27 +10,31 @@ import { MAX_SUPPLIED_PROOF_CHARACTERS } from './supplied-key/importer.js';
  */
 export interface EvidenceExport extends ProofInputs {
   exportVersion: 1;
+  /** Where a looked-up proof was found, as a provider reported it. A rerun cannot check this. */
+  source?: ChainSource;
   report: Report;
 }
 
 export const MAX_EXPORT_CHARACTERS = 786_432;
 
-export function writeExport(inputs: string | ProofInputs, report: Report): string {
+export function writeExport(inputs: string | ProofInputs, report: Report, source?: ChainSource): string {
   const { proof, publicInputs, verificationKey } = typeof inputs === 'string' ? { proof: inputs } : inputs;
   const bundle: EvidenceExport = {
     exportVersion: 1,
     proof,
     ...(publicInputs === undefined ? {} : { publicInputs }),
     ...(verificationKey === undefined ? {} : { verificationKey }),
+    ...(source === undefined ? {} : { source }),
     report,
   };
   return `${JSON.stringify(bundle, null, 2)}\n`;
 }
 
+/** `source` is repeated from the export as recorded. The rerun does not check it. */
 export type RerunResult =
-  | { reproduced: true; report: Report }
+  | { reproduced: true; report: Report; source?: ChainSource }
   | { reproduced: false; kind: 'unreadable'; reason: string }
-  | { reproduced: false; kind: 'different'; fields: string[]; report: Report };
+  | { reproduced: false; kind: 'different'; fields: string[]; report: Report; source?: ChainSource };
 
 /**
  * Repeats the check on the proof inside an export and compares the fresh
@@ -56,6 +61,9 @@ export async function rerunExport(text: string, scan: (inputs: ProofInputs) => P
     return unreadable('the export holds public inputs or a verification key that is not text of supported size');
   }
   if (typeof bundle.report !== 'object' || bundle.report === null || Array.isArray(bundle.report)) return unreadable('the export does not contain a report');
+  const source = bundle.source === undefined ? undefined : readChainSource(bundle.source);
+  if (bundle.source !== undefined && source === undefined) return unreadable('the export records a source that is not in the expected form');
+  const recordedSource = source === undefined ? {} : { source };
 
   const report = await scan({ proof: bundle.proof, ...(publicInputs === undefined ? {} : { publicInputs }), ...(verificationKey === undefined ? {} : { verificationKey }) });
   const fresh = report as unknown as Record<string, unknown>;
@@ -63,5 +71,5 @@ export async function rerunExport(text: string, scan: (inputs: ProofInputs) => P
   const fields = [...new Set([...Object.keys(fresh), ...Object.keys(recorded)])]
     .filter((key) => ordered(fresh[key]) !== ordered(recorded[key]))
     .sort();
-  return fields.length === 0 ? { reproduced: true, report } : { reproduced: false, kind: 'different', fields, report };
+  return fields.length === 0 ? { reproduced: true, report, ...recordedSource } : { reproduced: false, kind: 'different', fields, report, ...recordedSource };
 }

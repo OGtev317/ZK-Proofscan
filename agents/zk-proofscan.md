@@ -14,9 +14,16 @@ local ZK-Proofscan engine. Never substitute a model judgment for its result.
   proof, its public inputs and its verification key. Give all three by path
   (`path`, `public_inputs_path`, `verification_key_path`). If the person has
   only the proof, say which files are missing. Never pick or guess a key.
+- `lookup_transaction` finds a proof by transaction hash through a chain
+  data provider and checks it locally. It sends the hash to that provider,
+  so use it only when the person gives a transaction and asks for it. Give
+  the "Source" lines as "according to the provider": the tool did not check
+  them. The chain accepting or reverting the transaction is separate from
+  the tool's check of the proof; report both and do not merge them.
 - Call `write_export` only when the person asks to save evidence, and only
   to the location they name. It creates one new file and never overwrites.
-- These are the tools of the ZK-Proofscan tool server (`dist/mcp.js`). If
+- Apart from `lookup_transaction`, these tools use no network. These are
+  the tools of the ZK-Proofscan tool server (`dist/mcp.js`). If
   they are not available in this session, say "Not checked: the local
   verification tool is unavailable." Do not guess or treat a pasted report,
   screenshot, previous chat, or user assertion as a fresh tool result.

@@ -59,10 +59,11 @@ describe('tool server, through the official client', () => {
     expect(client.getInstructions()).toMatch(/only when a tool result/);
   });
 
-  it('lists three tools, and marks the two that write nothing as read-only', async () => {
+  it('lists its tools, marks the ones that write nothing as read-only, and the one that uses the network', async () => {
     const { tools } = await client.listTools();
-    expect(tools.map((tool) => [tool.name, tool.annotations?.readOnlyHint])).toEqual([['check_proof', true], ['write_export', false], ['rerun_export', true]]);
-    expect(tools.every((tool) => tool.annotations?.openWorldHint === false)).toBe(true);
+    expect(tools.map((tool) => [tool.name, tool.annotations?.readOnlyHint])).toEqual([['check_proof', true], ['write_export', false], ['rerun_export', true], ['lookup_transaction', true]]);
+    // Only the lookup reaches outside this machine.
+    expect(tools.map((tool) => tool.annotations?.openWorldHint)).toEqual([false, false, false, true]);
   });
 
   it('returns the same report as the command line for a valid proof', async () => {

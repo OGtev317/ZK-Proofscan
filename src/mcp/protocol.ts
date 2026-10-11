@@ -6,7 +6,7 @@ import { callTool, listTools } from './tools.js';
 export const PROTOCOL_VERSIONS = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05'] as const;
 
 export const INSTRUCTIONS = [
-  'These tools check zero-knowledge proofs on this machine and return a fixed evidence report.',
+  'These tools check zero-knowledge proofs on this machine and return a fixed evidence report. Only lookup_transaction uses a network: it asks a chain data provider where a proof is, and what the provider says about the source is not checked.',
   'Say a proof is valid or invalid only when a tool result in this conversation says so. Never judge a proof by reading it.',
   'Give the claim, the limits and the "not performed" checks in the report\'s own words. Do not strengthen them: a valid proof does not show who made it, that they are one person, or that an application accepts it.',
   '"unsupported" and "error" mean nothing was checked. They do not mean the proof is invalid.',

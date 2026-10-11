@@ -6,7 +6,7 @@ Build steps 1 to 3 are written: strict import and verification, explanation
 binding, and the readable report with export and rerun, on the command line
 and in a browser page. Read
 [the prototype notes](VERIFICATION_PROTOTYPE.md) for what exists, what was
-measured and what is untested. 119 unit tests and 24 browser tests pass.
+measured and what is untested. 134 unit tests and 24 browser tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
 for the first version. The checkout `/Users/tevdev/Desktop/ZK-Proofscan` holds
@@ -89,6 +89,10 @@ The owner needs to answer the "Open decisions" at the end of the charter. The
 recommended first deliverable is a written report specification with one
 worked example, which is documentation and needs no further approval.
 
-Public RPC, on-chain, wallet, hosted-service and paid-infrastructure work are
-not approved. Not verified: whether the name "ZK-Proofscan" or "Proofscan" is
+On 2026-10-11 the owner approved read-only chain lookups through Alchemy,
+on any chain. `zk-proofscan lookup` and the `lookup_transaction` tool are
+built for that and tested against a stand-in provider only; no key was
+configured, so no real chain has been read. Read [the lookup notes](LOOKUP.md).
+Wallet actions, signing, transactions, deployment, hosted services and paid
+infrastructure are not approved. Not verified: whether the name "ZK-Proofscan" or "Proofscan" is
 already used by another product.
