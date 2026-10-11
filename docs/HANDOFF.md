@@ -1,5 +1,18 @@
 # ZK-Proofscan handoff
 
+## Local agent definition checkpoint (Codex, 2026-10-11)
+
+In the separate `/Users/tevdev/Desktop/ZK-Proofscan-Codex` checkout, branch
+`feat/local-agent-definition`, step 2 of the owner's local agent proposal is
+prepared. Read [LOCAL_AGENT.md](LOCAL_AGENT.md). Portable instructions require
+fresh tool results and verbatim reports; deterministic presentation preserves
+the existing renderer. No MCP server/client is connected and no live agent
+behavior test has run. No hosted model, service, or publication was activated.
+60 unit tests, typecheck, and the CLI build pass at this checkpoint. Earlier
+adapter research remains uncommitted and untouched. This checkpoint is being
+committed on the Codex branch for integration in the other session; main is
+not changed and no push or rebase is included.
+
 ## Prototype (2026-10-11)
 
 Build steps 1 to 3 are written: strict import and verification, explanation

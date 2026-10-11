@@ -18,6 +18,11 @@ qualified person has reviewed, and reports say so. The code is unaudited and unr
 [the prototype notes](docs/VERIFICATION_PROTOTYPE.md). What blocks a release
 is in [the release review](docs/RELEASE_REVIEW.md).
 
+Local agent instructions and a deterministic presentation seam are prepared,
+but no MCP server or agent client is connected. See
+[the local agent handoff](docs/LOCAL_AGENT.md) for the scope, privacy gate,
+and pending live behavior evaluations.
+
 Licensed GPL-3.0-or-later; see `LICENSE`.
 
 This repository was created on 2026-10-11 as "OtakuCoin" and refocused the same
