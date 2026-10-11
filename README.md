@@ -9,9 +9,12 @@ report. Instead of `0x7a2f…3b1c — Verified`, a report states:
 - **Verification:** which verifier and verifying key were used, and the result.
 - **Limits:** what the proof does not establish.
 
-**Status: prototype.** A command-line tool and a browser page check one
-supported format, Semaphore v4 proofs, show the report above, and export
-evidence another person can rerun. A local tool server lets an AI agent run
+**Status: prototype.** A command-line tool and a browser page check
+Semaphore v4 proofs against bundled keys, and Groth16, PLONK and FFLONK
+proofs written by snarkjs against a key the user supplies. They show the
+report above and export evidence another person can rerun. See
+[the formats](docs/FORMATS.md) for what each kind of result does and does
+not say. A local tool server lets an AI agent run
 the same check. Nothing is hosted. The explanation wording is a draft that no
 qualified person has reviewed, and reports say so. The code is unaudited and unreleased. Read
 [the charter](docs/PROJECT_CHARTER.md), [the handoff](docs/HANDOFF.md) and

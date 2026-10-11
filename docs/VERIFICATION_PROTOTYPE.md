@@ -4,10 +4,12 @@ Written 2026-10-11. Evaluation code: unaudited, unreviewed, not released.
 
 ## What exists
 
-A TypeScript core and a command-line tool for one kind of proof: a Semaphore
-v4 proof file as written by `@semaphore-protocol/proof`. The tool verifies
-it, explains the result from a fixed adapter, and can export the evidence so
-someone else can repeat the check.
+A TypeScript core and a command-line tool. This file describes the first
+format, a Semaphore v4 proof file as written by `@semaphore-protocol/proof`:
+the tool verifies it, explains the result from a fixed adapter, and can
+export the evidence so someone else can repeat the check. Proofs checked
+with a key the user supplies (Groth16, PLONK, FFLONK) are described in
+[the formats](FORMATS.md).
 
 ```sh
 npm ci
@@ -16,6 +18,7 @@ npm run build
 node dist/cli.js check tests/fixtures/semaphore-v4-valid.json
 node dist/cli.js check <proof.json> --json
 node dist/cli.js check <proof.json> --export evidence.json
+node dist/cli.js check <proof.json> --public <public.json> --key <verification_key.json>
 node dist/cli.js rerun evidence.json
 
 npm run build:web        # the browser page, written to dist-web/
@@ -142,6 +145,8 @@ report also shows that text as a reading aid.
 | `src/snarkjs-engine.ts` | The pinned snarkjs verifier |
 | `src/node/` | Bundled files, for Node |
 | `web/` | Browser page and verification worker |
+| `src/scan.ts` | Chooses between a bundled format and a supplied key |
+| `src/supplied-key/` | Strict reading, verification and fixed wording for a proof with its own key |
 | `src/cli.ts` | Command line |
 | `src/node/run.ts` | Check, export and rerun on files, shared by the command line and the tool server |
 | `src/mcp.ts`, `src/mcp/` | Tool server for AI agents |
@@ -194,7 +199,7 @@ No audit status has been confirmed for snarkjs 0.7.6 or for this code.
 
 ## Tested
 
-75 automated tests on macOS with Node 26.3.0:
+101 automated tests on macOS with Node 26.3.0:
 
 - Three real proofs, at tree depths 1, 3 and 10, each made from throwaway
   identities; each is rejected under a neighbouring depth.
@@ -213,10 +218,11 @@ No audit status has been confirmed for snarkjs 0.7.6 or for this code.
   refused arguments, exports that the command line reproduces, a forged
   export, malformed and oversized protocol messages.
 
-12 browser tests (six scenarios, each in Chromium and WebKit, run headless
+20 browser tests (ten scenarios, each in Chromium and WebKit, run headless
 through Playwright on macOS): a valid proof, a rejected proof, an unsupported
 file containing markup, recovery after an unreadable file, identical exports
-and cross-reruns between page and command line, and a forged export.
+and cross-reruns between page and command line, a forged export, and a
+proof with its own key in each of the four supplied-key systems.
 
 ## Not tested or not done
 

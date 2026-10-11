@@ -30,6 +30,10 @@ still blocks one. **Nothing has been released, published or hosted.**
 4. **Proving keys are not tied to the circuit source or the trusted setup.**
 5. **Not opened in real Safari** on a Mac or iPhone, in Firefox, or on Windows.
 6. **The name has not been checked** against existing products.
+7. **Supplied-key proofs (added after this review).** Their fixed wording
+   has had no qualified review; PLONK and FFLONK verification in snarkjs has
+   had less scrutiny than Groth16; and one value in an FFLONK proof is not
+   read by the verifier. See [the formats](FORMATS.md).
 
 ## Owner decisions still open
 

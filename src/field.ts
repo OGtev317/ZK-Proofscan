@@ -5,7 +5,11 @@ export const SCALAR_FIELD = 2188824287183927522224640574525727508854836440041603
 export const BASE_FIELD = 21888242871839275222246405745257275088696311157297823662689037894645226208583n;
 export const UINT256_LIMIT = 1n << 256n;
 
-const CANONICAL_DECIMAL = /^(0|[1-9][0-9]{0,77})$/;
+// BLS12-381 field sizes, for proofs checked with a supplied key.
+export const BLS12_381_SCALAR_FIELD = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001n;
+export const BLS12_381_BASE_FIELD = 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaabn;
+
+const CANONICAL_DECIMAL = /^(0|[1-9][0-9]{0,127})$/;
 
 /** Parses a decimal string with no sign, spaces or leading zeros, below `limit`. */
 export function parseCanonical(value: unknown, limit: bigint): bigint | undefined {

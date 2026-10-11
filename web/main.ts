@@ -1,6 +1,7 @@
 import { MAX_EXPORT_CHARACTERS, writeExport } from '../src/export.js';
+import { MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, type ProofInputs } from '../src/inputs.js';
 import { reportSections, unreadReport, type Report } from '../src/report.js';
-import { MAX_PROOF_CHARACTERS } from '../src/semaphore-v4/importer.js';
+import { MAX_SUPPLIED_PROOF_CHARACTERS } from '../src/supplied-key/importer.js';
 import type { Request, Response } from './protocol.js';
 
 const $ = <T extends HTMLElement>(id: string): T => {
@@ -10,6 +11,8 @@ const $ = <T extends HTMLElement>(id: string): T => {
 };
 const proofFile = $<HTMLInputElement>('proof-file');
 const proofText = $<HTMLTextAreaElement>('proof-text');
+const publicFile = $<HTMLInputElement>('public-file');
+const keyFile = $<HTMLInputElement>('key-file');
 const checkButton = $<HTMLButtonElement>('check');
 const exportFile = $<HTMLInputElement>('export-file');
 const status = $<HTMLParagraphElement>('status');
@@ -29,7 +32,7 @@ worker.onerror = () => {
   for (const settle of waiting.values()) settle({ id: 0, ok: false, message: 'the verification worker stopped' });
   waiting.clear();
 };
-type Sendable = { kind: 'check'; proof: string } | { kind: 'rerun'; export: string };
+type Sendable = { kind: 'check'; inputs: ProofInputs } | { kind: 'rerun'; export: string };
 const ask = (request: Sendable): Promise<Response> =>
   new Promise((resolve) => {
     const id = nextId++;
@@ -37,7 +40,7 @@ const ask = (request: Sendable): Promise<Response> =>
     worker.postMessage({ ...request, id } satisfies Request);
   });
 
-let current: { proof: string; report: Report } | undefined;
+let current: { inputs: ProofInputs; report: Report } | undefined;
 
 /** Everything shown comes through textContent: no file content is ever parsed as markup. */
 function show(report: Report): void {
@@ -78,9 +81,8 @@ function notChecked(message: string): void {
 }
 
 async function busy(label: string, work: () => Promise<void>): Promise<void> {
-  checkButton.disabled = true;
-  proofFile.disabled = true;
-  exportFile.disabled = true;
+  const controls = [checkButton, proofFile, publicFile, keyFile, exportFile];
+  for (const control of controls) control.disabled = true;
   status.textContent = label;
   try {
     await work();
@@ -89,9 +91,7 @@ async function busy(label: string, work: () => Promise<void>): Promise<void> {
     notChecked(error instanceof Error ? error.message : String(error));
     status.textContent = 'The check could not be completed.';
   } finally {
-    checkButton.disabled = false;
-    proofFile.disabled = false;
-    exportFile.disabled = false;
+    for (const control of controls) control.disabled = false;
   }
 }
 
@@ -100,11 +100,22 @@ async function readFile(file: File, limit: number): Promise<string> {
   return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(await file.arrayBuffer());
 }
 
+/** The proof text together with the two extra files, when they are chosen. */
+async function gather(proof: string): Promise<ProofInputs> {
+  const [publicInputs, verificationKey] = [publicFile.files?.[0], keyFile.files?.[0]];
+  return {
+    proof,
+    ...(publicInputs ? { publicInputs: await readFile(publicInputs, MAX_PUBLIC_INPUTS_CHARACTERS) } : {}),
+    ...(verificationKey ? { verificationKey: await readFile(verificationKey, MAX_VERIFICATION_KEY_CHARACTERS) } : {}),
+  };
+}
+
 async function check(proof: string): Promise<void> {
-  const response = await ask({ kind: 'check', proof });
+  const inputs = await gather(proof);
+  const response = await ask({ kind: 'check', inputs });
   if (!response.ok) throw new Error(response.message);
   if (response.kind !== 'check') throw new Error('unexpected answer from the verification worker');
-  current = { proof, report: response.report };
+  current = { inputs, report: response.report };
   rerunResult.hidden = true;
   show(response.report);
   download.hidden = false;
@@ -118,11 +129,18 @@ proofFile.addEventListener('change', () => {
   const file = proofFile.files?.[0];
   if (!file) return;
   void busy('Checking on this device…', async () => {
-    const text = await readFile(file, MAX_PROOF_CHARACTERS);
+    const text = await readFile(file, MAX_SUPPLIED_PROOF_CHARACTERS);
     proofText.value = text;
     await check(text);
   });
 });
+
+// Choosing either extra file checks again once a proof is there.
+for (const extra of [publicFile, keyFile]) {
+  extra.addEventListener('change', () => {
+    if (proofText.value !== '') void busy('Checking on this device…', () => check(proofText.value));
+  });
+}
 
 exportFile.addEventListener('change', () => {
   const file = exportFile.files?.[0];
@@ -155,7 +173,7 @@ exportFile.addEventListener('change', () => {
 
 download.addEventListener('click', () => {
   if (!current) return;
-  const url = URL.createObjectURL(new Blob([writeExport(current.proof, current.report)], { type: 'application/json' }));
+  const url = URL.createObjectURL(new Blob([writeExport(current.inputs, current.report)], { type: 'application/json' }));
   const link = document.createElement('a');
   link.href = url;
   link.download = `zk-proofscan-evidence-${current.report.input.sha256.slice(0, 12)}.json`;

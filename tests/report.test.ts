@@ -8,14 +8,14 @@ import { asPaddedAscii } from '../src/semaphore-v4/text.js';
 import { plus, text, validText } from './helpers.js';
 
 const bound = await bundledSemaphoreV4();
-const scan = (proof: string): Promise<Report> => scanSemaphoreV4(proof, bound);
+const scan = (input: string | { proof: string }): Promise<Report> => scanSemaphoreV4(typeof input === 'string' ? input : input.proof, bound);
 const claim = bound.adapter.manifest.explanation.claim;
 afterAll(stopSnarkjs);
 
 describe('evidence report', () => {
   it('states the claim, what is hidden, what is public, the check and the limits for a valid proof', async () => {
     const report = await scan(validText);
-    if (report.outcome !== 'valid') throw new Error(report.outcome);
+    if (report.outcome !== 'valid' || report.basis !== 'bundled-circuit') throw new Error(report.outcome);
     expect(report.claim).toBe(claim);
     expect(report.public.map((field) => field.name)).toEqual(['group root', 'nullifier', 'hashed message', 'hashed scope']);
     expect(report.verification).toEqual({ result: 'passed', verifier: { name: 'snarkjs', version: '0.7.6' }, verificationKeysSha256: bound.keys.sha256 });
@@ -62,7 +62,7 @@ describe('evidence report', () => {
 
   it('never puts text from the proof file into the explanation', async () => {
     const report = await scan(validText);
-    if (report.outcome !== 'valid') throw new Error(report.outcome);
+    if (report.outcome !== 'valid' || report.basis !== 'bundled-circuit') throw new Error(report.outcome);
     for (const sentence of [report.claim, ...report.hidden, ...report.limits, ...report.assumptions, ...report.applicationChecks.map((check) => check.description)]) {
       expect(sentence).not.toMatch(/[0-9]{10}|fixture/);
     }
@@ -129,7 +129,7 @@ describe('export and rerun', () => {
 
   it('refuses exports it cannot read without running anything', async () => {
     const never = async (): Promise<Report> => { throw new Error('must not run'); };
-    for (const bad of ['nope', '[]', '{}', '{"exportVersion":2,"proof":"x","report":{}}', '{"exportVersion":1,"proof":5,"report":{}}', '{"exportVersion":1,"proof":"x","report":[]}', `{"exportVersion":1,"proof":"${'x'.repeat(9000)}","report":{}}`, ' '.repeat(70_000)]) {
+    for (const bad of ['nope', '[]', '{}', '{"exportVersion":2,"proof":"x","report":{}}', '{"exportVersion":1,"proof":5,"report":{}}', '{"exportVersion":1,"proof":"x","report":[]}', `{"exportVersion":1,"proof":"${'x'.repeat(17_000)}","report":{}}`, '{"exportVersion":1,"proof":"x","publicInputs":5,"report":{}}', '{"exportVersion":1,"proof":"x","verificationKey":[],"report":{}}', ' '.repeat(800_000)]) {
       expect(await rerunExport(bad, never)).toMatchObject({ reproduced: false, kind: 'unreadable' });
     }
   });

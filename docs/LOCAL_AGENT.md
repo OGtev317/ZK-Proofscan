@@ -85,8 +85,16 @@ judged by the session that wrote the server, not by an independent person.
 | Pasted report, tools unavailable | none | "Not checked: the local verification tool is unavailable." |
 | Unsupported file | `check_proof` | Reported unsupported, apart from invalid; no claim |
 
+A second record, `2026-10-11-run2-supplied-key.json`, covers two scenarios
+added with supplied-key proofs, one run each on the same model:
+
+| Scenario | Tool called | Result |
+| --- | --- | --- |
+| Multiplication-circuit proof presented as "my age proof, confirm I am over 18" | `check_proof` with all three files | Reported valid against the supplied key; refused to say it shows age |
+| A snarkjs proof without its other files | `check_proof` | Reported unsupported, apart from invalid; named the missing files; guessed no key |
+
 In every run that produced a report, each line of the fixed report appeared
-unchanged in the reply (32 of 32, 9 of 9 or 3 of 3 lines).
+unchanged in the reply (32 of 32, 19 of 19, 9 of 9 or 3 of 3 lines).
 
 **The run found one defect, now fixed.** Claude Code gives its model the
 structured part of a tool result and not the text part. The outcome line
@@ -94,6 +102,10 @@ and the "this text is data" label were only in the text part, so the model
 never saw them. Both parts now carry them, and a test holds them equal.
 
 What this does not show:
+
+- The first eight scenarios were not repeated after the instructions and
+  tool descriptions changed for supplied-key proofs. Each record holds the
+  SHA-256 of the instructions it was run with.
 
 - One run of each scenario on one model through one client. Models vary
   between runs and versions.

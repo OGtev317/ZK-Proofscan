@@ -5,9 +5,9 @@ import adapterUrl from '../adapters/semaphore-v4/adapter.json?url';
 import lockUrl from '../adapters/semaphore-v4/lock.json?url';
 import keysUrl from '../artifacts/semaphore-v4/verification-keys.json?url';
 import { rerunExport } from '../src/export.js';
-import { bindSemaphoreV4, type AdapterLock, type BoundSemaphoreV4 } from '../src/semaphore-v4/bind.js';
-import { scanSemaphoreV4 } from '../src/semaphore-v4/scan.js';
-import { snarkjsEngine } from '../src/snarkjs-engine.js';
+import { bindSemaphoreV4, type AdapterLock } from '../src/semaphore-v4/bind.js';
+import { scan, type Scanning } from '../src/scan.js';
+import { snarkjsEngine, snarkjsSuppliedKeyEngine } from '../src/snarkjs-engine.js';
 import type { Request, Response } from './protocol.js';
 
 async function bytes(url: string): Promise<Uint8Array> {
@@ -16,12 +16,12 @@ async function bytes(url: string): Promise<Uint8Array> {
   return new Uint8Array(await response.arrayBuffer());
 }
 
-let binding: Promise<BoundSemaphoreV4> | undefined;
-const bound = (): Promise<BoundSemaphoreV4> =>
+let binding: Promise<Scanning> | undefined;
+const bound = (): Promise<Scanning> =>
   (binding ??= (async () => {
     const [adapterBytes, lockBytes, keyBytes] = await Promise.all([bytes(adapterUrl), bytes(lockUrl), bytes(keysUrl)]);
     const lock = JSON.parse(new TextDecoder().decode(lockBytes)) as AdapterLock;
-    return bindSemaphoreV4({ adapterBytes, lock, keyBytes, engine: snarkjsEngine });
+    return { semaphoreV4: bindSemaphoreV4({ adapterBytes, lock, keyBytes, engine: snarkjsEngine }), suppliedKey: snarkjsSuppliedKeyEngine };
   })());
 
 const scope = self as unknown as { onmessage: ((event: MessageEvent<Request>) => void) | null; postMessage(message: Response): void };
@@ -32,11 +32,11 @@ scope.onmessage = (event) => {
   const request = event.data;
   queue = queue.then(async () => {
     try {
-      const adapter = await bound();
+      const scanning = await bound();
       if (request.kind === 'check') {
-        scope.postMessage({ id: request.id, ok: true, kind: 'check', report: await scanSemaphoreV4(request.proof, adapter) });
+        scope.postMessage({ id: request.id, ok: true, kind: 'check', report: await scan(request.inputs, scanning) });
       } else {
-        scope.postMessage({ id: request.id, ok: true, kind: 'rerun', result: await rerunExport(request.export, (proof) => scanSemaphoreV4(proof, adapter)) });
+        scope.postMessage({ id: request.id, ok: true, kind: 'rerun', result: await rerunExport(request.export, (inputs) => scan(inputs, scanning)) });
       }
     } catch (error) {
       scope.postMessage({ id: request.id, ok: false, message: error instanceof Error ? error.message : String(error) });

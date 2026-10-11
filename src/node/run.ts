@@ -1,9 +1,10 @@
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { MAX_EXPORT_CHARACTERS, rerunExport, writeExport, type RerunResult } from '../export.js';
+import { MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, type ProofInputs } from '../inputs.js';
 import { renderReport, unreadReport, type Report } from '../report.js';
-import { MAX_PROOF_CHARACTERS } from '../semaphore-v4/importer.js';
-import { scanSemaphoreV4 } from '../semaphore-v4/scan.js';
-import { bundledSemaphoreV4 } from './bundled.js';
+import { scan } from '../scan.js';
+import { MAX_SUPPLIED_PROOF_CHARACTERS } from '../supplied-key/importer.js';
+import { bundledScanning } from './bundled.js';
 
 export const message = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
@@ -17,32 +18,51 @@ async function readText(path: string, limit: number): Promise<string> {
 }
 
 /** Checks proof text with the bundled adapter, keys and verifier. Never throws. */
-export async function checkText(text: string): Promise<Report> {
+export async function checkText(inputs: ProofInputs): Promise<Report> {
   try {
-    return await scanSemaphoreV4(text, await bundledSemaphoreV4());
+    return await scan(inputs, await bundledScanning());
   } catch (error) {
     return unreadReport('error', message(error));
   }
 }
 
-/** Checks a proof file. `text` is absent when the file could not be read. */
-export async function checkFile(path: string): Promise<{ report: Report; text?: string }> {
-  let text: string;
+/** Where a check's files are. The last two go together, for a proof checked with its own key. */
+export interface ProofPaths {
+  proof: string;
+  publicInputs?: string;
+  verificationKey?: string;
+}
+
+/** Checks a proof from files. `inputs` is absent when a file could not be read. */
+export async function checkFile(paths: ProofPaths): Promise<{ report: Report; inputs?: ProofInputs }> {
+  const read = async (path: string, limit: number, what: string): Promise<string> => {
+    try {
+      return await readText(path, limit);
+    } catch (error) {
+      // Text and JSON output must agree, including when nothing could be checked.
+      throw error instanceof TooLarge ? unreadReport('unsupported', `the ${what} is too large`) : unreadReport('error', `could not read the ${what}: ${message(error)}`);
+    }
+  };
+  let inputs: ProofInputs;
   try {
-    text = await readText(path, MAX_PROOF_CHARACTERS);
-  } catch (error) {
-    // Text and JSON output must agree, including when nothing could be checked.
-    return { report: error instanceof TooLarge ? unreadReport('unsupported', 'the file is too large') : unreadReport('error', `could not read the file: ${message(error)}`) };
+    inputs = {
+      // The largest proof text any format accepts; each format applies its own limit after this.
+      proof: await read(paths.proof, MAX_SUPPLIED_PROOF_CHARACTERS, 'file'),
+      ...(paths.publicInputs === undefined ? {} : { publicInputs: await read(paths.publicInputs, MAX_PUBLIC_INPUTS_CHARACTERS, 'public inputs file') }),
+      ...(paths.verificationKey === undefined ? {} : { verificationKey: await read(paths.verificationKey, MAX_VERIFICATION_KEY_CHARACTERS, 'verification key file') }),
+    };
+  } catch (unread) {
+    return { report: unread as Report };
   }
-  return { report: await checkText(text), text };
+  return { report: await checkText(inputs), inputs };
 }
 
 /** Writes an export, never over an existing file: that file may be someone's evidence. */
-export const saveExport = (path: string, text: string, report: Report): Promise<void> => writeFile(path, writeExport(text, report), { flag: 'wx' });
+export const saveExport = (path: string, inputs: ProofInputs, report: Report): Promise<void> => writeFile(path, writeExport(inputs, report), { flag: 'wx' });
 
 export async function rerunText(text: string): Promise<RerunResult> {
-  const bound = await bundledSemaphoreV4();
-  return rerunExport(text, (proof) => scanSemaphoreV4(proof, bound));
+  const scanning = await bundledScanning();
+  return rerunExport(text, (inputs) => scan(inputs, scanning));
 }
 
 export async function rerunFile(path: string): Promise<RerunResult> {
@@ -57,7 +77,7 @@ export function renderRerun(result: RerunResult): string {
   if (result.kind === 'unreadable') return `Not rerun: ${result.reason}.`;
   return [
     `NOT REPRODUCED: checking the proof again gave a different report.\nSections that differ: ${result.fields.join(', ')}.`,
-    'A difference in "tool" or "explanation" can mean a different version of this tool made the export.\n',
+    'A difference in "tool", "reportVersion", "basis" or "explanation" can mean a different version of this tool made the export.\n',
     `Report from this run:\n${renderReport(result.report)}`,
   ].join('\n');
 }

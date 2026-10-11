@@ -2,6 +2,9 @@ import type { LoadedAdapter } from './adapter.js';
 import type { VerificationResult } from './result.js';
 import { asPaddedAscii } from './semaphore-v4/text.js';
 import { sha256Hex, utf8 } from './sha256.js';
+import { CURVE_NAME, SUPPLIED_KEY, SYSTEM_NAME } from './supplied-key/explanation.js';
+import type { Curve, Protocol } from './supplied-key/importer.js';
+import type { SuppliedResult } from './supplied-key/verify.js';
 
 export const TOOL = { name: 'zk-proofscan', version: '0.0.0' } as const;
 
@@ -12,18 +15,31 @@ export interface ReportExplanation {
 }
 
 interface Common {
-  reportVersion: 1;
+  reportVersion: 2;
   tool: typeof TOOL;
   input: { sha256: string };
+}
+
+interface SuppliedKeyVerification {
+  verifier: { name: string; version: string };
+  proofSystem: { protocol: Protocol; curve: Curve };
+  verificationKeySha256: string;
+  publicInputsSha256: string;
 }
 
 /**
  * A report carries a claim only when the verifier accepted the proof. There
  * is no timestamp: the same input and the same tool give the same report.
+ *
+ * `basis` says what a pass rests on. With `bundled-circuit` the keys and the
+ * explanation ship with this tool for one known circuit. With `supplied-key`
+ * the key came with the proof and the circuit is unknown, so a program must
+ * not read `valid` there as a statement about any particular claim.
  */
 export type Report =
   | (Common & {
       outcome: 'valid';
+      basis: 'bundled-circuit';
       claim: string;
       hidden: string[];
       public: { name: string; meaning: string; value: string }[];
@@ -36,7 +52,20 @@ export type Report =
       assumptions: string[];
     })
   | (Common & {
+      outcome: 'valid';
+      basis: 'supplied-key';
+      claim: string;
+      hidden: string[];
+      publicInputs: string[];
+      verification: { result: 'passed' } & SuppliedKeyVerification;
+      explanation: { review: { status: 'unreviewed'; note: string } };
+      limits: string[];
+      assumptions: string[];
+    })
+  | (Common & { outcome: 'invalid'; basis: 'supplied-key'; publicInputs: string[]; verification: { result: 'failed' } & SuppliedKeyVerification })
+  | (Common & {
       outcome: 'invalid';
+      basis: 'bundled-circuit';
       public: { name: string; value: string }[];
       verification: { result: 'failed'; verifier: { name: string; version: string }; verificationKeysSha256: string };
     })
@@ -45,12 +74,12 @@ export type Report =
 
 /** A report for input that could not even be read, so there is nothing to hash. */
 export function unreadReport(outcome: 'unsupported' | 'error', detail: string): Report {
-  const common: Common = { reportVersion: 1, tool: TOOL, input: { sha256: 'not computed' } };
+  const common: Common = { reportVersion: 2, tool: TOOL, input: { sha256: 'not computed' } };
   return outcome === 'unsupported' ? { ...common, outcome, reason: detail } : { ...common, outcome, message: detail };
 }
 
 export function buildReport(proofText: string, result: VerificationResult, adapter: LoadedAdapter): Report {
-  const common: Common = { reportVersion: 1, tool: TOOL, input: { sha256: sha256Hex(utf8(proofText)) } };
+  const common: Common = { reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(utf8(proofText)) } };
   if (result.status === 'unsupported') return { ...common, outcome: 'unsupported', reason: result.reason };
   if (result.status === 'error') return { ...common, outcome: 'error', message: result.message };
 
@@ -61,6 +90,7 @@ export function buildReport(proofText: string, result: VerificationResult, adapt
     return {
       ...common,
       outcome: 'invalid',
+      basis: 'bundled-circuit',
       public: manifest.publicFields.map((field, i) => ({ name: field.name, value: result.publicSignals[i]! })),
       verification: { result: 'failed', ...verification },
     };
@@ -70,6 +100,7 @@ export function buildReport(proofText: string, result: VerificationResult, adapt
   return {
     ...common,
     outcome: 'valid',
+    basis: 'bundled-circuit',
     claim: manifest.explanation.claim,
     hidden: manifest.explanation.hidden,
     public: manifest.publicFields.map((field, i) => ({ ...field, value: result.publicSignals[i]! })),
@@ -92,6 +123,34 @@ export function buildReport(proofText: string, result: VerificationResult, adapt
   };
 }
 
+/** The report for a proof checked against a verification key supplied with it. */
+export function buildSuppliedKeyReport(proofText: string, result: SuppliedResult): Report {
+  const common: Common = { reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(utf8(proofText)) } };
+  if (result.status === 'unsupported') return { ...common, outcome: 'unsupported', reason: result.reason };
+  if (result.status === 'error') return { ...common, outcome: 'error', message: result.message };
+  const verification: SuppliedKeyVerification = {
+    verifier: result.verifier,
+    proofSystem: { protocol: result.protocol, curve: result.curve },
+    verificationKeySha256: result.verificationKeySha256,
+    publicInputsSha256: result.publicInputsSha256,
+  };
+  if (result.status === 'invalid') {
+    return { ...common, outcome: 'invalid', basis: 'supplied-key', publicInputs: result.publicSignals, verification: { result: 'failed', ...verification } };
+  }
+  return {
+    ...common,
+    outcome: 'valid',
+    basis: 'supplied-key',
+    claim: SUPPLIED_KEY.claim,
+    hidden: [...SUPPLIED_KEY.hidden],
+    publicInputs: result.publicSignals,
+    verification: { result: 'passed', ...verification },
+    explanation: { review: { status: 'unreviewed', note: SUPPLIED_KEY.review } },
+    limits: SUPPLIED_KEY.limits(result.protocol),
+    assumptions: SUPPLIED_KEY.assumptions(result.protocol, result.curve),
+  };
+}
+
 export interface ReportSection {
   heading: string;
   /** A short statement shown beside the heading, if any. */
@@ -103,6 +162,14 @@ export interface ReportSection {
 
 const NOTHING = 'This says nothing about whether a proof is valid.';
 const asText = (text: string | undefined): string => (text === undefined ? '' : ` (if this number encodes text, it reads: ${JSON.stringify(text)})`);
+
+const using = (verification: SuppliedKeyVerification): string =>
+  `using ${verification.verifier.name} ${verification.verifier.version}, against the verification key supplied with the proof (${SYSTEM_NAME[verification.proofSystem.protocol]} on ${CURVE_NAME[verification.proofSystem.curve]}).`;
+const suppliedFiles = (verification: SuppliedKeyVerification): string[] => [
+  `Verification key file (SHA-256): ${verification.verificationKeySha256}`,
+  `Public inputs file (SHA-256): ${verification.publicInputsSha256}`,
+];
+const numbered = (values: string[]): string[] => (values.length === 0 ? ['(none)'] : values.map((value, i) => `public input ${i + 1}: ${value}`));
 
 /**
  * The report as ordered sections. The command line and the browser page both
@@ -116,6 +183,14 @@ export function reportSections(report: Report): ReportSection[] {
     case 'error':
       return [{ heading: 'Not checked', summary: `The verification could not be completed (${report.message}).`, items: [NOTHING], tone: 'caution' }, file];
     case 'invalid':
+      if (report.basis === 'supplied-key') {
+        return [
+          { heading: 'Claim', summary: 'None. The verifier rejected this proof, so it establishes nothing.', items: [], tone: 'fail' },
+          { heading: 'Cryptographic verification', summary: `FAILED ${using(report.verification)}`, items: suppliedFiles(report.verification), tone: 'fail' },
+          { heading: 'Public inputs that were checked', items: numbered(report.publicInputs), tone: 'plain' },
+          file,
+        ];
+      }
       return [
         { heading: 'Claim', summary: 'None. The verifier rejected this proof, so it establishes nothing.', items: [], tone: 'fail' },
         {
@@ -128,6 +203,18 @@ export function reportSections(report: Report): ReportSection[] {
         file,
       ];
     case 'valid': {
+      if (report.basis === 'supplied-key') {
+        return [
+          { heading: 'Claim', summary: report.claim, items: [], tone: 'caution' },
+          { heading: 'Hidden by the proof', items: report.hidden, tone: 'plain' },
+          { heading: 'Public', summary: SUPPLIED_KEY.publicNote, items: numbered(report.publicInputs), tone: 'plain' },
+          { heading: 'Cryptographic verification', summary: `PASSED ${using(report.verification)}`, items: suppliedFiles(report.verification), tone: 'pass' },
+          { heading: 'Explanation', summary: `NOT REVIEWED. ${report.explanation.review.note}`, items: [], tone: 'caution' },
+          { heading: 'Limits', items: report.limits, tone: 'caution' },
+          { heading: 'This result assumes', items: report.assumptions, tone: 'plain' },
+          file,
+        ];
+      }
       const { explanation, verification } = report;
       const reviewed = explanation.review.status === 'reviewed';
       return [

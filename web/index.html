@@ -12,7 +12,8 @@
   <body>
     <main>
       <h1>ZK-Proofscan</h1>
-      <p class="lede">Checks a Semaphore v4 proof on this device and says what it does and does not establish. Nothing is uploaded.</p>
+      <p class="lede">Checks a zero-knowledge proof on this device and says what it does and does not establish. Nothing is uploaded.</p>
+      <p>It reads a Semaphore v4 proof on its own, or a Groth16, PLONK or FFLONK proof written by snarkjs together with its public inputs and verification key.</p>
       <p class="notice">Prototype. Unaudited, and the explanation wording has not been reviewed by a qualified person.</p>
 
       <section aria-labelledby="check-heading">
@@ -21,6 +22,13 @@
         <input id="proof-file" type="file" accept=".json,application/json" />
         <label for="proof-text">Or paste the proof</label>
         <textarea id="proof-text" rows="6" spellcheck="false" autocomplete="off"></textarea>
+        <fieldset>
+          <legend>Only for a proof checked with its own verification key</legend>
+          <label for="public-file">Public inputs file (.json)</label>
+          <input id="public-file" type="file" accept=".json,application/json" />
+          <label for="key-file">Verification key file (.json)</label>
+          <input id="key-file" type="file" accept=".json,application/json" />
+        </fieldset>
         <button id="check" type="button">Check proof</button>
       </section>
 

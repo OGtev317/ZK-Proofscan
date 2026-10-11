@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
+import type { Scanning } from '../scan.js';
 import { bindSemaphoreV4, type AdapterLock, type BoundSemaphoreV4 } from '../semaphore-v4/bind.js';
-import { snarkjsEngine } from '../snarkjs-engine.js';
+import { snarkjsEngine, snarkjsSuppliedKeyEngine } from '../snarkjs-engine.js';
 
 const file = (path: string): Promise<Uint8Array> => readFile(new URL(`../../${path}`, import.meta.url));
 
@@ -14,3 +15,6 @@ export async function bundledSemaphoreV4(): Promise<BoundSemaphoreV4> {
     engine: snarkjsEngine,
   });
 }
+
+/** Everything this build checks with. */
+export const bundledScanning = async (): Promise<Scanning> => ({ semaphoreV4: await bundledSemaphoreV4(), suppliedKey: snarkjsSuppliedKeyEngine });

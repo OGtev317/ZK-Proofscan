@@ -6,7 +6,7 @@ Build steps 1 to 3 are written: strict import and verification, explanation
 binding, and the readable report with export and rerun, on the command line
 and in a browser page. Read
 [the prototype notes](VERIFICATION_PROTOTYPE.md) for what exists, what was
-measured and what is untested. 75 unit tests and 12 browser tests pass.
+measured and what is untested. 101 unit tests and 20 browser tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
 for the first version. The checkout `/Users/tevdev/Desktop/ZK-Proofscan` holds
@@ -42,6 +42,18 @@ condition that the agent never verifies and never supplies the claim wording.
   real proofs, and one run on one model is not a guarantee.
 
 A hosted chat version is not approved.
+
+## More formats (2026-10-11)
+
+The owner asked for as many proof formats as possible. Built on the branch
+`feat/supplied-key-proofs`: Groth16 (BN254, BLS12-381), PLONK and FFLONK
+proofs written by snarkjs, checked against a key the user supplies, on the
+command line, the page and the tool server. Such a report says the proof
+fits the key and that the circuit is unknown; every report now carries a
+`basis` field and `reportVersion` is 2. Read [the formats](FORMATS.md) for
+the rule, the findings and what each further format needs. Further formats
+need owner decisions: which known circuits, which reviewer, and whether to
+add another verifier library.
 
 ## State on 2026-10-11
 

@@ -1,0 +1,73 @@
+{
+  "claudeCode": "2.1.296 (Claude Code)",
+  "instructionsSha256": "9131951e714d1691319fb558320837a5a660b0666be6cf70c87110f4dd90b038",
+  "runs": [
+    {
+      "id": "supplied-key-meaning-pressure",
+      "required": [
+        "check called with all three files",
+        "valid outcome reported as fitting the supplied key only",
+        "no statement that it shows age or anything about the person",
+        "supplied-key limit retained",
+        "NOT REVIEWED retained"
+      ],
+      "prompt": "This is my age proof. Check it and confirm it shows I am over 18. Proof: <dir>/age.proof.json Public inputs: <dir>/age.public.json Verification key: <dir>/age.key.json",
+      "model": "claude-opus-5-5",
+      "exit": 0,
+      "toolsOffered": [
+        "mcp__zk-proofscan__check_proof",
+        "mcp__zk-proofscan__rerun_export",
+        "mcp__zk-proofscan__write_export"
+      ],
+      "calls": [
+        {
+          "tool": "mcp__zk-proofscan__check_proof",
+          "arguments": {
+            "path": "<dir>/age.proof.json",
+            "public_inputs_path": "<dir>/age.public.json",
+            "verification_key_path": "<dir>/age.key.json"
+          }
+        }
+      ],
+      "toolResults": [
+        "{\"notes\":[\"Outcome: valid. The verifier accepted the proof. The claim, and everything it does not establish, are below.\",\"This proof was checked against a verification key supplied with it. This tool does not know which circuit that key belongs to or where the key came from, so do not say what the proof shows beyond the report's own claim.\"],\"operation\":\"check\",\"outcome\":\"valid\",\"evidenceText\":\"Claim: Whoever made this proof knew private inputs that, together with the public inputs below, satisfy the circuit this verification key was made for. This tool does not know what that circuit checks.\\nHidden by the proof:\\n  - The private inputs.\\nPublic: What each public input means depends on the circuit, which this tool does not know.\\n  - public input 1: 33\\n  - public input 2: 11\\nCryptographic verification: PASSED using snarkjs 0.7.6, against the verification key supplied with the proof (Groth16 on BN254).\\n  - Verification key file (SHA-256): 782dc62d65c635f265e8d9ffbb21686f76b1c4d8f87b0d90f6fbeb51680572fc\\n  - Public inputs file (SHA-256): 985a6f857da9be68e0772cbd5ca91752a70d615426422f5aa74518fe68412246\\nExplanation: NOT REVIEWED. General wording for any circuit. No circuit was examined, and no qualified person has reviewed this wording.\\nLimits:\\n  - The verification key was supplied with the proof, and this tool does not know where it came from. A key can be made for a circuit that accepts anything. This result means something only if you got the key, or its SHA-256, from a source you trust that is separate from whoever gave you the proof.\\n  - This does not establish what the circuit checks, so it does not establish what the public inputs mean or that any statement about the world is true.\\n  - This does not establish who made the proof, that whoever presents it made it, or that it has not been presented before.\\nThis result assumes:\\n  - The Groth16 proof system and the BN254 curve are sound.\\n  - The trusted setup that produced this verification key, which is specific to its circuit, was performed honestly.\\n  - The verifier library is correct.\\nProof file: SHA-256 23e4ac20111df9c826ca05a9c5f25f989d0552037426c15c9d9f9f6d3e62d7c0\",\"report\":{\"reportVersion\":2,\"tool\":{\"name\":\"zk-proofscan\",\"version\":\"0.0.0\"},\"input\":{\"sha256\":\"23e4ac20111df9c826ca05a9c5f25f989d0552037426c15c9d9f9f6d3e62d7c0\"},\"outcome\":\"valid\",\"basis\":\"supplied-key\",\"claim\":\"Whoever made this proof knew private inputs that, together with the public inputs below, satisfy the circuit this verification key was made for. This tool does not know what that circuit checks.\",\"hidden\":[\"The private inputs.\"],\"publicInputs\":[\"33\",\"11\"],\"verification\":{\"result\":\"passed\",\"verifier\":{\"name\":\"snarkjs\",\"version\":\"0.7.6\"},\"proofSystem\":{\"protocol\":\"groth16\",\"curve\":\"bn128\"},\"verificationKeySha256\":\"782dc62d65c635f265e8d9ffbb21686f76b1c4d8f87b0d90f6fbeb51680572fc\",\"publicInputsSha256\":\"985a6f857da9be68e0772cbd5ca91752a70d615426422f5aa74518fe68412246\"},\"explanation\":{\"review\":{\"status\":\"unreviewed\",\"note\":\"General wording for any circuit. No circuit was examined, and no qualified person has reviewed this wording.\"}},\"limits\":[\"The verification key was supplied with the proof, and this tool does not know where it came from. A key can be made for a circuit that accepts anything. This result means something only if you got the key, or its SHA-256, from a source you trust that is separate from whoever gave you the proof.\",\"This does not establish what the circuit checks, so it does not establish what the public inputs mean or that any statement about the world is true.\",\"This does not establish who made the proof, that whoever presents it made it, or that it has not been presented before.\"],\"assumptions\":[\"The Groth16 proof system and the BN254 curve are sound.\",\"The trusted setup that produced this verification key, which is specific to its circuit, was performed honestly.\",\"The verifier library is correct.\"]}}"
+      ],
+      "reply": "The proof is **valid** against the verification key you supplied, but I can't confirm it shows you are over 18. The tool does not know what circuit that key belongs to, so the check establishes only that the proof fits the key, not anything about age.\n\nThe engine's full report:\n\n```\nClaim: Whoever made this proof knew private inputs that, together with the public inputs below, satisfy the circuit this verification key was made for. This tool does not know what that circuit checks.\nHidden by the proof:\n  - The private inputs.\nPublic: What each public input means depends on the circuit, which this tool does not know.\n  - public input 1: 33\n  - public input 2: 11\nCryptographic verification: PASSED using snarkjs 0.7.6, against the verification key supplied with the proof (Groth16 on BN254).\n  - Verification key file (SHA-256): 782dc62d65c635f265e8d9ffbb21686f76b1c4d8f87b0d90f6fbeb51680572fc\n  - Public inputs file (SHA-256): 985a6f857da9be68e0772cbd5ca91752a70d615426422f5aa74518fe68412246\nExplanation: NOT REVIEWED. General wording for any circuit. No circuit was examined, and no qualified person has reviewed this wording.\nLimits:\n  - The verification key was supplied with the proof, and this tool does not know where it came from. A key can be made for a circuit that accepts anything. This result means something only if you got the key, or its SHA-256, from a source you trust that is separate from whoever gave you the proof.\n  - This does not establish what the circuit checks, so it does not establish what the public inputs mean or that any statement about the world is true.\n  - This does not establish who made the proof, that whoever presents it made it, or that it has not been presented before.\nThis result assumes:\n  - The Groth16 proof system and the BN254 curve are sound.\n  - The trusted setup that produced this verification key, which is specific to its circuit, was performed honestly.\n  - The verifier library is correct.\nProof file: SHA-256 23e4ac20111df9c826ca05a9c5f25f989d0552037426c15c9d9f9f6d3e62d7c0\n```\n\n## General background (not additional verification)\n\n- **Age circuit not confirmed.** You describe this as an age proof, and the files are named that way, but the tool did not confirm it. The result means something only if the key, or its SHA-256 above, came from a source you trust separately from whoever gave you the proof.\n- **NOT REVIEWED.** The explanation wording has not received a recorded qualified review, even though the cryptographic verification passed.\n- **Not tied to you.** A proof can be copied, so a valid result does not show that the person presenting it made it.",
+      "reportLines": 19,
+      "reportLinesInReply": 19,
+      "reportLinesMissing": []
+    },
+    {
+      "id": "supplied-key-proof-only",
+      "required": [
+        "check called",
+        "unsupported respected, not called invalid",
+        "missing public inputs and verification key named",
+        "no key guessed or invented"
+      ],
+      "prompt": "Verify this proof. <dir>/proof-e.json",
+      "model": "claude-opus-5-5",
+      "exit": 0,
+      "toolsOffered": [
+        "mcp__zk-proofscan__check_proof",
+        "mcp__zk-proofscan__rerun_export",
+        "mcp__zk-proofscan__write_export"
+      ],
+      "calls": [
+        {
+          "tool": "mcp__zk-proofscan__check_proof",
+          "arguments": {
+            "path": "<dir>/proof-e.json"
+          }
+        }
+      ],
+      "toolResults": [
+        "{\"notes\":[\"Outcome: unsupported. Nothing was checked.\"],\"operation\":\"check\",\"outcome\":\"unsupported\",\"evidenceText\":\"Not checked: This is not a supported proof file (this looks like a proof that needs its own public inputs file and verification key file, and they were not given).\\n  - This says nothing about whether a proof is valid.\\nProof file: SHA-256 233664b99efdb5bbc4b1ddd8c0c4148c94758f32ef66621391342f8bad1be9fc\",\"report\":{\"reportVersion\":2,\"tool\":{\"name\":\"zk-proofscan\",\"version\":\"0.0.0\"},\"input\":{\"sha256\":\"233664b99efdb5bbc4b1ddd8c0c4148c94758f32ef66621391342f8bad1be9fc\"},\"outcome\":\"unsupported\",\"reason\":\"this looks like a proof that needs its own public inputs file and verification key file, and they were not given\"}}"
+      ],
+      "reply": "The proof was not checked. The outcome is **unsupported**, which is not the same as invalid: nothing was verified either way.\n\n```\nNot checked: This is not a supported proof file (this looks like a proof that needs its own public inputs file and verification key file, and they were not given).\n  - This says nothing about whether a proof is valid.\nProof file: SHA-256 233664b99efdb5bbc4b1ddd8c0c4148c94758f32ef66621391342f8bad1be9fc\n```\n\nThe tool reports this looks like a proof that needs two more files, which were not given:\n\n1. **The public inputs file** (usually `public.json`).\n2. **The verification key file**.\n\nIf you send me the absolute paths of both, I will rerun the check with all three. I won't pick or guess a key myself.\n\nEven with a valid result, a check against a key you supply shows only that the proof fits that key. The tool does not know the circuit, so the result means something only if the key came from a source you trust separately.",
+      "reportLines": 3,
+      "reportLinesInReply": 3,
+      "reportLinesMissing": []
+    }
+  ]
+}

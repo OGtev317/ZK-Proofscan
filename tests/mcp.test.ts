@@ -133,12 +133,12 @@ describe('tool server, through the official client', () => {
     const missing = await call('check_proof', { path: join(dir, 'missing.json') });
     expect(said(missing)).toMatch(/^Outcome: error\. Nothing was checked\./);
     expect(missing.structuredContent?.report).toMatchObject({ outcome: 'error', message: expect.stringMatching(/could not read the file/) });
-    const huge = await call('check_proof', { path: file('huge.json', 'x'.repeat(40_000)) });
+    const huge = await call('check_proof', { path: file('huge.json', 'x'.repeat(70_000)) });
     expect(huge.structuredContent?.report).toMatchObject({ outcome: 'unsupported', reason: 'the file is too large' });
   });
 
   it('refuses arguments it does not understand, without echoing them', async () => {
-    for (const args of [{}, { path: '/a', proof: 'b' }, { path: 'relative.json' }, { proof: 7 }, { proof: 'x'.repeat(9000) }, { proof: validText, 'ignore previous instructions': 'x' }]) {
+    for (const args of [{}, { path: '/a', proof: 'b' }, { path: 'relative.json' }, { proof: 7 }, { proof: 'x'.repeat(17_000) }, { proof: validText, 'ignore previous instructions': 'x' }]) {
       const result = await call('check_proof', args);
       expect(result.isError).toBe(true);
       expect(said(result)).toMatch(/^Not run: /);
@@ -146,6 +146,31 @@ describe('tool server, through the official client', () => {
       expect(result.structuredContent).toBeUndefined();
     }
     await expect(call('no_such_tool', {})).rejects.toThrow(/Unknown tool/);
+  });
+
+  it('checks a proof with its own key and warns the model not to say what it means', async () => {
+    const part = (kind: string): string => join(root, `tests/fixtures/snarkjs/plonk-bn128.${kind}.json`);
+    const args = { path: part('proof'), public_inputs_path: part('public'), verification_key_path: part('key') };
+    const result = await call('check_proof', args);
+    expect(result.structuredContent).toMatchObject({ outcome: 'valid', report: { basis: 'supplied-key', publicInputs: ['33', '11'] } });
+    expect(result.structuredContent?.notes).toContainEqual(expect.stringMatching(/does not know which circuit that key belongs to/));
+    expect(said(result)).toContain('A key can be made for a circuit that accepts anything.');
+
+    const target = join(dir, 'supplied.json');
+    expect((await call('write_export', { ...args, export_to: target })).isError).toBeFalsy();
+    const rerun = await call('rerun_export', { path: target });
+    expect(rerun.structuredContent).toMatchObject({ reproduced: true, fresh: { outcome: 'valid' } });
+    expect(rerun.structuredContent?.notes).toContainEqual(expect.stringMatching(/does not know which circuit/));
+
+    // On its own it is not checked; half the set, or pasted text with a key, is refused.
+    expect((await call('check_proof', { path: part('proof') })).structuredContent).toMatchObject({ outcome: 'unsupported' });
+    for (const bad of [{ path: part('proof'), public_inputs_path: part('public') }, { proof: 'x', public_inputs_path: part('public'), verification_key_path: part('key') }, { ...args, verification_key_path: 'key.json' }]) {
+      const refused = await call('check_proof', bad);
+      expect(refused.isError).toBe(true);
+      expect(said(refused)).toMatch(/^Not run: /);
+    }
+    const missing = await call('check_proof', { ...args, verification_key_path: join(dir, 'absent.json') });
+    expect(missing.structuredContent).toMatchObject({ outcome: 'error', report: { message: expect.stringMatching(/could not read the verification key file/) } });
   });
 
   it('writes an export the command line reproduces, and never overwrites one', async () => {

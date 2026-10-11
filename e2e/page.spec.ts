@@ -113,6 +113,36 @@ test('makes the same report as the command line, and each can rerun the other', 
   expect(problems).toEqual([]);
 });
 
+for (const system of ['groth16-bn128', 'groth16-bls12381', 'plonk-bn128', 'fflonk-bn128']) {
+  test(`checks a ${system} proof with its own key, the same as the command line`, async ({ page }, info) => {
+    const problems = await open(page);
+    const part = (kind: string): string => fixture(`snarkjs/${system}.${kind}.json`);
+    await page.setInputFiles('#proof-file', part('proof'));
+    // On its own the proof is not checked, and is not called invalid.
+    await expect(outcome(page)).toHaveAttribute('data-outcome', 'unsupported');
+    await page.setInputFiles('#public-file', part('public'));
+    await expect(page.locator('#sections')).toContainText('needs both');
+    await page.setInputFiles('#key-file', part('key'));
+    await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+    const text = await page.locator('#sections').innerText();
+    for (const expected of ['This tool does not know what that circuit checks.', 'public input 1: 33', 'against the verification key supplied with the proof', 'NOT REVIEWED.', 'A key can be made for a circuit that accepts anything.']) {
+      expect(text).toContain(expected);
+    }
+    expect(text).not.toContain('membership');
+
+    const [saved] = await Promise.all([page.waitForEvent('download'), page.click('#download')]);
+    const fromPage = join(dir, `page-${system}-${info.project.name}.json`);
+    await saved.saveAs(fromPage);
+    const fromCli = join(dir, `cli-${system}-${info.project.name}.json`);
+    expect(cli('check', part('proof'), '--public', part('public'), '--key', part('key'), '--export', fromCli).status).toBe(0);
+    expect(readFileSync(fromPage, 'utf8')).toBe(readFileSync(fromCli, 'utf8'));
+    expect(cli('rerun', fromPage).stdout).toMatch(/^REPRODUCED/);
+    await page.setInputFiles('#export-file', fromCli);
+    await expect(page.locator('#rerun-result')).toContainText('REPRODUCED');
+    expect(problems).toEqual([]);
+  });
+}
+
 test('notices a forged export', async ({ page }) => {
   const problems = await open(page);
   const exported = join(dir, `forge-source-${Date.now()}.json`);

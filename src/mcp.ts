@@ -6,8 +6,8 @@ import { stopSnarkjs } from './snarkjs-engine.js';
 // A Model Context Protocol server over standard input and output: one JSON
 // message per line. Standard output carries protocol messages only.
 
-// The largest real message is an export of 65,536 characters, JSON-escaped.
-const MAX_LINE_CHARACTERS = 1_048_576;
+// The largest real message is an export of 786,432 characters, JSON-escaped.
+const MAX_LINE_CHARACTERS = 4_194_304;
 
 const send = (response: Response): void => {
   process.stdout.write(`${JSON.stringify(response)}\n`);
