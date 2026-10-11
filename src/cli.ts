@@ -2,7 +2,7 @@
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { MAX_EXPORT_CHARACTERS, rerunExport, writeExport } from './export.js';
 import { bundledSemaphoreV4 } from './node/bundled.js';
-import { stopSnarkjs } from './node/snarkjs-engine.js';
+import { stopSnarkjs } from './snarkjs-engine.js';
 import { renderReport, type Report } from './report.js';
 import { MAX_PROOF_CHARACTERS } from './semaphore-v4/importer.js';
 import { scanSemaphoreV4 } from './semaphore-v4/scan.js';

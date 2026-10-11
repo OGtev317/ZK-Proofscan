@@ -3,9 +3,10 @@
 ## Prototype (2026-10-11)
 
 Build steps 1 to 3 are written: strict import and verification, explanation
-binding, and the readable report with export and rerun. Read
+binding, and the readable report with export and rerun, on the command line
+and in a browser page. Read
 [the prototype notes](VERIFICATION_PROTOTYPE.md) for what exists, what was
-measured and what is untested. 48 tests pass.
+measured and what is untested. 48 unit tests and 12 browser tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
 for the first version. The checkout `/Users/tevdev/Desktop/ZK-Proofscan` holds
@@ -22,8 +23,7 @@ Open, in order of importance:
 1. A named, qualified reviewer for the adapter wording. Until then it stays
    marked unreviewed.
 2. Evidence linking the key file to the circuit source and trusted setup.
-3. Step 4, release review, and the browser interface with a verification
-   worker. Neither is started.
+3. Step 4, release review.
 
 ## State on 2026-10-11
 

@@ -17,6 +17,9 @@ node dist/cli.js check tests/fixtures/semaphore-v4-valid.json
 node dist/cli.js check <proof.json> --json
 node dist/cli.js check <proof.json> --export evidence.json
 node dist/cli.js rerun evidence.json
+
+npm run build:web        # the browser page, written to dist-web/
+npm run test:e2e         # browser tests in Chromium and WebKit
 ```
 
 | `check` outcome | Exit code | Meaning |
@@ -30,7 +33,23 @@ node dist/cli.js rerun evidence.json
 it differs, 2 when the export cannot be read and 3 on failure. Wrong usage
 exits 64.
 
-There is no browser interface yet.
+## Browser page
+
+`web/` is a single page with no framework. Verification runs in a worker so
+the page stays responsive. It uses the same core, adapter, lock and key file
+as the command line, and binds them the same way before checking anything.
+
+- A proof can be chosen as a file or pasted. An evidence export can be
+  loaded to repeat someone else's check.
+- The page and the command line render the same report sections, and their
+  exports are byte-for-byte identical for the same proof. Each can rerun the
+  other's export.
+- A content security policy allows scripts, styles and requests from the
+  page's own origin only. The browser tests fail if the page requests
+  anything else. File content is shown as text and never parsed as markup.
+
+The page is built but not hosted anywhere. Hosting it is a separate decision
+for the owner.
 
 ## How an explanation is tied to a verification
 
@@ -79,13 +98,15 @@ report also shows that text as a reading aid.
 | `src/semaphore-v4/bind.ts` | Binds adapter, lock, keys and verifier |
 | `src/report.ts` | Builds and renders the report |
 | `src/export.ts` | Export and rerun |
-| `src/node/` | The snarkjs verifier and bundled files, for Node |
+| `src/snarkjs-engine.ts` | The pinned snarkjs verifier |
+| `src/node/` | Bundled files, for Node |
+| `web/` | Browser page and verification worker |
 | `src/cli.ts` | Command line |
 | `adapters/semaphore-v4/` | Adapter text and its lock |
 | `artifacts/semaphore-v4/` | Key file copied unchanged from the Semaphore package |
 
 The core takes the verifier and file bytes as arguments and uses no Node API,
-so a browser worker can supply its own later. That has not been tried.
+which is how the browser worker and the command line share it.
 
 The importer accepts only the six known fields, numbers as canonical decimal
 strings within range, exactly eight proof points, and refuses a field written
@@ -140,11 +161,18 @@ No audit status has been confirmed for snarkjs 0.7.6 or for this code.
   inside an export were detected.
 - Command-line exit codes.
 
+12 browser tests (six scenarios, each in Chromium and WebKit, run headless
+through Playwright on macOS): a valid proof, a rejected proof, an unsupported
+file containing markup, recovery after an unreadable file, identical exports
+and cross-reruns between page and command line, and a forged export.
+
 ## Not tested or not done
 
 - The adapter wording has not been reviewed by a qualified person.
-- No browser, Safari or Windows. A CI workflow for Linux on Node 22 and 24 is
-  written but had not run when this was written.
+- Playwright's WebKit is not Safari itself. The page has not been opened in
+  Safari on a Mac or an iPhone, in Firefox, or on Windows.
+- The page has had no accessibility review beyond labelled controls and a
+  live status line.
 - Random testing covered one file with simple changes; there is no
   coverage-guided fuzzing.
 - The link between the key file and the Semaphore circuit source and trusted

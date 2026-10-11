@@ -13,8 +13,10 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc --noEmit",
+    "build:web": "vite build",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "fixtures": "node scripts/make-fixture.mjs"
   },
   "dependencies": {
@@ -22,12 +24,14 @@
     "snarkjs": "0.7.6"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.0",
     "@semaphore-protocol/group": "4.14.3",
     "@semaphore-protocol/identity": "4.14.3",
     "@semaphore-protocol/proof": "4.14.3",
     "@types/node": "26.6.5",
     "@types/snarkjs": "0.7.9",
     "typescript": "7.0.2",
+    "vite": "8.3.4",
     "vitest": "5.0.3"
   }
 }

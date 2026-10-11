@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { verifyProof as semaphoreVerify } from '@semaphore-protocol/proof';
 import { afterAll, describe, expect, it } from 'vitest';
 import { SCALAR_FIELD } from '../src/field.js';
-import { SNARKJS_VERSION, snarkjsEngine, stopSnarkjs } from '../src/node/snarkjs-engine.js';
+import { SNARKJS_VERSION, snarkjsEngine, stopSnarkjs } from '../src/snarkjs-engine.js';
 import { bundledSemaphoreV4Keys } from '../src/node/keys.js';
 import { ArtifactMismatchError, SEMAPHORE_V4_KEYS_SHA256, loadSemaphoreV4Keys } from '../src/semaphore-v4/artifact.js';
 import { hashToField } from '../src/semaphore-v4/hash.js';

@@ -34,7 +34,7 @@ describe('command line', () => {
     const result = cli('check', file('tampered.json', text((raw) => { raw.nullifier = plus(raw.nullifier, 1n); })));
     expect(result.status).toBe(1);
     expect(result.stdout).toMatch(/FAILED/);
-    expect(result.stdout).toMatch(/Claim: none/);
+    expect(result.stdout).toMatch(/Claim: None/);
   });
 
   it('exits 2 for an unsupported file without calling it invalid', () => {

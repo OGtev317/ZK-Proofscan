@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { rerunExport, writeExport } from '../src/export.js';
 import { bundledSemaphoreV4 } from '../src/node/bundled.js';
-import { stopSnarkjs } from '../src/node/snarkjs-engine.js';
+import { stopSnarkjs } from '../src/snarkjs-engine.js';
 import { renderReport, type Report } from '../src/report.js';
 import { scanSemaphoreV4 } from '../src/semaphore-v4/scan.js';
 import { asPaddedAscii } from '../src/semaphore-v4/text.js';
@@ -25,9 +25,9 @@ describe('evidence report', () => {
     for (const heading of ['Claim:', 'Hidden by the proof:', 'Public:', 'Cryptographic verification: PASSED', 'Explanation:', 'Application checks not performed:', 'Limits:', 'This result assumes:']) {
       expect(shown).toContain(heading);
     }
-    expect(shown).toContain('Review: NOT REVIEWED.');
+    expect(shown).toContain('Explanation: NOT REVIEWED.');
     expect(shown).toContain('Whether this nullifier has been used before.');
-    expect(shown).toContain('If this number encodes text, it reads: "fixture message"');
+    expect(shown).toContain('if this number encodes text, it reads: "fixture message"');
   });
 
   it('states the unperformed application checks and the limits in JSON as well as in text', async () => {
@@ -55,7 +55,7 @@ describe('evidence report', () => {
       expect(renderReport(report)).not.toContain(claim);
       expect(renderReport(report)).not.toContain('PASSED');
     }
-    expect(renderReport(reports[0]!)).toContain('Claim: none.');
+    expect(renderReport(reports[0]!)).toContain('Claim: None.');
     expect(renderReport(reports[1]!)).toContain('says nothing about whether a proof is valid');
     expect(renderReport(reports[2]!)).toContain('says nothing about whether a proof is valid');
   });

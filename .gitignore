@@ -11,3 +11,6 @@ coverage/
 *.key
 .idea/
 .vscode/
+dist-web/
+test-results/
+playwright-report/

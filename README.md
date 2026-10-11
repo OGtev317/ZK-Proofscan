@@ -9,9 +9,9 @@ report. Instead of `0x7a2f…3b1c — Verified`, a report states:
 - **Verification:** which verifier and verifying key were used, and the result.
 - **Limits:** what the proof does not establish.
 
-**Status: prototype.** A command-line tool checks one supported format,
-Semaphore v4 proofs, prints the report above, and exports evidence another
-person can rerun. The explanation wording is a draft that no qualified person
+**Status: prototype.** A command-line tool and a browser page check one
+supported format, Semaphore v4 proofs, show the report above, and export
+evidence another person can rerun. Nothing is hosted. The explanation wording is a draft that no qualified person
 has reviewed, and reports say so. The code is unaudited and unreleased. Read
 [the charter](docs/PROJECT_CHARTER.md), [the handoff](docs/HANDOFF.md) and
 [the prototype notes](docs/VERIFICATION_PROTOTYPE.md).

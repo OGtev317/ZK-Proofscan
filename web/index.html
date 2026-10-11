@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- The page loads nothing from other sites and sends nothing anywhere. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'" />
+    <meta name="referrer" content="no-referrer" />
+    <title>ZK-Proofscan</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main>
+      <h1>ZK-Proofscan</h1>
+      <p class="lede">Checks a Semaphore v4 proof on this device and says what it does and does not establish. Nothing is uploaded.</p>
+      <p class="notice">Prototype. Unaudited, and the explanation wording has not been reviewed by a qualified person.</p>
+
+      <section aria-labelledby="check-heading">
+        <h2 id="check-heading">Check a proof</h2>
+        <label for="proof-file">Proof file (.json)</label>
+        <input id="proof-file" type="file" accept=".json,application/json" />
+        <label for="proof-text">Or paste the proof</label>
+        <textarea id="proof-text" rows="6" spellcheck="false" autocomplete="off"></textarea>
+        <button id="check" type="button">Check proof</button>
+      </section>
+
+      <section aria-labelledby="rerun-heading">
+        <h2 id="rerun-heading">Repeat someone else's check</h2>
+        <label for="export-file">Evidence export (.json)</label>
+        <input id="export-file" type="file" accept=".json,application/json" />
+      </section>
+
+      <p id="status" role="status" aria-live="polite"></p>
+      <section id="report" aria-labelledby="report-heading" hidden>
+        <h2 id="report-heading">Report</h2>
+        <p id="rerun-result" hidden></p>
+        <div id="sections"></div>
+        <button id="download" type="button" hidden>Download evidence export</button>
+      </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

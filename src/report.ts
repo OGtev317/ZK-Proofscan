@@ -86,53 +86,89 @@ export function buildReport(proofText: string, result: VerificationResult, adapt
   };
 }
 
-const bullets = (lines: string[]): string[] => lines.map((line) => `  - ${line}`);
-const asText = (text: string | undefined): string => (text === undefined ? '' : `\n      If this number encodes text, it reads: ${JSON.stringify(text)}`);
-const NOTHING = 'This says nothing about whether a proof is valid.';
+export interface ReportSection {
+  heading: string;
+  /** A short statement shown beside the heading, if any. */
+  summary?: string;
+  items: string[];
+  /** How the section should be weighed: a pass, a failure, a caution, or neutral. */
+  tone: 'pass' | 'fail' | 'caution' | 'plain';
+}
 
-export function renderReport(report: Report): string {
+const NOTHING = 'This says nothing about whether a proof is valid.';
+const asText = (text: string | undefined): string => (text === undefined ? '' : ` (if this number encodes text, it reads: ${JSON.stringify(text)})`);
+
+/**
+ * The report as ordered sections. The command line and the browser page both
+ * render from this, so neither can show a section the other leaves out.
+ */
+export function reportSections(report: Report): ReportSection[] {
+  const file: ReportSection = { heading: 'Proof file', summary: `SHA-256 ${report.input.sha256}`, items: [], tone: 'plain' };
   switch (report.outcome) {
     case 'unsupported':
-      return `Not checked: this is not a supported proof file (${report.reason}).\n${NOTHING}`;
+      return [{ heading: 'Not checked', summary: `This is not a supported proof file (${report.reason}).`, items: [NOTHING], tone: 'caution' }, file];
     case 'error':
-      return `Not checked: the verification could not be completed (${report.message}).\n${NOTHING}`;
+      return [{ heading: 'Not checked', summary: `The verification could not be completed (${report.message}).`, items: [NOTHING], tone: 'caution' }, file];
     case 'invalid':
       return [
-        'Claim: none. The verifier rejected this proof, so it establishes nothing.',
-        `Cryptographic verification: FAILED using ${report.verification.verifier.name} ${report.verification.verifier.version}.`,
-        'Public inputs that were checked:',
-        ...report.public.map((field) => `  - ${field.name}: ${field.value}`),
-        `Verification keys (SHA-256): ${report.verification.verificationKeysSha256}`,
-        `Proof file (SHA-256): ${report.input.sha256}`,
-      ].join('\n');
+        { heading: 'Claim', summary: 'None. The verifier rejected this proof, so it establishes nothing.', items: [], tone: 'fail' },
+        {
+          heading: 'Cryptographic verification',
+          summary: `FAILED using ${report.verification.verifier.name} ${report.verification.verifier.version}.`,
+          items: [`Verification keys (SHA-256): ${report.verification.verificationKeysSha256}`],
+          tone: 'fail',
+        },
+        { heading: 'Public inputs that were checked', items: report.public.map((field) => `${field.name}: ${field.value}`), tone: 'plain' },
+        file,
+      ];
     case 'valid': {
       const { explanation, verification } = report;
-      const review = explanation.review.status === 'reviewed'
-        ? `Reviewed by ${explanation.review.reviewer} on ${explanation.review.date}. ${explanation.review.note}`
-        : `NOT REVIEWED. ${explanation.review.note}`;
+      const reviewed = explanation.review.status === 'reviewed';
       return [
-        `Claim: ${report.claim}`,
-        'Hidden by the proof:',
-        ...bullets(report.hidden),
-        'Public:',
-        ...report.public.flatMap((field) => [`  - ${field.name}: ${field.value}`, `      ${field.meaning}`]),
-        `  - message in the file: ${report.proofFile.message}${asText(report.proofFile.messageIfText)}`,
-        `  - scope in the file: ${report.proofFile.scope}${asText(report.proofFile.scopeIfText)}`,
-        `  - tree depth: ${report.proofFile.merkleTreeDepth}`,
-        `Cryptographic verification: PASSED using ${verification.verifier.name} ${verification.verifier.version}.`,
-        `  Verification keys (SHA-256): ${verification.verificationKeysSha256}`,
-        `Explanation: adapter ${explanation.adapter.id} revision ${explanation.adapter.revision} (SHA-256 ${explanation.adapter.sha256}).`,
-        `  Review: ${review}`,
-        `  Circuit: ${explanation.circuit.name}, ${explanation.circuit.source}`,
-        `  Keys and circuit: ${explanation.circuit.linkToArtifacts}`,
-        'Application checks not performed:',
-        ...bullets(report.applicationChecks.map((check) => check.description)),
-        'Limits:',
-        ...bullets(report.limits),
-        'This result assumes:',
-        ...bullets(report.assumptions),
-        `Proof file (SHA-256): ${report.input.sha256}`,
-      ].join('\n');
+        { heading: 'Claim', summary: report.claim, items: [], tone: 'plain' },
+        { heading: 'Hidden by the proof', items: report.hidden, tone: 'plain' },
+        {
+          heading: 'Public',
+          items: [
+            ...report.public.map((field) => `${field.name}: ${field.value} — ${field.meaning}`),
+            `message in the file: ${report.proofFile.message}${asText(report.proofFile.messageIfText)}`,
+            `scope in the file: ${report.proofFile.scope}${asText(report.proofFile.scopeIfText)}`,
+            `tree depth: ${report.proofFile.merkleTreeDepth}`,
+          ],
+          tone: 'plain',
+        },
+        {
+          heading: 'Cryptographic verification',
+          summary: `PASSED using ${verification.verifier.name} ${verification.verifier.version}.`,
+          items: [`Verification keys (SHA-256): ${verification.verificationKeysSha256}`],
+          tone: 'pass',
+        },
+        {
+          heading: 'Explanation',
+          summary: reviewed
+            ? `Reviewed by ${explanation.review.reviewer} on ${explanation.review.date}. ${explanation.review.note}`
+            : `NOT REVIEWED. ${explanation.review.note}`,
+          items: [
+            `Adapter ${explanation.adapter.id} revision ${explanation.adapter.revision} (SHA-256 ${explanation.adapter.sha256})`,
+            `Circuit: ${explanation.circuit.name}, ${explanation.circuit.source}`,
+            `Keys and circuit: ${explanation.circuit.linkToArtifacts}`,
+          ],
+          tone: reviewed ? 'plain' : 'caution',
+        },
+        { heading: 'Application checks not performed', items: report.applicationChecks.map((check) => check.description), tone: 'caution' },
+        { heading: 'Limits', items: report.limits, tone: 'caution' },
+        { heading: 'This result assumes', items: report.assumptions, tone: 'plain' },
+        file,
+      ];
     }
   }
+}
+
+export function renderReport(report: Report): string {
+  return reportSections(report)
+    .flatMap((section) => [
+      section.summary === undefined ? `${section.heading}:` : `${section.heading}: ${section.summary}`,
+      ...section.items.map((item) => `  - ${item}`),
+    ])
+    .join('\n');
 }

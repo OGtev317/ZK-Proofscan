@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { afterAll, describe, expect, it } from 'vitest';
 import { AdapterError, loadAdapter } from '../src/adapter.js';
-import { snarkjsEngine, stopSnarkjs } from '../src/node/snarkjs-engine.js';
+import { snarkjsEngine, stopSnarkjs } from '../src/snarkjs-engine.js';
 import { ArtifactMismatchError } from '../src/semaphore-v4/artifact.js';
 import { bindSemaphoreV4, type AdapterLock } from '../src/semaphore-v4/bind.js';
 import { sha256Hex, utf8 } from '../src/sha256.js';

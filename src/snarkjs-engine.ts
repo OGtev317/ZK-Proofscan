@@ -1,5 +1,5 @@
 import { groth16 } from 'snarkjs';
-import type { Groth16Engine } from '../semaphore-v4/verify.js';
+import type { Groth16Engine } from './semaphore-v4/verify.js';
 
 /** The pinned verifier. A test checks this against the installed package. */
 export const SNARKJS_VERSION = '0.7.6';

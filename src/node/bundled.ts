@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { bindSemaphoreV4, type AdapterLock, type BoundSemaphoreV4 } from '../semaphore-v4/bind.js';
-import { snarkjsEngine } from './snarkjs-engine.js';
+import { snarkjsEngine } from '../snarkjs-engine.js';
 
 const file = (path: string): Promise<Uint8Array> => readFile(new URL(`../../${path}`, import.meta.url));
 
