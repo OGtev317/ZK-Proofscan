@@ -1,20 +1,29 @@
 # ZK-Proofscan handoff
 
-## Verification prototype (2026-10-11)
+## Prototype (2026-10-11)
 
-Build step 1 is written on branch `feat/verification-prototype` in the
-checkout `/Users/tevdev/Desktop/ZK-Proofscan`. Read
+Build steps 1 to 3 are written: strict import and verification, explanation
+binding, and the readable report with export and rerun. Read
 [the prototype notes](VERIFICATION_PROTOTYPE.md) for what exists, what was
-measured and what is untested. 27 tests pass.
+measured and what is untested. 48 tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
-for the first version; this checkout holds the core, command line and tests.
-Adapter text and source research belong to the other session, in its own
-checkout. One session per checkout.
+for the first version. The checkout `/Users/tevdev/Desktop/ZK-Proofscan` holds
+the core, command line and tests. Adapter wording and source research belong
+to the other session, in its own checkout. One session per checkout.
 
-Next is build step 2, explanation binding: approved templates tied to exact
-artifacts, with tests that reject swapped metadata or verifier artifacts. It
-depends on the adapter text and on naming a human reviewer.
+The adapter wording in `adapters/semaphore-v4/adapter.json` is a draft taken
+from the owner's illustrative report so the machinery could be built and
+tested. Whoever changes it must update `lock.json` with the new SHA-256 and
+raise the revision.
+
+Open, in order of importance:
+
+1. A named, qualified reviewer for the adapter wording. Until then it stays
+   marked unreviewed.
+2. Evidence linking the key file to the circuit source and trusted setup.
+3. Step 4, release review, and the browser interface with a verification
+   worker. Neither is started.
 
 ## State on 2026-10-11
 

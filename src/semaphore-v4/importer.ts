@@ -27,6 +27,9 @@ const reject = (reason: string): ImportResult => ({ ok: false, reason });
  */
 export function importSemaphoreV4(text: string): ImportResult {
   if (text.length > MAX_PROOF_CHARACTERS) return reject(`the file is larger than ${MAX_PROOF_CHARACTERS} characters`);
+  // A supported proof needs no escape sequences, and allowing them would let
+  // a field name be spelled two ways (see the repeated-field check below).
+  if (text.includes('\\')) return reject('the file contains a backslash escape');
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
@@ -37,7 +40,8 @@ export function importSemaphoreV4(text: string): ImportResult {
   const record = parsed as Record<string, unknown>;
 
   for (const key of Object.keys(record)) {
-    if (!(KEYS as readonly string[]).includes(key)) return reject(`unknown field "${key}"`);
+    // The name is not echoed: it is untrusted text that would be printed.
+    if (!(KEYS as readonly string[]).includes(key)) return reject('the file has a field that is not part of a Semaphore v4 proof');
   }
   for (const key of KEYS) {
     if (!Object.hasOwn(record, key)) return reject(`missing field "${key}"`);
@@ -67,8 +71,8 @@ export function importSemaphoreV4(text: string): ImportResult {
 
   // JSON.parse keeps only the last of two fields with the same name, so a
   // file could show one value to a reader and another to this tool. Every
-  // string value above is digits only, so a quoted field name in the text can
-  // only be a field name.
+  // string value above is digits only and escapes are refused, so a quoted
+  // field name in the text can only be that field.
   for (const key of KEYS) {
     if (text.split(`"${key}"`).length !== 2) return reject(`field "${key}" appears more than once`);
   }

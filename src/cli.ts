@@ -1,63 +1,102 @@
 #!/usr/bin/env node
-import { readFile, stat } from 'node:fs/promises';
-import { bundledSemaphoreV4Keys } from './node/keys.js';
-import { snarkjsEngine, stopSnarkjs } from './node/snarkjs-engine.js';
-import type { VerificationResult } from './result.js';
+import { readFile, stat, writeFile } from 'node:fs/promises';
+import { MAX_EXPORT_CHARACTERS, rerunExport, writeExport } from './export.js';
+import { bundledSemaphoreV4 } from './node/bundled.js';
+import { stopSnarkjs } from './node/snarkjs-engine.js';
+import { renderReport, type Report } from './report.js';
 import { MAX_PROOF_CHARACTERS } from './semaphore-v4/importer.js';
-import { verifySemaphoreV4 } from './semaphore-v4/verify.js';
+import { scanSemaphoreV4 } from './semaphore-v4/scan.js';
+
+const USAGE = `Usage:
+  zk-proofscan check <semaphore-v4-proof.json> [--json] [--export <file>]
+  zk-proofscan rerun <export.json>`;
 
 // Exit codes keep "the proof is wrong" apart from "the check did not happen".
-const EXIT: Record<VerificationResult['status'], number> = { valid: 0, invalid: 1, unsupported: 2, error: 3 };
+const EXIT: Record<Report['outcome'], number> = { valid: 0, invalid: 1, unsupported: 2, error: 3 };
+const USAGE_ERROR = 64;
 
-async function check(path: string): Promise<VerificationResult> {
+const message = (error: unknown): string => (error instanceof Error ? error.message : String(error));
+
+class TooLarge extends Error {}
+
+async function readText(path: string, limit: number): Promise<string> {
+  if ((await stat(path)).size > limit * 4) throw new TooLarge();
+  return new TextDecoder('utf-8', { fatal: true }).decode(await readFile(path));
+}
+
+async function check(path: string, json: boolean, exportPath: string | undefined): Promise<number> {
   let text: string;
   try {
-    if ((await stat(path)).size > MAX_PROOF_CHARACTERS * 4) return { status: 'unsupported', reason: 'the file is too large to be a supported proof' };
-    text = new TextDecoder('utf-8', { fatal: true }).decode(await readFile(path));
+    text = await readText(path, MAX_PROOF_CHARACTERS);
   } catch (error) {
-    return { status: 'error', message: `could not read the file: ${error instanceof Error ? error.message : String(error)}` };
+    if (error instanceof TooLarge) {
+      console.log('Not checked: this is not a supported proof file (the file is too large).\nThis says nothing about whether a proof is valid.');
+      return EXIT.unsupported;
+    }
+    console.log(`Not checked: the verification could not be completed (could not read the file: ${message(error)}).\nThis says nothing about whether a proof is valid.`);
+    return EXIT.error;
   }
-  try {
-    return await verifySemaphoreV4(text, await bundledSemaphoreV4Keys(), snarkjsEngine);
-  } catch (error) {
-    return { status: 'error', message: error instanceof Error ? error.message : String(error) };
+  const bound = await bundledSemaphoreV4();
+  const report = await scanSemaphoreV4(text, bound);
+  console.log(json ? JSON.stringify(report, null, 2) : renderReport(report));
+  if (exportPath !== undefined) {
+    try {
+      // Never overwrite: an existing export may be someone's evidence.
+      await writeFile(exportPath, writeExport(text, report), { flag: 'wx' });
+    } catch (error) {
+      console.error(`The export was not written: ${message(error)}`);
+      return EXIT.error;
+    }
   }
+  return EXIT[report.outcome];
 }
 
-function describe(result: VerificationResult): string {
-  switch (result.status) {
-    case 'valid':
-    case 'invalid':
-      return [
-        result.status === 'valid' ? 'Cryptographic verification: PASSED' : 'Cryptographic verification: FAILED (the verifier rejected this proof)',
-        `Format: Semaphore v4, tree depth ${result.artifact.merkleTreeDepth}`,
-        `Verifier: ${result.verifier.name} ${result.verifier.version}`,
-        `Verification keys (SHA-256): ${result.artifact.sha256}`,
-        'Public inputs given to the verifier:',
-        `  group root:     ${result.publicSignals[0]}`,
-        `  nullifier:      ${result.publicSignals[1]}`,
-        `  hashed message: ${result.publicSignals[2]}`,
-        `    (message in the file: ${result.message})`,
-        `  hashed scope:   ${result.publicSignals[3]}`,
-        `    (scope in the file: ${result.scope})`,
-        'Not checked: whether any application accepts this group root, and whether this nullifier was already used.',
-      ].join('\n');
-    case 'unsupported':
-      return `Not checked: this is not a supported proof file (${result.reason}).\nThis says nothing about whether a proof is valid.`;
-    case 'error':
-      return `Not checked: the verification could not be completed (${result.message}).\nThis says nothing about whether a proof is valid.`;
+async function rerun(path: string): Promise<number> {
+  const text = await readText(path, MAX_EXPORT_CHARACTERS).catch((error: unknown) => {
+    throw new Error(`could not read the export: ${error instanceof TooLarge ? 'the file is too large' : message(error)}`);
+  });
+  const bound = await bundledSemaphoreV4();
+  const result = await rerunExport(text, (proof) => scanSemaphoreV4(proof, bound));
+  if (result.reproduced) {
+    console.log(`REPRODUCED: checking the proof again gave the same report (outcome: ${result.report.outcome}).\n`);
+    console.log(renderReport(result.report));
+    return 0;
   }
+  if (result.kind === 'unreadable') {
+    console.log(`Not rerun: ${result.reason}.`);
+    return 2;
+  }
+  console.log(`NOT REPRODUCED: checking the proof again gave a different report.\nSections that differ: ${result.fields.join(', ')}.`);
+  console.log('A difference in "tool" or "explanation" can mean a different version of this tool made the export.\n');
+  console.log(`Report from this run:\n${renderReport(result.report)}`);
+  return 1;
 }
 
-const args = process.argv.slice(2);
-const json = args.includes('--json');
-const paths = args.filter((arg) => arg !== '--json');
-if (paths.length !== 1 || paths[0]!.startsWith('-')) {
-  console.error('Usage: zk-proofscan [--json] <semaphore-v4-proof.json>');
-  process.exitCode = 64;
-} else {
-  const result = await check(paths[0]!);
-  console.log(json ? JSON.stringify(result, null, 2) : describe(result));
+async function main(args: string[]): Promise<number> {
+  const [command, ...rest] = args;
+  const paths: string[] = [];
+  let json = false;
+  let exportPath: string | undefined;
+  for (let i = 0; i < rest.length; i++) {
+    const arg = rest[i]!;
+    if (arg === '--json') json = true;
+    else if (arg === '--export' && rest[i + 1] !== undefined) exportPath = rest[++i];
+    else if (arg.startsWith('-')) return USAGE_ERROR;
+    else paths.push(arg);
+  }
+  if (paths.length !== 1) return USAGE_ERROR;
+  if (command === 'check') return check(paths[0]!, json, exportPath);
+  if (command === 'rerun' && !json && exportPath === undefined) return rerun(paths[0]!);
+  return USAGE_ERROR;
+}
+
+try {
+  const code = await main(process.argv.slice(2));
+  if (code === USAGE_ERROR) console.error(USAGE);
+  process.exitCode = code;
+} catch (error) {
+  console.log(`Not checked: the verification could not be completed (${message(error)}).\nThis says nothing about whether a proof is valid.`);
+  process.exitCode = EXIT.error;
+} finally {
   await stopSnarkjs();
-  process.exitCode = EXIT[result.status];
 }

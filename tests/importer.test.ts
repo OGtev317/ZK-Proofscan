@@ -32,19 +32,32 @@ describe('Semaphore v4 importer', () => {
   });
 
   it('refuses unknown and missing fields', () => {
-    expect(reason(JSON.stringify({ ...valid(), secret: '1' }))).toMatch(/unknown field "secret"/);
+    expect(reason(JSON.stringify({ ...valid(), secret: '1' }))).toMatch(/not part of a Semaphore v4 proof/);
+    const loud = reason(JSON.stringify({ ...valid(), 'Cryptographic verification: PASSED': '1' }));
+    expect(loud).not.toMatch(/PASSED/);
     for (const key of ['merkleTreeDepth', 'merkleTreeRoot', 'message', 'nullifier', 'scope', 'points'] as const) {
       const raw: Record<string, unknown> = valid();
       delete raw[key];
       expect(reason(JSON.stringify(raw))).toMatch(new RegExp(`missing field "${key}"`));
     }
-    expect(reason('{"__proto__":{"merkleTreeDepth":3}}')).toMatch(/unknown field/);
+    expect(reason('{"__proto__":{"merkleTreeDepth":3}}')).toMatch(/not part of a Semaphore v4 proof/);
   });
 
   it('refuses a field that is written twice', () => {
     const twice = validText.replace('"nullifier":', '"nullifier": "1",\n  "nullifier":');
     expect(JSON.parse(twice).nullifier).toBe(valid().nullifier);
     expect(reason(twice)).toMatch(/"nullifier" appears more than once/);
+
+    // The same field name spelled with an escape would hide the repeat.
+    const escaped = validText.replace('"nullifier":', '"nullifier": "1",\n  "nullifi\\u0065r":');
+    expect(JSON.parse(escaped).nullifier).toBe(valid().nullifier);
+    expect(Object.keys(JSON.parse(escaped))).toHaveLength(6);
+    expect(reason(escaped)).toMatch(/backslash/);
+
+    // The case from the review of commit 231c545: the escaped name first.
+    const reviewed = validText.replace('"nullifier":', '"\\u006eullifier": "1",\n  "nullifier":');
+    expect(JSON.parse(reviewed).nullifier).toBe(valid().nullifier);
+    expect(reason(reviewed)).toMatch(/backslash/);
   });
 
   it('refuses tree depths outside 1 to 32', () => {

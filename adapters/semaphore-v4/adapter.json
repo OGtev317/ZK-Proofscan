@@ -1,0 +1,51 @@
+{
+  "id": "semaphore-v4",
+  "revision": 1,
+  "format": "semaphore-v4",
+  "verifier": { "name": "snarkjs", "version": "0.7.6" },
+  "artifacts": [
+    {
+      "role": "verification-keys",
+      "sha256": "d96ec60593b6fc2334f1f04e008e07425d5536d7777f6ac21d996fc80779b3c9",
+      "source": "npm package @semaphore-protocol/proof 4.14.3, file src/verification-keys.json"
+    }
+  ],
+  "circuit": {
+    "name": "Semaphore",
+    "source": "https://github.com/semaphore-protocol/semaphore/blob/4dbc39b83a4066bf5084fd7f5d336202aad2f815/packages/circuits/src/semaphore.circom",
+    "linkToArtifacts": "Not established here. The verification keys were not rebuilt from this source or checked against the trusted setup."
+  },
+  "publicFields": [
+    { "name": "group root", "meaning": "Merkle root of the list of membership commitments the proof refers to." },
+    { "name": "nullifier", "meaning": "A value derived from the prover's secret and the scope. The same secret and scope always give the same nullifier." },
+    { "name": "hashed message", "meaning": "Hash of the message this proof is bound to." },
+    { "name": "hashed scope", "meaning": "Hash of the scope, the topic within which the nullifier is fixed." }
+  ],
+  "explanation": {
+    "claim": "Someone knew the secret behind a membership commitment included under this group root, and generated this proof bound to this message and scope.",
+    "hidden": [
+      "The secret.",
+      "Which membership commitment under the root was used."
+    ],
+    "applicationChecks": [
+      { "id": "group-root-accepted", "description": "Whether any application currently accepts this group root. The root may be old or made up." },
+      { "id": "nullifier-unused", "description": "Whether this nullifier has been used before." }
+    ],
+    "limits": [
+      "This does not establish unique personhood: one person can hold several memberships.",
+      "This does not establish that membership was granted fairly.",
+      "This does not establish that whoever presents this file controls the credential: a proof can be copied.",
+      "Hiding which member made the proof is not anonymity. The message may identify someone, a small group hides little, and a repeated nullifier links proofs from the same member in the same scope."
+    ],
+    "assumptions": [
+      "The Groth16 proof system and the BN254 curve are sound.",
+      "The trusted setup behind the verification keys was performed honestly.",
+      "The verification keys belong to the named circuit, and that circuit enforces the claim above.",
+      "The verifier library is correct."
+    ]
+  },
+  "review": {
+    "status": "unreviewed",
+    "note": "Draft wording taken from the project owner's illustrative report. No qualified person has reviewed it against the circuit."
+  }
+}

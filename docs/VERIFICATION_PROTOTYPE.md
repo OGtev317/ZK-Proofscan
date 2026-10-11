@@ -1,29 +1,71 @@
-# Verification prototype (build step 1)
+# Prototype notes (build steps 1 to 3)
 
 Written 2026-10-11. Evaluation code: unaudited, unreviewed, not released.
 
 ## What exists
 
-A TypeScript core and a command-line tool that check one kind of proof: a
-Semaphore v4 proof file as written by `@semaphore-protocol/proof`.
+A TypeScript core and a command-line tool for one kind of proof: a Semaphore
+v4 proof file as written by `@semaphore-protocol/proof`. The tool verifies
+it, explains the result from a fixed adapter, and can export the evidence so
+someone else can repeat the check.
 
 ```sh
 npm ci
 npm test
 npm run build
-node dist/cli.js tests/fixtures/semaphore-v4-valid.json   # add --json for JSON
+node dist/cli.js check tests/fixtures/semaphore-v4-valid.json
+node dist/cli.js check <proof.json> --json
+node dist/cli.js check <proof.json> --export evidence.json
+node dist/cli.js rerun evidence.json
 ```
 
-| Result | Exit code | Meaning |
+| `check` outcome | Exit code | Meaning |
 | --- | --- | --- |
 | `valid` | 0 | The verifier accepted the proof |
 | `invalid` | 1 | The verifier ran and rejected the proof |
 | `unsupported` | 2 | The file is not a supported proof; nothing was verified |
 | `error` | 3 | The check could not be completed; nothing was verified |
 
-There are no explanation templates, registry, browser interface or report
-export yet. Output states the verification result, the verifier and key hash,
-the public inputs, and that the group root and nullifier use were not checked.
+`rerun` exits 0 when a fresh check gives the same report as the export, 1 when
+it differs, 2 when the export cannot be read and 3 on failure. Wrong usage
+exits 64.
+
+There is no browser interface yet.
+
+## How an explanation is tied to a verification
+
+`adapters/semaphore-v4/adapter.json` holds every sentence a report can say
+beyond pass or fail: the claim, what is hidden, the meaning of each public
+input, the application checks not performed, limits, assumptions, the circuit
+source and the review status. The text is fixed; nothing from a proof file is
+substituted into it.
+
+Before any proof is checked, four parts are bound together, and binding fails
+if any one is exchanged:
+
+1. The adapter file must hash to the value in `adapters/semaphore-v4/lock.json`.
+2. The adapter must name the verifier and version that will run.
+3. The adapter must describe the four public inputs in circuit order.
+4. The key file must hash to the value the adapter names.
+
+A report carries the claim only when the verifier accepted the proof. A
+rejected proof gets "Claim: none". Changing any wording means changing the
+lock deliberately, and reports show the adapter's hash.
+
+**The shipped adapter is marked unreviewed, and every passing report says so.**
+An adapter cannot be marked reviewed without a named reviewer and a date.
+These checks keep the parts consistent with each other. They do not show that
+the wording is correct: that needs a qualified person to review it against
+the circuit.
+
+An export contains the proof text and the report. `rerun` checks the proof
+again and compares; it trusts nothing the export says about itself. Exports
+reference the key file and adapter by hash and do not bundle them, so a rerun
+needs the same version of this tool. Reports carry no timestamp, so the same
+input gives the same report.
+
+If a message or scope number has the shape Semaphore gives to short text, the
+report also shows that text as a reading aid.
 
 ## Parts
 
@@ -33,12 +75,17 @@ the public inputs, and that the group root and nullifier use were not checked.
 | `src/semaphore-v4/hash.ts` | Semaphore's message and scope hashing |
 | `src/semaphore-v4/artifact.ts` | Verification keys, accepted only at a pinned SHA-256 |
 | `src/semaphore-v4/verify.ts` | Builds the public inputs and calls the verifier |
-| `src/node/` | The snarkjs verifier and the bundled key file, for Node |
+| `src/adapter.ts` | Strict reading of an adapter file |
+| `src/semaphore-v4/bind.ts` | Binds adapter, lock, keys and verifier |
+| `src/report.ts` | Builds and renders the report |
+| `src/export.ts` | Export and rerun |
+| `src/node/` | The snarkjs verifier and bundled files, for Node |
 | `src/cli.ts` | Command line |
+| `adapters/semaphore-v4/` | Adapter text and its lock |
 | `artifacts/semaphore-v4/` | Key file copied unchanged from the Semaphore package |
 
-The core takes the verifier and the key bytes as arguments and uses no Node
-API, so a browser worker can supply its own later. That has not been tried.
+The core takes the verifier and file bytes as arguments and uses no Node API,
+so a browser worker can supply its own later. That has not been tried.
 
 The importer accepts only the six known fields, numbers as canonical decimal
 strings within range, exactly eight proof points, and refuses a field written
@@ -78,19 +125,31 @@ No audit status has been confirmed for snarkjs 0.7.6 or for this code.
 
 ## Tested
 
-27 automated tests on macOS with Node 26.3.0: one real proof (tree depth 3,
-five throwaway members), a change to each public field and each proof point,
-other tree depths, swapped values, out-of-range and non-canonical values,
-unknown, missing and repeated fields, a changed key file, a verifier that
-throws, and the command-line exit codes.
+48 automated tests on macOS with Node 26.3.0:
+
+- Three real proofs, at tree depths 1, 3 and 10, each made from throwaway
+  identities; each is rejected under a neighbouring depth.
+- A change to each public field and each proof point; swapped values;
+  out-of-range and non-canonical values; unknown, missing and repeated fields.
+- 400 seeded random single-character changes to a valid file: none passed
+  unless the file still said exactly the same thing.
+- Binding refused changed wording, a changed review status, another format,
+  verifier or version, reordered public fields and other key files.
+- No claim or explanation appears for rejected, unsupported or failed checks.
+- Exports were reproduced; forged claims, removed limits and a swapped proof
+  inside an export were detected.
+- Command-line exit codes.
 
 ## Not tested or not done
 
-- Only one valid proof, at one tree depth. Depths other than 3 have no valid
-  fixture.
-- No fuzzing, no browser, no Safari, no Windows or Linux, no CI.
+- The adapter wording has not been reviewed by a qualified person.
+- No browser, Safari or Windows. A CI workflow for Linux on Node 22 and 24 is
+  written but had not run when this was written.
+- Random testing covered one file with simple changes; there is no
+  coverage-guided fuzzing.
 - The link between the key file and the Semaphore circuit source and trusted
   setup is not established here. The hash shows only that the file is the one
   shipped in the Semaphore package.
 - The fixture script downloads Semaphore's public proving files at run time;
   those downloads are not hash-checked by this repository.
+- Exports do not bundle the key file or adapter.

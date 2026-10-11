@@ -1,4 +1,4 @@
-import { sha256 } from '@noble/hashes/sha2.js';
+import { sha256Hex } from '../sha256.js';
 import { MAX_DEPTH } from './importer.js';
 
 /** SHA-256 of `verification-keys.json` from `@semaphore-protocol/proof` 4.14.3. */
@@ -17,7 +17,7 @@ export class ArtifactMismatchError extends Error {}
  * evidence about how the keys were produced.
  */
 export function loadSemaphoreV4Keys(bytes: Uint8Array): SemaphoreV4Keys {
-  const actual = Array.from(sha256(bytes), (byte) => byte.toString(16).padStart(2, '0')).join('');
+  const actual = sha256Hex(bytes);
   if (actual !== SEMAPHORE_V4_KEYS_SHA256) {
     throw new ArtifactMismatchError(`verification keys have SHA-256 ${actual}, expected ${SEMAPHORE_V4_KEYS_SHA256}`);
   }

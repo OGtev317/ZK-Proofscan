@@ -38,6 +38,43 @@ describe('Semaphore v4 verification', () => {
     }
   });
 
+  it('passes real proofs made at other tree depths, and rejects each under the wrong depth', async () => {
+    for (const depth of [1, 10]) {
+      const other = readFileSync(new URL(`./fixtures/semaphore-v4-valid-depth${depth}.json`, import.meta.url), 'utf8');
+      expect(await run(other)).toMatchObject({ status: 'valid', artifact: { merkleTreeDepth: depth } });
+      expect(await semaphoreVerify(JSON.parse(other) as never)).toBe(true);
+      const moved = JSON.stringify({ ...JSON.parse(other), merkleTreeDepth: depth + 1 });
+      expect((await run(moved)).status).toBe('invalid');
+    }
+  });
+
+  // Seeded so a failure can be repeated. A changed file may still pass only
+  // if it says exactly the same thing, for example with different spacing.
+  it('never passes a randomly damaged proof file that says something different', async () => {
+    let seed = 0x5eed1234;
+    const next = (limit: number): number => {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      return seed % limit;
+    };
+    const alphabet = '0123456789"{}[],: \n-+.eEx';
+    const same = JSON.stringify(valid());
+    const seen = { valid: 0, invalid: 0, unsupported: 0, error: 0 };
+    for (let i = 0; i < 400; i++) {
+      const at = next(validText.length);
+      const kind = next(3);
+      const char = alphabet[next(alphabet.length)]!;
+      const damaged = kind === 0 ? validText.slice(0, at) + char + validText.slice(at + 1)
+        : kind === 1 ? validText.slice(0, at) + validText.slice(at + 1)
+        : validText.slice(0, at) + char + validText.slice(at);
+      const result = await run(damaged);
+      seen[result.status]++;
+      if (result.status === 'valid') expect(JSON.stringify(JSON.parse(damaged))).toBe(same);
+      expect(result.status).not.toBe('error');
+    }
+    expect(seen.invalid).toBeGreaterThan(20);
+    expect(seen.unsupported).toBeGreaterThan(20);
+  });
+
   it('rejects a change to any single proof point', async () => {
     for (let i = 0; i < 8; i++) {
       expect((await run(text((raw) => { raw.points[i] = plus(raw.points[i]!, 1n); }))).status).toBe('invalid');
