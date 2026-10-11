@@ -1,0 +1,33 @@
+{
+  "name": "zk-proofscan",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Turns a supported zero-knowledge proof into a readable, checkable evidence report.",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "zk-proofscan": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "fixtures": "node scripts/make-fixture.mjs"
+  },
+  "dependencies": {
+    "@noble/hashes": "2.4.0",
+    "snarkjs": "0.7.6"
+  },
+  "devDependencies": {
+    "@semaphore-protocol/group": "4.14.3",
+    "@semaphore-protocol/identity": "4.14.3",
+    "@semaphore-protocol/proof": "4.14.3",
+    "@types/node": "26.6.5",
+    "@types/snarkjs": "0.7.9",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
+  }
+}

@@ -9,9 +9,13 @@ report. Instead of `0x7a2f…3b1c — Verified`, a report states:
 - **Verification:** which verifier and verifying key were used, and the result.
 - **Limits:** what the proof does not establish.
 
-**Status: project charter only.** There is no code, specification, dependency
-or hosted service yet. Read [the charter](docs/PROJECT_CHARTER.md) and
-[the handoff](docs/HANDOFF.md).
+**Status: verification prototype.** A command-line tool checks one supported
+format, Semaphore v4 proofs, and reports the result. The explanation sections
+above are not built yet. The code is unaudited and unreleased. Read
+[the charter](docs/PROJECT_CHARTER.md), [the handoff](docs/HANDOFF.md) and
+[the prototype notes](docs/VERIFICATION_PROTOTYPE.md).
+
+Licensed GPL-3.0-or-later; see `LICENSE`.
 
 This repository was created on 2026-10-11 as "OtakuCoin" and refocused the same
 day. The earlier charter is in Git history at commit `8c0373c`.
