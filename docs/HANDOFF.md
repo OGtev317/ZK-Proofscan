@@ -51,7 +51,7 @@ proofs written by snarkjs, checked against a key the user supplies, on the
 command line, the page and the tool server. Such a report says the proof
 fits the key and that the circuit is unknown; every report now carries a
 `basis` field and `reportVersion` is 2. Read [the formats](FORMATS.md) for
-the rule, the findings and what each further format needs. 
+the rule, the findings and what each further format needs.
 A key registry (`registry/keys.json`, `src/registry.ts`) recognises a
 supplied key that is on record and reports provenance, the link to circuit
 source, the record's review and the explanation's review as separate lines.
