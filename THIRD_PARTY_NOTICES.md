@@ -2,7 +2,8 @@
 
 ZK-Proofscan is licensed GPL-3.0-or-later (see `LICENSE`). It is distributed
 with the packages below, each under its own licence. This list is generated
-by `node scripts/notices.mjs` from the installed production dependencies;
+by `node scripts/notices.mjs` from the production dependencies in
+`package-lock.json`, including the optional packages for every platform;
 the licence shown is the one each package declares, which has not been
 checked against the package's files.
 
@@ -15,6 +16,11 @@ The verification keys in `artifacts/semaphore-v4/` are copied from
 | @iden3/bigarray | 0.0.2 | GPL-3.0 |
 | @iden3/binfileutils | 0.0.12 | GPL-3.0 |
 | @msgpackr-extract/msgpackr-extract-darwin-arm64 | 3.0.4 | MIT |
+| @msgpackr-extract/msgpackr-extract-darwin-x64 | 3.0.4 | MIT |
+| @msgpackr-extract/msgpackr-extract-linux-arm | 3.0.4 | MIT |
+| @msgpackr-extract/msgpackr-extract-linux-arm64 | 3.0.4 | MIT |
+| @msgpackr-extract/msgpackr-extract-linux-x64 | 3.0.4 | MIT |
+| @msgpackr-extract/msgpackr-extract-win32-x64 | 3.0.4 | MIT |
 | @noble/hashes | 1.8.0 | MIT |
 | @noble/hashes | 2.4.0 | MIT |
 | async | 3.2.6 | MIT |
