@@ -1,4 +1,5 @@
-import type { LoadedAdapter } from './adapter.js';
+import type { AdapterReview, LoadedAdapter } from './adapter.js';
+import type { RecognisedKey } from './registry.js';
 import type { VerificationResult } from './result.js';
 import { asPaddedAscii } from './semaphore-v4/text.js';
 import { sha256Hex, utf8 } from './sha256.js';
@@ -24,8 +25,26 @@ interface SuppliedKeyVerification {
   verifier: { name: string; version: string };
   proofSystem: { protocol: Protocol; curve: Curve };
   verificationKeySha256: string;
+  verificationKeyContentSha256: string;
   publicInputsSha256: string;
 }
+
+/**
+ * Whether a supplied key is one this tool has on record. A match answers
+ * "which published key is this" and nothing else: provenance, the link to
+ * circuit source, the review of the record and the review of any
+ * explanation are separate statements.
+ */
+export type KeyRecognition =
+  | { match: 'none' }
+  | {
+      match: 'exact';
+      registry: { revision: number; sha256: string };
+      artifact: RecognisedKey['artifact'];
+      key: string;
+      /** The explanation this tool holds for the circuit, which a supplied-key report does not apply. */
+      explanation: { adapter: string; review: AdapterReview } | null;
+    };
 
 /**
  * A report carries a claim only when the verifier accepted the proof. There
@@ -58,11 +77,12 @@ export type Report =
       hidden: string[];
       publicInputs: string[];
       verification: { result: 'passed' } & SuppliedKeyVerification;
+      keyRecognition: KeyRecognition;
       explanation: { review: { status: 'unreviewed'; note: string } };
       limits: string[];
       assumptions: string[];
     })
-  | (Common & { outcome: 'invalid'; basis: 'supplied-key'; publicInputs: string[]; verification: { result: 'failed' } & SuppliedKeyVerification })
+  | (Common & { outcome: 'invalid'; basis: 'supplied-key'; publicInputs: string[]; verification: { result: 'failed' } & SuppliedKeyVerification; keyRecognition: KeyRecognition })
   | (Common & {
       outcome: 'invalid';
       basis: 'bundled-circuit';
@@ -124,7 +144,7 @@ export function buildReport(proofText: string, result: VerificationResult, adapt
 }
 
 /** The report for a proof checked against a verification key supplied with it. */
-export function buildSuppliedKeyReport(proofText: string, result: SuppliedResult): Report {
+export function buildSuppliedKeyReport(proofText: string, result: SuppliedResult, recognise: (contentSha256: string) => KeyRecognition): Report {
   const common: Common = { reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(utf8(proofText)) } };
   if (result.status === 'unsupported') return { ...common, outcome: 'unsupported', reason: result.reason };
   if (result.status === 'error') return { ...common, outcome: 'error', message: result.message };
@@ -132,21 +152,25 @@ export function buildSuppliedKeyReport(proofText: string, result: SuppliedResult
     verifier: result.verifier,
     proofSystem: { protocol: result.protocol, curve: result.curve },
     verificationKeySha256: result.verificationKeySha256,
+    verificationKeyContentSha256: result.verificationKeyContentSha256,
     publicInputsSha256: result.publicInputsSha256,
   };
+  const keyRecognition = recognise(result.verificationKeyContentSha256);
+  const recognised = keyRecognition.match === 'exact';
   if (result.status === 'invalid') {
-    return { ...common, outcome: 'invalid', basis: 'supplied-key', publicInputs: result.publicSignals, verification: { result: 'failed', ...verification } };
+    return { ...common, outcome: 'invalid', basis: 'supplied-key', publicInputs: result.publicSignals, verification: { result: 'failed', ...verification }, keyRecognition };
   }
   return {
     ...common,
     outcome: 'valid',
     basis: 'supplied-key',
-    claim: SUPPLIED_KEY.claim,
+    claim: SUPPLIED_KEY.claim(recognised),
     hidden: [...SUPPLIED_KEY.hidden],
     publicInputs: result.publicSignals,
     verification: { result: 'passed', ...verification },
+    keyRecognition,
     explanation: { review: { status: 'unreviewed', note: SUPPLIED_KEY.review } },
-    limits: SUPPLIED_KEY.limits(result.protocol),
+    limits: SUPPLIED_KEY.limits(result.protocol, recognised),
     assumptions: SUPPLIED_KEY.assumptions(result.protocol, result.curve),
   };
 }
@@ -169,6 +193,41 @@ const suppliedFiles = (verification: SuppliedKeyVerification): string[] => [
   `Verification key file (SHA-256): ${verification.verificationKeySha256}`,
   `Public inputs file (SHA-256): ${verification.publicInputsSha256}`,
 ];
+const LINK: Record<RecognisedKey['artifact']['circuitLink']['status'], string> = { established: 'Established', 'partly-established': 'Partly established', unconfirmed: 'Unconfirmed' };
+const reviewed = (review: { status: 'unreviewed' | 'reviewed'; note: string; reviewer?: string; date?: string }): string =>
+  review.status === 'reviewed' ? `Reviewed by ${review.reviewer} on ${review.date}. ${review.note}` : `NOT REVIEWED. ${review.note}`;
+
+/** One line for each separate question about a supplied key. */
+function keySection(recognition: KeyRecognition, verification: SuppliedKeyVerification): ReportSection {
+  const content = `Content SHA-256 (the key itself, whatever its file's spacing): ${verification.verificationKeyContentSha256}`;
+  if (recognition.match === 'none') {
+    return {
+      heading: 'Verification key',
+      summary: 'Not recognised. It matches no key recorded in this tool. That is not a sign that anything is wrong with it.',
+      items: [content],
+      tone: 'caution',
+    };
+  }
+  const { artifact, explanation } = recognition;
+  const { provenance } = artifact;
+  return {
+    heading: 'Verification key',
+    summary: `Recognised: an exact match to a recorded key (${artifact.description}; ${recognition.key}).`,
+    items: [
+      content,
+      `Where the recorded key came from: ${provenance.publisher}, package ${provenance.package} ${provenance.version}, file ${provenance.file} (SHA-256 ${provenance.sha256}), ${provenance.url}`,
+      `Circuit the publisher names: ${artifact.circuit.name}, ${artifact.circuit.source}`,
+      `Tied to that circuit source: ${LINK[artifact.circuitLink.status]}. ${artifact.circuitLink.note}`,
+      `This record: ${reviewed(artifact.entryReview)}`,
+      explanation === null
+        ? 'Explanation of the circuit: this tool has none.'
+        : `Explanation of the circuit: this tool has one (adapter ${explanation.adapter}), which this report does not apply. ${reviewed(explanation.review)}`,
+      `Registry revision ${recognition.registry.revision} (SHA-256 ${recognition.registry.sha256})`,
+    ],
+    tone: 'plain',
+  };
+}
+
 const numbered = (values: string[]): string[] => (values.length === 0 ? ['(none)'] : values.map((value, i) => `public input ${i + 1}: ${value}`));
 
 /**
@@ -187,6 +246,7 @@ export function reportSections(report: Report): ReportSection[] {
         return [
           { heading: 'Claim', summary: 'None. The verifier rejected this proof, so it establishes nothing.', items: [], tone: 'fail' },
           { heading: 'Cryptographic verification', summary: `FAILED ${using(report.verification)}`, items: suppliedFiles(report.verification), tone: 'fail' },
+          keySection(report.keyRecognition, report.verification),
           { heading: 'Public inputs that were checked', items: numbered(report.publicInputs), tone: 'plain' },
           file,
         ];
@@ -209,6 +269,7 @@ export function reportSections(report: Report): ReportSection[] {
           { heading: 'Hidden by the proof', items: report.hidden, tone: 'plain' },
           { heading: 'Public', summary: SUPPLIED_KEY.publicNote, items: numbered(report.publicInputs), tone: 'plain' },
           { heading: 'Cryptographic verification', summary: `PASSED ${using(report.verification)}`, items: suppliedFiles(report.verification), tone: 'pass' },
+          keySection(report.keyRecognition, report.verification),
           { heading: 'Explanation', summary: `NOT REVIEWED. ${report.explanation.review.note}`, items: [], tone: 'caution' },
           { heading: 'Limits', items: report.limits, tone: 'caution' },
           { heading: 'This result assumes', items: report.assumptions, tone: 'plain' },

@@ -129,6 +129,8 @@ for (const system of ['groth16-bn128', 'groth16-bls12381', 'plonk-bn128', 'fflon
       expect(text).toContain(expected);
     }
     expect(text).not.toContain('membership');
+    expect(text).toContain('Verification key');
+    expect(text).toContain('Not recognised.');
 
     const [saved] = await Promise.all([page.waitForEvent('download'), page.click('#download')]);
     const fromPage = join(dir, `page-${system}-${info.project.name}.json`);
@@ -142,6 +144,23 @@ for (const system of ['groth16-bn128', 'groth16-bls12381', 'plonk-bn128', 'fflon
     expect(problems).toEqual([]);
   });
 }
+
+test('recognises a supplied key that is on record, the same as the command line', async ({ page }) => {
+  const problems = await open(page);
+  const part = (kind: string): string => fixture(`snarkjs/semaphore-v4-depth3.${kind}.json`);
+  await page.setInputFiles('#public-file', part('public'));
+  await page.setInputFiles('#key-file', part('key'));
+  await page.setInputFiles('#proof-file', part('proof'));
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  const text = await page.locator('#sections').innerText();
+  for (const expected of ['Recognised: an exact match to a recorded key', 'tree depth 3', 'Tied to that circuit source: Partly established.', 'This record: NOT REVIEWED.', 'which this report does not apply']) {
+    expect(text).toContain(expected);
+  }
+  expect(text).not.toContain('nullifier');
+  const fromCli = cli('check', part('proof'), '--public', part('public'), '--key', part('key')).stdout;
+  for (const line of fromCli.split('\n').filter((entry) => entry.startsWith('  - '))) expect(text).toContain(line.slice(4));
+  expect(problems).toEqual([]);
+});
 
 test('notices a forged export', async ({ page }) => {
   const problems = await open(page);

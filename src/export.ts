@@ -1,3 +1,4 @@
+import { ordered } from './canonical.js';
 import { MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, type ProofInputs } from './inputs.js';
 import type { Report } from './report.js';
 import { MAX_SUPPLIED_PROOF_CHARACTERS } from './supplied-key/importer.js';
@@ -23,14 +24,6 @@ export function writeExport(inputs: string | ProofInputs, report: Report): strin
     report,
   };
   return `${JSON.stringify(bundle, null, 2)}\n`;
-}
-
-/** JSON with object keys sorted, so the order fields were written in does not matter. */
-function ordered(value: unknown): string {
-  return JSON.stringify(value, (_key, inner: unknown) =>
-    typeof inner === 'object' && inner !== null && !Array.isArray(inner)
-      ? Object.fromEntries(Object.entries(inner).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
-      : inner) ?? 'undefined';
 }
 
 export type RerunResult =

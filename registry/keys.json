@@ -1,0 +1,161 @@
+{
+  "registryVersion": 1,
+  "revision": 1,
+  "artifacts": [
+    {
+      "id": "semaphore-v4-verification-keys",
+      "description": "Semaphore v4 Groth16 verification keys, one for each Merkle tree depth from 1 to 32",
+      "provenance": {
+        "publisher": "Semaphore (Privacy and Scaling Explorations)",
+        "package": "@semaphore-protocol/proof",
+        "version": "4.14.3",
+        "file": "src/verification-keys.json",
+        "url": "https://www.npmjs.com/package/@semaphore-protocol/proof/v/4.14.3",
+        "sha256": "d96ec60593b6fc2334f1f04e008e07425d5536d7777f6ac21d996fc80779b3c9"
+      },
+      "circuit": {
+        "name": "Semaphore",
+        "source": "https://github.com/semaphore-protocol/semaphore/blob/4dbc39b83a4066bf5084fd7f5d336202aad2f815/packages/circuits/src/semaphore.circom"
+      },
+      "circuitLink": {
+        "status": "partly-established",
+        "note": "Each key equals the one inside the proving key Semaphore publishes for that tree depth (checked 2026-10-11, recorded in artifacts/semaphore-v4/proving-key-check.json). That those proving keys were built from this source in an honest trusted setup was not checked."
+      },
+      "explanationAdapter": "semaphore-v4",
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the published package."
+      },
+      "keys": [
+        {
+          "label": "tree depth 1",
+          "contentSha256": "31223c0c188e5229b9ba91e3b4c37d7e3ada64178fdd36718ce7374a72deccfe"
+        },
+        {
+          "label": "tree depth 2",
+          "contentSha256": "2b6b96046efa83919f651658a8f7e95e05fa40397ffbc601d5ddad5d3368cfdb"
+        },
+        {
+          "label": "tree depth 3",
+          "contentSha256": "62b1dbf3a7180a690875132dc3541eb72edfd215f4f70ae46eadea0d9293d72f"
+        },
+        {
+          "label": "tree depth 4",
+          "contentSha256": "e46fd4e393663ac62334101fa0aa62f7961a178d8a1f3f16a0ed2d1a057c5a63"
+        },
+        {
+          "label": "tree depth 5",
+          "contentSha256": "255e1f10dd2c025ce1618c0a3cb32339dd83f5c0d4ffc4d2cbe6d5f762b3bd61"
+        },
+        {
+          "label": "tree depth 6",
+          "contentSha256": "bc2d767378b16a79c9adab9194be0c6ba4e0fb610b483baa5bcfd37d8caf02a1"
+        },
+        {
+          "label": "tree depth 7",
+          "contentSha256": "23d7b0e90a6e174471ec8b7c7910cce63964158bbf9006dcba216c807a82ae10"
+        },
+        {
+          "label": "tree depth 8",
+          "contentSha256": "d847aeb925bb6e41dad5a95df5984dd79bcd72c1ccc51af154b33bd653ee160c"
+        },
+        {
+          "label": "tree depth 9",
+          "contentSha256": "6f75df0542226b5d2ec340e1af18277778ab5038dec409102694c71ac881885a"
+        },
+        {
+          "label": "tree depth 10",
+          "contentSha256": "84e10d3fcb7977c4e96e9d398b2a19bfa26c316d314c8dca49eed0ab9b3d3d13"
+        },
+        {
+          "label": "tree depth 11",
+          "contentSha256": "8e88303763dd41250ed763f310a8475f939c801a746539fa798f4488dc29113d"
+        },
+        {
+          "label": "tree depth 12",
+          "contentSha256": "0bee55be276c03b5eb4e69cb840a88a2b5c4a6baa859c05af1c7f5494b35e60e"
+        },
+        {
+          "label": "tree depth 13",
+          "contentSha256": "74abab46e449b6015f186837cc032ee01b8b752570ba3ee5bc9b61f6b3d60b58"
+        },
+        {
+          "label": "tree depth 14",
+          "contentSha256": "92ef6a202b4cd332e48c00b03ac0af81f2864d404eac3e14ab08538321a608ce"
+        },
+        {
+          "label": "tree depth 15",
+          "contentSha256": "626dcb9b3b6b67e25cc9cad7e6819eb6b1485a0ef86df4f641b1936652c174fe"
+        },
+        {
+          "label": "tree depth 16",
+          "contentSha256": "caca2b64976ca138e2223f5bd99e8e9d923d720984f724e2f5ec380d8f7cb701"
+        },
+        {
+          "label": "tree depth 17",
+          "contentSha256": "e2b656a57c5248f08f27b979490832bd2f33921fd47698bc1639159969819f27"
+        },
+        {
+          "label": "tree depth 18",
+          "contentSha256": "9d78e5a22bce1104136a020dd7903f3d999ce80b30e9455ec4ff027242ccc80b"
+        },
+        {
+          "label": "tree depth 19",
+          "contentSha256": "30014aaa0db670d06eed7f050522e2eaeaecf359d6e123264f616d9232d2a6c7"
+        },
+        {
+          "label": "tree depth 20",
+          "contentSha256": "deb32503bd679a3730289fe79319df0ccf0bf5dab279360f10f5ecd29611ce6d"
+        },
+        {
+          "label": "tree depth 21",
+          "contentSha256": "7d9b2964f4c83d90b362839eb49b72dea942aeedfcc2a8a2eed2dd5e29cf6db3"
+        },
+        {
+          "label": "tree depth 22",
+          "contentSha256": "d4fe57b9758d044f6946ac87be29c0e2c5ee697b3a673db81cb35b086d881ec2"
+        },
+        {
+          "label": "tree depth 23",
+          "contentSha256": "97fc9dac194e0c4f0789376accf86e78bd226d261464809d0894b4fb2f42f4e2"
+        },
+        {
+          "label": "tree depth 24",
+          "contentSha256": "88ac7ac34f81a63d1c83a2154963870027fb32b4f7c8f5746712433b62244353"
+        },
+        {
+          "label": "tree depth 25",
+          "contentSha256": "63b9c578b436a2f5c3193ab3d65d8642005c82729f061ecc3ea00484feb31f06"
+        },
+        {
+          "label": "tree depth 26",
+          "contentSha256": "1a9e4ef08ffab12e7c4e42bf07059d1da9be6f5797dbb79fa6429b11db6595f1"
+        },
+        {
+          "label": "tree depth 27",
+          "contentSha256": "b0e756e172c4afe211bb1e69a5632d6603146fe0314696236704a90fdac84c37"
+        },
+        {
+          "label": "tree depth 28",
+          "contentSha256": "3b56e8b3013f9c601d0908b36aef9399ec20ae86f15c712229b892067d379bb1"
+        },
+        {
+          "label": "tree depth 29",
+          "contentSha256": "dcdd7cb8e20567a6317fc62ff923a75251deee78549169bab18b65dfc30a1a06"
+        },
+        {
+          "label": "tree depth 30",
+          "contentSha256": "e8bdc938f9132cce94f7c7485ac8faa34c92118db15c8a18c54b6d7be058b3d4"
+        },
+        {
+          "label": "tree depth 31",
+          "contentSha256": "2521e9bb33fc27657dc3ce5f73a54f7ca131675985fe769567470f779dbf7253"
+        },
+        {
+          "label": "tree depth 32",
+          "contentSha256": "2196715f52ae1799f5a91b89b5a0b9f1fd8a478a25bfddf938c33f3663e06d39"
+        }
+      ]
+    }
+  ]
+}

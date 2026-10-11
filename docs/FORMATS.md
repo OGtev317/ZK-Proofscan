@@ -41,6 +41,31 @@ the result means something only if the key, or its SHA-256, came from a
 source trusted separately from the proof. It lists the public inputs as
 numbers with no meaning attached.
 
+### Recognising a supplied key
+
+Every supplied-key report has a "Verification key" section. The key is
+looked up in [the key registry](../registry/README.md) by the hash of its
+content. A match shows which published key it is and nothing more, so the
+section gives one line for each separate question: where the recorded file
+came from, how far it is tied to circuit source, whether a maintainer
+checked the record, and whether this tool holds an explanation, with that
+explanation's own review status. The explanation is not applied to the
+report. An unmatched key is reported as not recognised, which is not a
+fault.
+
+The registry holds the 32 Semaphore v4 keys, each recorded separately from
+the file that holds them all. Its entry is marked as not reviewed by a
+maintainer, and the link to circuit source as partly established. The
+registry file is pinned by hash in the code, and a changed file is refused.
+
+Tested: a real Semaphore proof written as three snarkjs files is recognised
+at its tree depth; the same key in another layout is recognised; a key
+differing in one value, including a value the verifier does not read, is
+not; a recorded key is still named when the proof fails under it; the
+file of all 32 keys is not accepted as a key; a forged export claiming a
+reviewed record is noticed; the command line, the tool server and the page
+give the same text.
+
 ### How the three files are read
 
 - Each file must be JSON that can be read only one way: no escapes, no
@@ -106,14 +131,25 @@ circuit needs its published verification key pinned by hash, an adapter
 with the claim, limits and application checks, and a qualified person to
 review that wording. No new dependency.
 
-A first step that needs no reviewer: a **key registry**. When a supplied
-key's SHA-256 matches a pinned key, the report can name the circuit it
-belongs to, still without claiming what it means until an adapter is
-reviewed.
+The key registry is the first step and is built (see above). Its entries
+still need a maintainer's review of their provenance.
 
-Candidates: Semaphore v3 (used by World ID and by Zupass), iden3 / Privado
-ID credential circuits, Sui zkLogin, Anon Aadhaar, ZK Email, Rate-Limiting
-Nullifier, MACI, Tornado-style withdrawal proofs.
+**Direction taken on 2026-10-11**, from a research note the owner forwarded
+and asked to be acted on: the next adapter is one pinned ZK Email blueprint,
+not "ZK Email" in general, because each blueprint compiles to its own
+circuit, key and public-input layout. Before any code it needs a published
+blueprint and key to pin, and public test proofs that can be reproduced.
+Its report must separate "a confirmation email with these properties
+existed" from attendance, current ownership or control of the inbox.
+Verification stays offline for this milestone, and no second verifier
+library is added until a specific customer artifact calls for one.
+
+The note also reported, and this repository has not checked: World ID is
+moving off its Semaphore v3 system; Zupass is several proof types, not one;
+Sui zkLogin needs checks beyond the proof (provider keys, ephemeral
+signature, expiry). Those make Semaphore v3 and zkLogin later candidates.
+Others: Anon Aadhaar, iden3 / Privado ID credential circuits, Rate-Limiting
+Nullifier, MACI.
 
 ### B. Other proof systems
 
@@ -123,10 +159,10 @@ its own fixtures and input rules. This project does not write verifiers.
 
 | System | Likely verifier | Open questions |
 | --- | --- | --- |
-| Noir / Barretenberg (UltraHonk) | Aztec's `bb.js` | Size of the WebAssembly, version pinning between prover and verifier |
+| Noir | Depends on the proving backend; the language does not fix a format | Which backend the customer's proofs use |
 | gnark Groth16 and PLONK | None known in JavaScript | Proof encoding differs from snarkjs; converting it is new code that needs review |
-| RISC Zero receipts | Rust crate | Whether a maintained WebAssembly build exists |
-| SP1 proofs | Succinct's verifier | The same |
+| RISC Zero receipts | Rust crate; receipts can also be wrapped in Groth16 | Whether the wrapped form can use the verifier already here, and how the program is bound |
+| SP1 proofs | Succinct's verifier; offers STARK, Groth16 and PLONK forms | The same |
 | Halo2 | No standard one | Proof layout is specific to each application |
 | Cairo / STARK proofs | Rust verifiers | The same as RISC Zero |
 | Bulletproofs range proofs | Rust `bulletproofs` | Not circuit proofs; the report shape needs thought |
@@ -140,6 +176,12 @@ need their own design note before any code.
 
 ## Decisions for the owner
 
-1. Which known circuits matter first (section A), and who reviews each.
-2. Whether to add a second verifier library, and which (section B).
+1. Who reviews the explanation wording, and which maintainer reviews the
+   registry entry.
+2. Which ZK Email blueprint to pin, once candidates are researched.
 3. Whether section C belongs in this product or a later one.
+
+A chain lookup (is a root accepted, was a nullifier used) is out of this
+milestone. If added later it must name the provider, chain, contract, block
+and query, be kept apart from local verification, and never turn "unused at
+block B" into "cannot be replayed".

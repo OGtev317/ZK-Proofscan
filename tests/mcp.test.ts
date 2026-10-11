@@ -162,6 +162,15 @@ describe('tool server, through the official client', () => {
     expect(rerun.structuredContent).toMatchObject({ reproduced: true, fresh: { outcome: 'valid' } });
     expect(rerun.structuredContent?.notes).toContainEqual(expect.stringMatching(/does not know which circuit/));
 
+    // A key on record changes the note, not the meaning.
+    const recorded = (kind: string): string => join(root, `tests/fixtures/snarkjs/semaphore-v4-depth3.${kind}.json`);
+    const recognised = await call('check_proof', { path: recorded('proof'), public_inputs_path: recorded('public'), verification_key_path: recorded('key') });
+    expect(recognised.structuredContent).toMatchObject({ outcome: 'valid', report: { basis: 'supplied-key', keyRecognition: { match: 'exact', key: 'tree depth 3' } } });
+    expect(recognised.structuredContent?.notes).toContainEqual(expect.stringMatching(/exactly matches a recorded key/));
+    expect(recognised.structuredContent?.notes).not.toContainEqual(expect.stringMatching(/does not know which circuit/));
+    const fromCli = execFileSync(process.execPath, [join(root, 'dist/cli.js'), 'check', recorded('proof'), '--public', recorded('public'), '--key', recorded('key')], { encoding: 'utf8' });
+    expect(`${recognised.structuredContent?.evidenceText}\n`).toBe(fromCli);
+
     // On its own it is not checked; half the set, or pasted text with a key, is refused.
     expect((await call('check_proof', { path: part('proof') })).structuredContent).toMatchObject({ outcome: 'unsupported' });
     for (const bad of [{ path: part('proof'), public_inputs_path: part('public') }, { proof: 'x', public_inputs_path: part('public'), verification_key_path: part('key') }, { ...args, verification_key_path: 'key.json' }]) {

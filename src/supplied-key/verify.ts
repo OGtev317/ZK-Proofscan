@@ -1,4 +1,5 @@
 import type { ProofInputs } from '../inputs.js';
+import { keyContentSha256 } from '../registry.js';
 import type { VerifierIdentity } from '../result.js';
 import { sha256Hex, utf8 } from '../sha256.js';
 import { importSuppliedKey, type Curve, type Protocol } from './importer.js';
@@ -13,7 +14,10 @@ export interface SuppliedChecked {
   protocol: Protocol;
   curve: Curve;
   verifier: VerifierIdentity;
+  /** Of the key file's exact bytes. */
   verificationKeySha256: string;
+  /** Of what the key says, whatever its spacing and field order. */
+  verificationKeyContentSha256: string;
   publicInputsSha256: string;
   publicSignals: string[];
 }
@@ -39,6 +43,7 @@ export async function verifySuppliedKey(inputs: Required<ProofInputs>, engine: S
       curve,
       verifier: engine.identity,
       verificationKeySha256: sha256Hex(utf8(inputs.verificationKey)),
+      verificationKeyContentSha256: keyContentSha256(key),
       publicInputsSha256: sha256Hex(utf8(inputs.publicInputs)),
       publicSignals,
     };

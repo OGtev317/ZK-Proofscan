@@ -38,7 +38,12 @@ const hasQuotedText = (report: Report): boolean =>
 // A pass against a key that came with the proof must not be retold as a pass
 // for any particular claim.
 const SUPPLIED = 'This proof was checked against a verification key supplied with it. This tool does not know which circuit that key belongs to or where the key came from, so do not say what the proof shows beyond the report\'s own claim.';
-const isSupplied = (report: Report): boolean => (report.outcome === 'valid' || report.outcome === 'invalid') && report.basis === 'supplied-key';
+const RECOGNISED = 'This proof was checked against a supplied verification key that exactly matches a recorded key. Give what the "Verification key" section says about that key in its own words, including each "NOT REVIEWED" and "Partly established". The match does not make the report say what the proof means.';
+/** The note a supplied-key result needs, if it is one. */
+function suppliedNote(report: Report): string[] {
+  if ((report.outcome !== 'valid' && report.outcome !== 'invalid') || report.basis !== 'supplied-key') return [];
+  return [report.keyRecognition.match === 'exact' ? RECOGNISED : SUPPLIED];
+}
 
 /**
  * A client may give its model the text part or the structured part, and
@@ -48,7 +53,7 @@ const isSupplied = (report: Report): boolean => (report.outcome === 'valid' || r
  */
 function reportResult(report: Report, extra: string[] = []): ToolResult {
   const shown = presentCheck(report);
-  const notes = [`Outcome: ${OUTCOME[report.outcome]}`, ...(isSupplied(report) ? [SUPPLIED] : []), ...(hasQuotedText(report) ? [QUOTED] : []), ...extra];
+  const notes = [`Outcome: ${OUTCOME[report.outcome]}`, ...suppliedNote(report), ...(hasQuotedText(report) ? [QUOTED] : []), ...extra];
   return { content: [{ type: 'text', text: [...notes, '', shown.evidenceText].join('\n') }], structuredContent: { notes, ...shown, report } };
 }
 
@@ -152,7 +157,7 @@ const rerun: Tool = {
     const full = renderRerun(result);
     // Everything `renderRerun` says above the report itself.
     const above = 'fresh' in shown ? full.slice(0, full.lastIndexOf(shown.fresh.evidenceText)).trim() : full;
-    const notes = [...above.split('\n').filter((line) => line !== ''), ...(fresh !== undefined && isSupplied(fresh) ? [SUPPLIED] : []), ...(fresh !== undefined && hasQuotedText(fresh) ? [QUOTED] : [])];
+    const notes = [...above.split('\n').filter((line) => line !== ''), ...(fresh === undefined ? [] : suppliedNote(fresh)), ...(fresh !== undefined && hasQuotedText(fresh) ? [QUOTED] : [])];
     const text = 'fresh' in shown ? [...notes, '', shown.fresh.evidenceText].join('\n') : full;
     return { content: [{ type: 'text', text }], structuredContent: { notes, ...shown, ...(fresh === undefined ? {} : { report: fresh }) } };
   },

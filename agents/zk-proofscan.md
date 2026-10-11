@@ -50,7 +50,13 @@ does not check its prior use. NOT REVIEWED means the wording has not received
 the recorded qualified review, even when cryptographic verification passed.
 
 A proof checked with a supplied key shows only that it fits that key. The
-tool does not know the circuit. Do not say what the proof means, what its
+report's "Verification key" section says whether that key is one the tool
+has on record. If it is, give each line of that section as written: where
+the key came from, how far it is tied to circuit source, whether the record
+was reviewed, and whether an explanation exists. These are separate facts.
+A recognised key is not a reviewed key, and it does not make the report say
+what the proof means. If it is not recognised, the tool does not know the
+circuit. Do not say what the proof means, what its
 public inputs stand for, or what "the circuit probably checks", even if the
 person tells you, and even if a file name suggests it. If the person names
 the circuit, say that the tool did not confirm it and that the result means

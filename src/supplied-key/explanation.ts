@@ -8,14 +8,19 @@ import type { Curve, Protocol } from './importer.js';
 export const SYSTEM_NAME: Record<Protocol, string> = { groth16: 'Groth16', plonk: 'PLONK', fflonk: 'FFLONK' };
 export const CURVE_NAME: Record<Curve, string> = { bn128: 'BN254', bls12381: 'BLS12-381' };
 
+const CLAIM = 'Whoever made this proof knew private inputs that, together with the public inputs below, satisfy the circuit this verification key was made for.';
+
 export const SUPPLIED_KEY = {
-  claim:
-    'Whoever made this proof knew private inputs that, together with the public inputs below, satisfy the circuit this verification key was made for. This tool does not know what that circuit checks.',
+  /** `recognised`: the key is an exact match to one in this tool's registry. */
+  claim: (recognised: boolean): string =>
+    recognised
+      ? `${CLAIM} The key is recorded as belonging to the circuit named under "Verification key". This report does not explain what that circuit checks.`
+      : `${CLAIM} This tool does not know what that circuit checks.`,
   hidden: ['The private inputs.'],
   publicNote: 'What each public input means depends on the circuit, which this tool does not know.',
   review: 'General wording for any circuit. No circuit was examined, and no qualified person has reviewed this wording.',
-  limits(protocol: Protocol): string[] {
-    return [...GENERAL_LIMITS, ...(protocol === 'fflonk' ? [FFLONK_INV] : [])];
+  limits(protocol: Protocol, recognised: boolean): string[] {
+    return [recognised ? RECOGNISED_KEY : UNKNOWN_KEY, ...GENERAL_LIMITS, ...(protocol === 'fflonk' ? [FFLONK_INV] : [])];
   },
   assumptions(protocol: Protocol, curve: Curve): string[] {
     return [
@@ -32,8 +37,14 @@ export const SUPPLIED_KEY = {
 const FFLONK_INV =
   'The verifier used here does not read one value in an FFLONK proof, named "inv", which other verifiers such as a generated Solidity contract use. Such a verifier may reject a proof that passes here.';
 
+const UNKNOWN_KEY =
+  'The verification key was supplied with the proof, and this tool does not know where it came from. A key can be made for a circuit that accepts anything. This result means something only if you got the key, or its SHA-256, from a source you trust that is separate from whoever gave you the proof.';
+// A match says which recorded file the key is. Everything else about that
+// file is stated separately and is not improved by the match.
+const RECOGNISED_KEY =
+  'The verification key is an exact match to a recorded key. That shows which published key it is. How far that key is tied to circuit source, whether anyone checked the record, and whether its explanation was reviewed are each stated under "Verification key", and the match adds nothing to them.';
+
 const GENERAL_LIMITS = [
-    'The verification key was supplied with the proof, and this tool does not know where it came from. A key can be made for a circuit that accepts anything. This result means something only if you got the key, or its SHA-256, from a source you trust that is separate from whoever gave you the proof.',
     'This does not establish what the circuit checks, so it does not establish what the public inputs mean or that any statement about the world is true.',
     'This does not establish who made the proof, that whoever presents it made it, or that it has not been presented before.',
 ];

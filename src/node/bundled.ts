@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { loadKeyRegistry } from '../registry.js';
 import type { Scanning } from '../scan.js';
 import { bindSemaphoreV4, type AdapterLock, type BoundSemaphoreV4 } from '../semaphore-v4/bind.js';
 import { snarkjsEngine, snarkjsSuppliedKeyEngine } from '../snarkjs-engine.js';
@@ -17,4 +18,8 @@ export async function bundledSemaphoreV4(): Promise<BoundSemaphoreV4> {
 }
 
 /** Everything this build checks with. */
-export const bundledScanning = async (): Promise<Scanning> => ({ semaphoreV4: await bundledSemaphoreV4(), suppliedKey: snarkjsSuppliedKeyEngine });
+export const bundledScanning = async (): Promise<Scanning> => ({
+  semaphoreV4: await bundledSemaphoreV4(),
+  suppliedKey: snarkjsSuppliedKeyEngine,
+  registry: loadKeyRegistry(await file('registry/keys.json')),
+});

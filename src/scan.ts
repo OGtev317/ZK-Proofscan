@@ -1,5 +1,6 @@
 import type { ProofInputs } from './inputs.js';
-import { buildSuppliedKeyReport, TOOL, type Report } from './report.js';
+import type { KeyRegistry } from './registry.js';
+import { buildSuppliedKeyReport, TOOL, type KeyRecognition, type Report } from './report.js';
 import type { BoundSemaphoreV4 } from './semaphore-v4/bind.js';
 import { scanSemaphoreV4 } from './semaphore-v4/scan.js';
 import { sha256Hex, utf8 } from './sha256.js';
@@ -10,6 +11,7 @@ import { verifySuppliedKey } from './supplied-key/verify.js';
 export interface Scanning {
   semaphoreV4: BoundSemaphoreV4;
   suppliedKey: SuppliedKeyEngine;
+  registry: KeyRegistry;
 }
 
 const unsupported = (proof: string, reason: string): Report => ({ reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(utf8(proof)) }, outcome: 'unsupported', reason });
@@ -33,5 +35,14 @@ export async function scan(inputs: ProofInputs, scanning: Scanning): Promise<Rep
   if (publicInputs === undefined || verificationKey === undefined) {
     return unsupported(proof, 'a proof checked with its own verification key needs both a public inputs file and a verification key file');
   }
-  return buildSuppliedKeyReport(proof, await verifySuppliedKey({ proof, publicInputs, verificationKey }, scanning.suppliedKey));
+  const { registry, semaphoreV4 } = scanning;
+  const recognise = (contentSha256: string): KeyRecognition => {
+    const found = registry.find(contentSha256);
+    if (found === undefined) return { match: 'none' };
+    // The only explanation this build holds. Its review status is reported, never upgraded.
+    const { manifest } = semaphoreV4.adapter;
+    const explanation = found.artifact.explanationAdapter === manifest.id ? { adapter: manifest.id, review: manifest.review } : null;
+    return { match: 'exact', registry: { revision: registry.revision, sha256: registry.sha256 }, artifact: found.artifact, key: found.label, explanation };
+  };
+  return buildSuppliedKeyReport(proof, await verifySuppliedKey({ proof, publicInputs, verificationKey }, scanning.suppliedKey), recognise);
 }
