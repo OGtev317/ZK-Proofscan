@@ -41,6 +41,10 @@ still blocks one. **Nothing has been released, published or hosted.**
    confirmed for `@aztec/bb.js` 5.2.1; its setup files are as Aztec's server
    sent them and were not compared with the ceremony's record; and files
    written by the `bb` command-line program were not tried.
+9. **Cairo verification (added after this review).** `swiftness` 1.0.0 has
+   no known audit and no release since January 2025, and it accepts the
+   security level a proof declares; this tool adds its own floor. It reads
+   the older Stone layout only.
 
 ## Owner decisions still open
 

@@ -62,7 +62,7 @@ describe('command line', () => {
     const missing = cli('check', '--json', join(dir, 'missing.json'));
     expect(missing.status).toBe(3);
     expect(JSON.parse(missing.stdout)).toMatchObject({ outcome: 'error', message: expect.stringMatching(/could not read the file/) });
-    const huge = cli('check', '--json', file('huge.json', 'x'.repeat(300_000)));
+    const huge = cli('check', '--json', file('huge.json', 'x'.repeat(3_000_000)));
     expect(huge.status).toBe(2);
     expect(JSON.parse(huge.stdout)).toMatchObject({ outcome: 'unsupported', reason: 'the file is too large' });
     const junk = cli('check', '--json', file('junk2.json', 'junk'));

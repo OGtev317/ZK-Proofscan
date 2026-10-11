@@ -14,7 +14,7 @@ export interface EvidenceExport extends ProofInputs {
   report: Report;
 }
 
-export const MAX_EXPORT_CHARACTERS = 786_432;
+export const MAX_EXPORT_CHARACTERS = 6_000_000;
 
 export function writeExport(inputs: string | ProofInputs, report: Report, source?: ChainSource): string {
   const { proof, publicInputs, verificationKey } = typeof inputs === 'string' ? { proof: inputs } : inputs;

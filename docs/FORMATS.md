@@ -4,7 +4,7 @@ Written 2026-10-11. The owner asked for the idea to cover as many proof
 formats as possible. This file records what is supported, the rule every
 format follows, and what each further format would need.
 
-## Three bases for a result
+## Four bases for a result
 
 Every `valid` or `invalid` report carries a `basis`, because a pass means
 very different things in each case.
@@ -14,6 +14,7 @@ very different things in each case.
 | `bundled-circuit` | Verification keys pinned by hash, and an explanation written for that one circuit | The circuit's claim, in the adapter's wording |
 | `recorded-circuit` | The user's key is an exact match to a recorded key, and an explanation is bound to that key | The circuit's claim, in the adapter's wording, with the key's provenance stated |
 | `supplied-key` | Only the key the user gave with the proof | The proof fits that key. No explanation is applied, so nothing about meaning |
+| `cairo-program` | A proof about a program known only by its hash; there is no key | A program with that hash ran and wrote that output. Nothing about what the program does |
 
 A supplied key is never used for a bundled format, so it cannot stand in for
 the pinned keys. A program reading reports must check `basis` before
@@ -28,6 +29,7 @@ treating `valid` as a statement about any claim.
 | snarkjs Groth16 on BN254 or BLS12-381 | `supplied-key` | Proof, public inputs, verification key | snarkjs 0.7.6 |
 | snarkjs PLONK on BN254 | `supplied-key` | Proof, public inputs, verification key | snarkjs 0.7.6 |
 | snarkjs FFLONK on BN254 | `supplied-key` | Proof, public inputs, verification key | snarkjs 0.7.6 |
+| Cairo STARK proof (Stone prover layout) | `cairo-program` | Proof | `swiftness` 1.0.0. Command line and tool server only |
 | Noir (UltraHonk on BN254, written by Barretenberg) | `supplied-key` | `proof`, `public_inputs`, `vk`, all binary | `@aztec/bb.js` 5.2.1. Command line and tool server only |
 
 ```sh
@@ -173,6 +175,62 @@ rollup variants are not checked (this build of the library refused to make
 a `starknet` proof); no audit status is confirmed for this version; the
 browser page does not check Noir proofs.
 
+### Cairo proofs (the Starknet proof system)
+
+Added 2026-10-11. Cairo is the language Starknet runs, and a Cairo proof
+shows that a program ran. This reads proofs in the JSON layout of the Stone
+prover, with the verifier `swiftness` 1.0.0 (Apache-2.0), a Rust port of
+StarkWare's Cairo verifier compiled to WebAssembly.
+
+```sh
+node dist/cli.js check proof.json
+```
+
+A STARK needs no trusted setup, so there is no key file. The report gives
+the program's hash and its output, and says the tool does not know what the
+program does. It is **not a statement about Starknet**: it does not show
+that anything happened on the network.
+
+- **A security floor of 80 bits, enforced here.** A STARK proof chooses its
+  own parameters, and this verifier library accepts whatever a proof
+  declares. Without a floor, a proof made with trivial parameters would
+  pass. The tool reads the declared figure (queries × log of cosets +
+  proof-of-work bits), refuses anything under 80 without running the
+  verifier, and prints the figure in every report. 80 is this project's
+  choice of a conventional minimum, not a standard anyone set for it.
+- **The declared figure cannot be inflated.** Tested: raising any of the
+  three numbers in a real 70-bit proof, so that it claims 80 or more, makes
+  verification fail, and a true proof fails when its numbers are misstated.
+  Each parameter must be named exactly once in the file.
+- **Two Stone layouts are tried**, since a file does not say which it is.
+- **Each verification runs in its own worker thread**, which is stopped
+  afterwards and after two minutes at most.
+- **Unread part of the file.** Measured: the verifier reads the proof from
+  the file's `annotations` and does not read `proof_hex`. A file with a
+  changed `proof_hex` passes. A test pins this.
+
+Tested with two unmodified example proofs from the Swiftness repository: a
+96-bit proof passes; a 70-bit proof, which the library itself accepts, is
+refused; a changed output, program word, step count or transcript
+commitment is not accepted; export and rerun reproduce.
+
+Not tested or not done:
+
+- **The library is the weakest dependency here.** Its last release was in
+  January 2025, this tool knows of no audit of it, and its packaged build
+  has no downloads to speak of. Treat a pass as weaker evidence than a pass
+  from the other verifiers.
+- **Stone is the older prover.** StarkWare's newer S-two prover writes a
+  different layout, which this does not read. No verifier for it that runs
+  in JavaScript was found.
+- The security figure is conjectured, not proven, as for STARKs generally.
+- No program is recognised by its hash. A registry of known programs would
+  be the counterpart of the key registry.
+- Proofs fetched from Starknet, facts registered on Ethereum, and storage
+  proofs are different things and are not read.
+- The package is about 145 MB installed: one build per layout, hash and
+  Stone version. The browser page does not check Cairo proofs.
+
 ### How the three files are read
 
 - Each file must be JSON that can be read only one way: no escapes, no
@@ -275,7 +333,7 @@ its own fixtures and input rules. This project does not write verifiers.
 | RISC Zero receipts | Rust crate; receipts can also be wrapped in Groth16 | Whether the wrapped form can use the verifier already here, and how the program is bound |
 | SP1 proofs | Succinct's verifier; offers STARK, Groth16 and PLONK forms | The same |
 | Halo2 | No standard one | Proof layout is specific to each application |
-| Cairo / STARK proofs | Rust verifiers | The same as RISC Zero |
+| Cairo proofs from the S-two prover | None found for JavaScript | Stone-layout proofs are read; these are not |
 | Bulletproofs range proofs | Rust `bulletproofs` | Not circuit proofs; the report shape needs thought |
 
 ### C. Privacy-preserving credentials that are not circuit proofs

@@ -70,6 +70,13 @@ person tells you, and even if a file name suggests it. If the person names
 the circuit, say that the tool did not confirm it and that the result means
 something only if the key came from a source they trust separately.
 
+A Cairo proof shows that a program ran. The program is known only by its
+hash, so do not say what it does, what its output means, or that the proof
+is about Starknet, a transaction or a contract. Give the security figure
+the report prints. If the tool refused a proof for declaring too little
+security, say that nothing was checked; it is not a finding that the proof
+is false.
+
 Some recorded keys have an explanation bound to them, and then the report
 has a claim, public inputs with names, and "Checks not performed". For an
 email proof the claim is that someone had an email with certain properties.

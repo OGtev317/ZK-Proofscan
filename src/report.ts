@@ -1,5 +1,7 @@
 import type { AdapterReview, LoadedAdapter } from './adapter.js';
 import { readPublicInput } from './recorded/reading.js';
+import { CAIRO } from './cairo/explanation.js';
+import type { CairoParameters, CairoResult } from './cairo/verify.js';
 import type { RecognisedKey } from './registry.js';
 import type { VerificationResult } from './result.js';
 import { asPaddedAscii } from './semaphore-v4/text.js';
@@ -31,6 +33,12 @@ interface SuppliedKeyVerification {
   publicInputsSha256: string;
 }
 
+interface CairoVerification {
+  verifier: { name: string; version: string };
+  /** `proverFormat` is the Stone layout the proof verified under, when it did. */
+  proofSystem: { name: 'cairo-stark'; proverFormat?: string } & CairoParameters;
+}
+
 /**
  * Whether a supplied key is one this tool has on record. A match answers
  * "which published key is this" and nothing else: provenance, the link to
@@ -58,6 +66,8 @@ export type KeyRecognition =
  * recorded key, and an explanation bound to that key is applied. With
  * `supplied-key` the key came with the proof and no explanation is applied,
  * so a program must not read `valid` there as a statement about any claim.
+ * With `cairo-program` the proof is about a run of a program known only by
+ * its hash, and likewise says nothing about what that program does.
  */
 export type Report =
   | (Common & {
@@ -107,6 +117,19 @@ export type Report =
       public: { name: string; value: string }[];
       verification: { result: 'failed'; verifier: { name: string; version: string }; verificationKeysSha256: string };
     })
+  | (Common & {
+      outcome: 'valid';
+      basis: 'cairo-program';
+      claim: string;
+      hidden: string[];
+      program: { hash: string };
+      output: string[];
+      verification: { result: 'passed' } & CairoVerification;
+      explanation: { review: { status: 'unreviewed'; note: string } };
+      limits: string[];
+      assumptions: string[];
+    })
+  | (Common & { outcome: 'invalid'; basis: 'cairo-program'; verification: { result: 'failed' } & CairoVerification })
   | (Common & { outcome: 'unsupported'; reason: string })
   | (Common & { outcome: 'error'; message: string });
 
@@ -158,6 +181,31 @@ export function buildReport(proofText: string, result: VerificationResult, adapt
     applicationChecks: manifest.explanation.applicationChecks.map((check) => ({ id: check.id, status: 'not-performed' as const, description: check.description })),
     limits: manifest.explanation.limits,
     assumptions: manifest.explanation.assumptions,
+  };
+}
+
+/** The report for a Cairo proof: a run of a program known only by its hash. */
+export function buildCairoReport(proofText: string, result: CairoResult): Report {
+  const common: Common = { reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(partBytes(proofText)) } };
+  if (result.status === 'unsupported') return { ...common, outcome: 'unsupported', reason: result.reason };
+  if (result.status === 'error') return { ...common, outcome: 'error', message: result.message };
+  const verification: CairoVerification = {
+    verifier: result.verifier,
+    proofSystem: { name: 'cairo-stark', ...(result.status === 'valid' ? { proverFormat: result.stone } : {}), ...result.parameters },
+  };
+  if (result.status === 'invalid') return { ...common, outcome: 'invalid', basis: 'cairo-program', verification: { result: 'failed', ...verification } };
+  return {
+    ...common,
+    outcome: 'valid',
+    basis: 'cairo-program',
+    claim: CAIRO.claim,
+    hidden: [...CAIRO.hidden],
+    program: { hash: result.programHash },
+    output: result.output,
+    verification: { result: 'passed', ...verification },
+    explanation: { review: { status: 'unreviewed', note: CAIRO.review } },
+    limits: [...CAIRO.limits],
+    assumptions: CAIRO.assumptions(result.parameters),
   };
 }
 
@@ -235,6 +283,10 @@ export interface ReportSection {
 const NOTHING = 'This says nothing about whether a proof is valid.';
 const asText = (text: string | undefined): string => (text === undefined ? '' : ` (if this number encodes text, it reads: ${JSON.stringify(text)})`);
 
+const usingCairo = (verification: CairoVerification): string =>
+  `using ${verification.verifier.name} ${verification.verifier.version} (Cairo STARK proof, layout ${verification.proofSystem.layout}${verification.proofSystem.proverFormat === undefined ? '' : `, ${verification.proofSystem.proverFormat === 'stone6' ? 'Stone 6' : 'Stone 5'} format`}).`;
+const securityLine = (system: CairoVerification['proofSystem']): string =>
+  `Security the proof declares: ${system.securityBits} bits (${system.queries} queries × ${system.logCosets} + ${system.proofOfWorkBits} proof-of-work bits). This tool requires at least 80.`;
 const using = (verification: SuppliedKeyVerification): string =>
   `using ${verification.verifier.name} ${verification.verifier.version}, against the verification key supplied with the proof (${SYSTEM_NAME[verification.proofSystem.protocol]} on ${CURVE_NAME[verification.proofSystem.curve]}${verification.proofSystem.variant === undefined ? '' : `, variant ${verification.proofSystem.variant}`}).`;
 const suppliedFiles = (verification: SuppliedKeyVerification): string[] => [
@@ -292,6 +344,13 @@ export function reportSections(report: Report): ReportSection[] {
     case 'error':
       return [{ heading: 'Not checked', summary: `The verification could not be completed (${report.message}).`, items: [NOTHING], tone: 'caution' }, file];
     case 'invalid':
+      if (report.basis === 'cairo-program') {
+        return [
+          { heading: 'Claim', summary: 'None. The verifier rejected this proof, so it establishes nothing.', items: [], tone: 'fail' },
+          { heading: 'Cryptographic verification', summary: `FAILED ${usingCairo(report.verification)}`, items: [securityLine(report.verification.proofSystem)], tone: 'fail' },
+          file,
+        ];
+      }
       if (report.basis === 'supplied-key') {
         return [
           { heading: 'Claim', summary: 'None. The verifier rejected this proof, so it establishes nothing.', items: [], tone: 'fail' },
@@ -313,6 +372,23 @@ export function reportSections(report: Report): ReportSection[] {
         file,
       ];
     case 'valid': {
+      if (report.basis === 'cairo-program') {
+        return [
+          { heading: 'Claim', summary: report.claim, items: [], tone: 'caution' },
+          { heading: 'Hidden by the proof', items: report.hidden, tone: 'plain' },
+          {
+            heading: 'Public',
+            summary: CAIRO.publicNote,
+            items: [`program hash: ${report.program.hash}`, ...(report.output.length === 0 ? ['output: (none)'] : report.output.map((value, i) => `output ${i + 1}: ${value}`))],
+            tone: 'plain',
+          },
+          { heading: 'Cryptographic verification', summary: `PASSED ${usingCairo(report.verification)}`, items: [securityLine(report.verification.proofSystem)], tone: 'pass' },
+          { heading: 'Explanation', summary: `NOT REVIEWED. ${report.explanation.review.note}`, items: [], tone: 'caution' },
+          { heading: 'Limits', items: report.limits, tone: 'caution' },
+          { heading: 'This result assumes', items: report.assumptions, tone: 'plain' },
+          file,
+        ];
+      }
       if (report.basis === 'recorded-circuit') {
         const { explanation } = report;
         const wasReviewed = explanation.review.status === 'reviewed';

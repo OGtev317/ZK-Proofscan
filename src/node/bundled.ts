@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { bindRecordedCircuit } from '../recorded/bind.js';
+import { swiftnessEngine } from './cairo-engine.js';
 import { bbJsEngine } from './noir-engine.js';
 import { loadKeyRegistry } from '../registry.js';
 import type { Scanning } from '../scan.js';
@@ -45,5 +46,5 @@ export async function bundledScanning(): Promise<Scanning> {
       }),
     ),
   );
-  return { semaphoreV4: await bundledSemaphoreV4(), suppliedKey: snarkjsSuppliedKeyEngine, registry, recorded, ultraHonk: bbJsEngine };
+  return { semaphoreV4: await bundledSemaphoreV4(), suppliedKey: snarkjsSuppliedKeyEngine, registry, recorded, ultraHonk: bbJsEngine, cairo: swiftnessEngine };
 }

@@ -6,7 +6,7 @@ Build steps 1 to 3 are written: strict import and verification, explanation
 binding, and the readable report with export and rerun, on the command line
 and in a browser page. Read
 [the prototype notes](VERIFICATION_PROTOTYPE.md) for what exists, what was
-measured and what is untested. 146 unit tests and 24 browser tests pass.
+measured and what is untested. 154 unit tests and 24 browser tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
 for the first version. The checkout `/Users/tevdev/Desktop/ZK-Proofscan` holds
@@ -98,6 +98,9 @@ infrastructure are not approved.
 
 Also on 2026-10-11 the owner approved adding verifier libraries so that the
 first test release covers four kinds of proof: snarkjs, Groth16, Noir and
-Starknet. Noir is built with `@aztec/bb.js` 5.2.1 on the command line and
-tool server; read "Noir proofs" in the formats document. Not verified: whether the name "ZK-Proofscan" or "Proofscan" is
+Starknet. Noir is built with `@aztec/bb.js` 5.2.1, and Cairo proofs (the
+proof system Starknet uses) with `swiftness` 1.0.0, both on the command line
+and tool server only. Read "Noir proofs" and "Cairo proofs" in the formats
+document, including why the Cairo verifier is the weakest dependency and why
+this tool enforces its own security floor. Not verified: whether the name "ZK-Proofscan" or "Proofscan" is
 already used by another product.

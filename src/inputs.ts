@@ -16,7 +16,7 @@ export interface ProofInputs {
 }
 
 /** The largest proof part any format accepts; each format applies its own limit after this. */
-export const MAX_PROOF_PART_CHARACTERS = 65_536;
+export const MAX_PROOF_PART_CHARACTERS = 2_500_000;
 export const MAX_PUBLIC_INPUTS_CHARACTERS = 65_536;
 export const MAX_VERIFICATION_KEY_CHARACTERS = 262_144;
 /** The most public inputs a supplied-key proof may have. */

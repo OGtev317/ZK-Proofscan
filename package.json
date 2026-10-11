@@ -23,7 +23,8 @@
   "dependencies": {
     "@aztec/bb.js": "5.2.1",
     "@noble/hashes": "2.4.0",
-    "snarkjs": "0.7.6"
+    "snarkjs": "0.7.6",
+    "swiftness": "1.0.0"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "1.32.1",

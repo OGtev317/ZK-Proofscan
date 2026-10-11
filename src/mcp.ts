@@ -6,8 +6,8 @@ import { stopEngines } from './node/stop.js';
 // A Model Context Protocol server over standard input and output: one JSON
 // message per line. Standard output carries protocol messages only.
 
-// The largest real message is an export of 786,432 characters, JSON-escaped.
-const MAX_LINE_CHARACTERS = 4_194_304;
+// The largest real message is an export of 6,000,000 characters, JSON-escaped.
+const MAX_LINE_CHARACTERS = 16_777_216;
 
 const send = (response: Response): void => {
   process.stdout.write(`${JSON.stringify(response)}\n`);

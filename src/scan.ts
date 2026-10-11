@@ -1,8 +1,9 @@
+import { looksLikeCairoProof, verifyCairo, type CairoEngine } from './cairo/verify.js';
 import { isBinaryPart, partBytes, type ProofInputs } from './inputs.js';
 import { verifyUltraHonk, type UltraHonkEngine } from './noir/verify.js';
 import type { BoundRecordedCircuit } from './recorded/bind.js';
 import type { KeyRegistry } from './registry.js';
-import { buildSuppliedKeyReport, TOOL, type KeyRecognition, type Report } from './report.js';
+import { buildCairoReport, buildSuppliedKeyReport, TOOL, type KeyRecognition, type Report } from './report.js';
 import type { BoundSemaphoreV4 } from './semaphore-v4/bind.js';
 import { scanSemaphoreV4 } from './semaphore-v4/scan.js';
 import { sha256Hex } from './sha256.js';
@@ -18,6 +19,8 @@ export interface Scanning {
   recorded: BoundRecordedCircuit[];
   /** Absent where Barretenberg is not available, such as the browser page. */
   ultraHonk?: UltraHonkEngine;
+  /** Absent where the Cairo verifier is not available, such as the browser page. */
+  cairo?: CairoEngine;
 }
 
 const unsupported = (proof: string, reason: string): Report => ({ reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(partBytes(proof)) }, outcome: 'unsupported', reason });
@@ -31,6 +34,11 @@ const unsupported = (proof: string, reason: string): Report => ({ reportVersion:
 export async function scan(inputs: ProofInputs, scanning: Scanning): Promise<Report> {
   const { proof, publicInputs, verificationKey } = inputs;
   if (publicInputs === undefined && verificationKey === undefined) {
+    // A Cairo proof is one file and needs no key: a STARK has no trusted setup.
+    if (!isBinaryPart(proof) && looksLikeCairoProof(proof)) {
+      if (scanning.cairo === undefined) return unsupported(proof, 'this is a Cairo proof, which this build cannot check; use the command line');
+      return buildCairoReport(proof, await verifyCairo(proof, scanning.cairo));
+    }
     const report = await scanSemaphoreV4(proof, scanning.semaphoreV4);
     // Say what is missing when the file is plainly a snarkjs proof.
     if (report.outcome === 'unsupported' && /"protocol"\s*:\s*"(groth16|plonk|fflonk)"/.test(proof.slice(0, 65_536))) {

@@ -50,6 +50,7 @@ The verification keys in `artifacts/semaphore-v4/` are copied from
 | picocolors | 1.1.1 | ISC |
 | r1csfile | 0.0.48 | GPL-3.0 |
 | snarkjs | 0.7.6 | GPL-3.0 |
+| swiftness | 1.0.0 | SEE LICENSE IN LICENSE |
 | tryer | 1.0.1 | MIT |
 | tslib | 2.7.0 | 0BSD |
 | wasmbuilder | 0.0.16 | GPL-3.0 |

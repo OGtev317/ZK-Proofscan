@@ -25,7 +25,8 @@ async function readText(path: string, limit: number): Promise<string> {
  * carried as its bytes, as is a text file that happens to begin like one.
  */
 async function readPart(path: string, limit: number): Promise<string> {
-  if ((await stat(path)).size > limit * 4) throw new TooLarge();
+  // A limit in characters is also the limit in bytes: no supported file needs more bytes than characters.
+  if ((await stat(path)).size > limit) throw new TooLarge();
   const bytes = await readFile(path);
   let text: string | undefined;
   try {
