@@ -74,6 +74,8 @@ describe('tool server, through the official client', () => {
     expect(said(result)).toMatch(/^Outcome: valid\./);
     expect(said(result).endsWith(fromCli.trimEnd())).toBe(true);
     expect(result.structuredContent?.report).toEqual(JSON.parse(fromCliJson));
+    expect(result.structuredContent).toMatchObject({ operation: 'check', outcome: 'valid' });
+    expect(`${result.structuredContent?.evidenceText}\n`).toBe(fromCli);
     expect(said(result)).toMatch(/NOT REVIEWED/);
     expect(said(result)).toMatch(/Application checks not performed:/);
   });
@@ -142,7 +144,7 @@ describe('tool server, through the official client', () => {
     const bundle = writeExport(validText, (await call('check_proof', { proof: validText })).structuredContent?.report);
     const same = await call('rerun_export', { path: file('export.json', bundle) });
     expect(said(same)).toMatch(/REPRODUCED: checking the proof again gave the same report/);
-    expect(same.structuredContent).toMatchObject({ reproduced: true, report: { outcome: 'valid' } });
+    expect(same.structuredContent).toMatchObject({ reproduced: true, report: { outcome: 'valid' }, fresh: { outcome: 'valid' } });
 
     const forged = JSON.parse(bundle);
     forged.report.limits = [];
@@ -150,7 +152,8 @@ describe('tool server, through the official client', () => {
     const different = await call('rerun_export', { export: JSON.stringify(forged) });
     expect(said(different)).toMatch(/NOT REPRODUCED/);
     expect(said(different)).not.toMatch(/unique human/);
-    expect(different.structuredContent).toMatchObject({ reproduced: false, kind: 'different', differingSections: ['claim', 'limits'] });
+    expect(different.structuredContent).toMatchObject({ operation: 'rerun', reproduced: false, kind: 'different', fields: ['claim', 'limits'], fresh: { outcome: 'valid' } });
+    expect(JSON.stringify(different.structuredContent)).not.toMatch(/unique human/);
 
     expect((await call('rerun_export', { export: 'junk' })).structuredContent).toMatchObject({ reproduced: false, kind: 'unreadable' });
     const absent = await call('rerun_export', { path: join(dir, 'absent.json') });

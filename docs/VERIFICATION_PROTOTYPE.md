@@ -56,7 +56,7 @@ for the owner.
 `dist/mcp.js` is a Model Context Protocol server, so an AI agent can run the
 check instead of guessing at a proof. It speaks over standard input and
 output, runs on the user's machine and uses no network. Step 1 of the agent
-work; no agent is defined yet.
+work; the agent itself is described in [the agent notes](LOCAL_AGENT.md).
 
 | Tool | Does | Writes |
 | --- | --- | --- |
@@ -65,7 +65,9 @@ work; no agent is defined yet.
 | `rerun_export` | Repeats the check inside an export and compares | Nothing |
 
 - Each result carries the same report text as the command line and the same
-  JSON report, so an agent has no wording of its own to supply.
+  JSON report, so an agent has no wording of its own to supply. The fixed
+  text is also in the structured result as `evidenceText`, for a host that
+  shows it to the person directly.
 - The first line states the outcome, and "nothing was checked" is kept apart
   from "invalid", as on the command line.
 - When the report shows a message or scope as text, the result says that the
@@ -141,6 +143,8 @@ report also shows that text as a reading aid.
 | `src/cli.ts` | Command line |
 | `src/node/run.ts` | Check, export and rerun on files, shared by the command line and the tool server |
 | `src/mcp.ts`, `src/mcp/` | Tool server for AI agents |
+| `src/agent/presentation.ts` | The fixed report text a tool result carries |
+| `agents/` | Agent instructions and evaluation scenarios; not activated |
 | `adapters/semaphore-v4/` | Adapter text and its lock |
 | `artifacts/semaphore-v4/` | Key file copied unchanged from the Semaphore package |
 
@@ -188,7 +192,7 @@ No audit status has been confirmed for snarkjs 0.7.6 or for this code.
 
 ## Tested
 
-64 automated tests on macOS with Node 26.3.0:
+74 automated tests on macOS with Node 26.3.0:
 
 - Three real proofs, at tree depths 1, 3 and 10, each made from throwaway
   identities; each is rejected under a neighbouring depth.

@@ -1,7 +1,8 @@
 import { isAbsolute } from 'node:path';
+import { presentCheck, presentRerun } from '../agent/presentation.js';
 import { MAX_EXPORT_CHARACTERS } from '../export.js';
 import { checkFile, checkText, message, renderRerun, rerunFile, rerunText, saveExport } from '../node/run.js';
-import { renderReport, type Report } from '../report.js';
+import type { Report } from '../report.js';
 import { MAX_PROOF_CHARACTERS } from '../semaphore-v4/importer.js';
 
 export interface ToolResult {
@@ -33,9 +34,14 @@ const QUOTED = 'The text in quotation marks after "it reads" was chosen by whoev
 const hasQuotedText = (report: Report): boolean =>
   report.outcome === 'valid' && (report.proofFile.messageIfText !== undefined || report.proofFile.scopeIfText !== undefined);
 
+/**
+ * `evidenceText` is the fixed report, for a host that shows it to the person
+ * directly instead of trusting a model to repeat it.
+ */
 function reportResult(report: Report, extra: string[] = []): ToolResult {
-  const lines = [`Outcome: ${OUTCOME[report.outcome]}`, ...(hasQuotedText(report) ? [QUOTED] : []), ...extra, '', renderReport(report)];
-  return { content: [{ type: 'text', text: lines.join('\n') }], structuredContent: { report } };
+  const shown = presentCheck(report);
+  const lines = [`Outcome: ${OUTCOME[report.outcome]}`, ...(hasQuotedText(report) ? [QUOTED] : []), ...extra, '', shown.evidenceText];
+  return { content: [{ type: 'text', text: lines.join('\n') }], structuredContent: { ...shown, report } };
 }
 
 const refuse = (reason: string): ToolResult => ({ content: [{ type: 'text', text: `Not run: ${reason}.` }], isError: true });
@@ -117,12 +123,10 @@ const rerun: Tool = {
     } catch (error) {
       return { content: [{ type: 'text', text: `Not rerun: ${message(error)}.\nThis says nothing about whether a proof is valid.` }], isError: true };
     }
-    const quoted = !result.reproduced && result.kind === 'unreadable' ? false : hasQuotedText(result.report);
-    const structured = result.reproduced
-      ? { reproduced: true, report: result.report }
-      : result.kind === 'unreadable'
-        ? { reproduced: false, kind: result.kind, reason: result.reason }
-        : { reproduced: false, kind: result.kind, differingSections: result.fields, report: result.report };
+    // Only the report from this run is returned; the recorded one never is.
+    const fresh = !result.reproduced && result.kind === 'unreadable' ? undefined : result.report;
+    const quoted = fresh !== undefined && hasQuotedText(fresh);
+    const structured = { ...presentRerun(result), ...(fresh === undefined ? {} : { report: fresh }) };
     return { content: [{ type: 'text', text: `${quoted ? `${QUOTED}\n\n` : ''}${renderRerun(result)}` }], structuredContent: structured };
   },
 };

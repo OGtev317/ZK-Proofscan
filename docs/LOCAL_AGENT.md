@@ -1,94 +1,88 @@
-# Local agent definition - prepared, not activated
+# Agent definition: written, not activated
 
-Scope: step 2 of the owner's agent plan. No MCP server, hosted chat, model
-invocation, paid dependency, or network verification was added. The agent
-definition is portable instructions at `agents/zk-proofscan.md`; it is not
-auto-installed into Claude, Codex, or another client.
+Step 2 of the owner's agent plan. The agent is a way to use ZK-Proofscan: it
+runs the check through the tool server and shows the result. It does not
+verify anything and does not supply the claim wording.
 
-## Review of the proposal
+| Piece | Where | State |
+| --- | --- | --- |
+| Tool server | `src/mcp.ts`, `dist/mcp.js` | Built and tested (step 1) |
+| Agent instructions | `agents/zk-proofscan.md` | Written; not installed in any client |
+| Fixed presentation | `src/agent/presentation.ts` | Used by the tool server |
+| Evaluation scenarios | `agents/evaluation-cases.json` | Written; not run |
 
-The proposed boundary is correct: the deterministic engine verifies, the
-bound adapter supplies wording, and the assistant navigates the result.
-Two refinements matter:
+No client configuration is committed, so opening this repository does not
+connect any agent to the server. No model has been run with the instructions.
 
-1. Offline verification does not mean an offline agent. A cloud-backed client
-   may transmit tool results, including public inputs and decoded messages,
-   to its model provider. Installation/activation needs an approved data flow.
-2. Verbatim quoting and prompt-injection instructions are not enforced by a
-   prompt. The host should display a deterministic report separately from
-   model commentary. Agent behavior must be evaluated on the chosen client.
+## Before activation: who sees the data
 
-## Host integration seam
+The tool server uses no network. The agent calling it usually does: a
+cloud-hosted model receives every tool result, including the public inputs,
+the message and scope, the report and the file paths. Connecting the server
+to such an agent sends that data to the model's provider. The owner must
+approve the provider first. The agent cannot enforce this, because a hosted
+model has already received whatever it reads.
 
-`src/agent/presentation.ts` reuses `renderReport` without changing its wording.
-It accepts engine `Report` and `RerunResult` objects and produces canonical
-evidence text. It neither verifies nor validates arbitrary JSON. Only feed it
-fresh results from `scanSemaphoreV4` / `rerunExport`, never a recorded report
-submitted by a user. It is currently not wired into the CLI or browser.
+## What instructions cannot do
 
-The future MCP implementer can use `presentCheck` after `check`, and
-`presentRerun` after `rerun`. This is a proposed integration seam, not an
-existing MCP tool schema. Use the actual server's tool names when configuring
-the client. A rerun response keeps `reproduced` separate from `fresh.outcome`;
-an unreadable export has no fresh evidence. A differing export exposes only
-the fresh report, along with the field names that differ.
+Quoting the report word for word and ignoring text planted in a proof are
+instructions to a model, and a model can fail to follow them. Two measures
+do not depend on the model:
 
-Display `evidenceText` as escaped, inert text (for example DOM `textContent`),
-not HTML or Markdown. Do not let the model rewrite this block. Treat even
-tool results as data: messages, scopes, filenames, and error text can contain
-attacker instructions. Do not execute or fetch embedded content.
+- Each tool result carries `evidenceText`, the fixed report, in its
+  structured part. A host can show that to the person directly, as plain
+  text and not as Markdown or HTML, beside whatever the model says. Claude
+  Code does not do this: the person reads the model's reply.
+- A rerun result carries only the report from the fresh check. The report
+  recorded in an export is compared against and never returned.
 
-## Using the existing reference today
+Tool annotations such as "read-only" are hints to the client and not a
+boundary.
 
-After the operator's normal local build, the existing CLI supports:
+## Activating it, once the provider is approved
 
-```text
-node dist/cli.js check <proof.json> --json
-node dist/cli.js check <proof.json>
-node dist/cli.js rerun <evidence-export.json>
+For Claude Code, add a file `.mcp.json` at the repository root after
+`npm ci && npm run build`:
+
+```json
+{ "mcpServers": { "zk-proofscan": { "command": "node", "args": ["dist/mcp.js"] } } }
 ```
 
-These commands are reference workflows, not an MCP connection. `rerun` does
-not currently support `--json`; a future server should call `rerunExport`
-directly rather than inventing a CLI flag or scraping its prose.
+and copy `agents/zk-proofscan.md` to `.claude/agents/zk-proofscan.md` with
+this at the top:
 
-## Acceptance before activation
+```text
+---
+name: zk-proofscan
+description: Checks a zero-knowledge proof or evidence export with the local ZK-Proofscan tools and shows the fixed report.
+tools: mcp__zk-proofscan__check_proof, mcp__zk-proofscan__rerun_export, mcp__zk-proofscan__write_export
+---
+```
 
-- Connect the real local tool server with only the required operations.
-- Confirm which model host sees proof files and tool results, and obtain
-  approval before any external transmission. Do not request private inputs.
-- Render the evidence block outside model generation, preserving all sections.
-- Run `agents/evaluation-cases.json` against the actual configured agent.
-  Capture operation calls and responses without storing sensitive materials.
-- Require zero unsupported positive claims and zero execution of file-borne
-  instructions. Tool unavailability must fail closed. Repeat across the
-  intended client/model versions; a single run is not an audit or guarantee.
+The `tools` line leaves the agent without a shell, file access or web
+access, which limits what planted text could make it do. This configuration
+has not been tried.
 
-Current tests cover deterministic presentation and instruction-file contract
-regressions. They do **not** prove a language model follows the instructions.
-The adversarial cases are a manual evaluation plan, not completed live runs.
+## Acceptance (step 3)
 
-## Sources
+- Run every case in `agents/evaluation-cases.json` against the configured
+  agent, on test fixtures only, and record the tool calls and replies.
+- The hostile-message case needs a freshly generated proof bound to that
+  message. `scripts/make-fixture.mjs` has a fixed message today and needs an
+  option for it. Editing a valid proof's message does not give a valid proof.
+- Require no unsupported positive claim and no instruction from a file being
+  followed. With the tools unavailable the agent must say "Not checked".
+- Repeat for each client and model version intended for use. One passing
+  run is not an audit or a guarantee.
 
-- Existing repository contracts: `src/report.ts`, `src/export.ts`,
-  `src/semaphore-v4/scan.ts`, and `src/cli.ts`.
-- [MCP tool annotations](https://blog.modelcontextprotocol.io/posts/2026-03-16-tool-annotations/):
-  hints are not an enforcement boundary. No draft trust annotation is used.
+The tests in `tests/agent-presentation.test.ts` cover the fixed presentation
+and check that the instruction file keeps its key sentences. They do not
+show that a model follows them.
 
-## Handoff
+## History
 
-Work was based on main checkpoint `7e2cf18` in the separate
-`ZK-Proofscan-Codex` checkout, branch `feat/local-agent-definition`. Earlier
-uncommitted adapter/source research was preserved. Runtime adapter wording,
-locks, review status, CLI, browser, and the other checkout were not changed.
-The owner requested a branch commit for integration by the other session.
-This checkpoint does not include a push, rebase, or changes to main. The
-other session owns integration with its MCP implementation and its four
-review items; those items were not supplied to this session.
-
-Validation in this checkout: clean `npm ci`, `npm run typecheck`, `npm test`
-(60 tests, including 10 new presentation/contract tests), `npm run build`,
-and `git diff --check` passed. Browser tests were not rerun because no browser
-code changed. `npm audit --omit=dev` reported zero known production dependency
-advisories; the full install reported 10 development dependency advisories
-(4 moderate, 6 high). No dependency versions or adapter files were changed.
+The instructions, presentation code and scenarios were written by the Codex
+session in its own checkout on top of `7e2cf18`, before the tool server
+existed (commit `310b529`). They were then joined to the tool server here:
+real tool names, the server building its results from the presentation code,
+and the data-sharing rule moved from the agent to the operator.

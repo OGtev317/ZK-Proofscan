@@ -18,10 +18,10 @@ qualified person has reviewed, and reports say so. The code is unaudited and unr
 [the prototype notes](docs/VERIFICATION_PROTOTYPE.md). What blocks a release
 is in [the release review](docs/RELEASE_REVIEW.md).
 
-Local agent instructions and a deterministic presentation seam are prepared,
-but no MCP server or agent client is connected. See
-[the local agent handoff](docs/LOCAL_AGENT.md) for the scope, privacy gate,
-and pending live behavior evaluations.
+Instructions for an AI agent that uses the tool server are written but not
+activated, and no agent has been tested with them. See
+[the local agent notes](docs/LOCAL_AGENT.md) for the scope, the data-sharing
+decision that comes first, and the pending evaluations.
 
 Licensed GPL-3.0-or-later; see `LICENSE`.
 
