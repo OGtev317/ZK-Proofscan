@@ -79,6 +79,13 @@ work; no agent is defined yet.
   them, to a tool that ships 27. The official client library is a
   development dependency, and the tests drive the server through it.
 
+- **The server uses no network; the agent calling it usually does.** A
+  cloud-hosted model receives every tool result: the public inputs, the
+  message and scope, the report and the file paths. Connecting this server
+  to such an agent sends that data to the model's provider, and needs the
+  owner's approval for that provider. Only a model run on the same machine
+  keeps a check fully local.
+
 To try it with any client that takes a server command: `node dist/mcp.js`.
 
 ## How an explanation is tied to a verification
