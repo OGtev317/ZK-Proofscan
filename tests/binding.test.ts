@@ -70,7 +70,7 @@ describe('binding an explanation to its verifier and keys', () => {
     expect(() => bindSemaphoreV4(edited((m) => { m.explanation.limits.pop(); }, false))).toThrow(/not the locked/);
     expect(() => bindSemaphoreV4(edited((m) => { m.review = { status: 'reviewed', note: 'ok', reviewer: 'X', date: '2026-10-11' }; }, false))).toThrow(/not the locked/);
     expect(() => bindSemaphoreV4({ ...parts, adapterBytes: Buffer.concat([adapterBytes, Buffer.from(' ')]) })).toThrow(/not the locked/);
-    expect(() => bindSemaphoreV4({ ...parts, lock: { ...lock, revision: 2 } })).toThrow(/not the locked/);
+    expect(() => bindSemaphoreV4({ ...parts, lock: { ...lock, revision: lock.revision + 1 } })).toThrow(/not the locked/);
     expect(() => bindSemaphoreV4({ ...parts, lock: { ...lock, id: 'other' } })).toThrow(/not the locked/);
   });
 

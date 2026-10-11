@@ -1,0 +1,234 @@
+{
+  "checked": "2026-10-11",
+  "statement": "Each bundled verification key equals the key exported from the proving key published at the listed URL.",
+  "verificationKeysSha256": "d96ec60593b6fc2334f1f04e008e07425d5536d7777f6ac21d996fc80779b3c9",
+  "provingKeyVersion": "4.13.0",
+  "tool": "snarkjs zKey.exportVerificationKey",
+  "allMatch": true,
+  "provingKeys": [
+    {
+      "depth": 1,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-1.zkey",
+      "bytes": 1552601,
+      "sha256": "471a978875f91411b21ba5a2fbea41df30ec45eb23e3ac045edf7f30a2846a08",
+      "matches": true
+    },
+    {
+      "depth": 2,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-2.zkey",
+      "bytes": 1653555,
+      "sha256": "110e2d9de78730aa4f5c78c75017cfe4d769b4b7ce60f58484fb14733d7b0f35",
+      "matches": true
+    },
+    {
+      "depth": 3,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-3.zkey",
+      "bytes": 1899542,
+      "sha256": "c36653c42784df35a01f3d93415af9ad8292a540f8deb134a6a34a01752a89d3",
+      "matches": true
+    },
+    {
+      "depth": 4,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-4.zkey",
+      "bytes": 1852550,
+      "sha256": "90c94bad7ad97eeb9314750e443d84da783e38a21f55538d72b10d258064f6e6",
+      "matches": true
+    },
+    {
+      "depth": 5,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-5.zkey",
+      "bytes": 1951788,
+      "sha256": "a1431c24dc49e98d07d48e7bdacc002875bcb02a799d9156c6aa6bcbe0838926",
+      "matches": true
+    },
+    {
+      "depth": 6,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-6.zkey",
+      "bytes": 2038580,
+      "sha256": "24a7ef2c7f4c809a502e876cb3295535a73710ec7bc3827b5a15018e434a674a",
+      "matches": true
+    },
+    {
+      "depth": 7,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-7.zkey",
+      "bytes": 2113447,
+      "sha256": "d77851ee4bd496c6b5f70fbfa550f113a89bad972efd4c541267e566163d0600",
+      "matches": true
+    },
+    {
+      "depth": 8,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-8.zkey",
+      "bytes": 2231251,
+      "sha256": "d02521afe7133a97421244374d4bc005c1ebd7d7cf7c51e88b7e99fdaf183146",
+      "matches": true
+    },
+    {
+      "depth": 9,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-9.zkey",
+      "bytes": 2350717,
+      "sha256": "0eae4df76414b885a2f0793740330de896ab13f07504f97c81b5fe92868ce90e",
+      "matches": true
+    },
+    {
+      "depth": 10,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-10.zkey",
+      "bytes": 2422238,
+      "sha256": "f644af6753be9d48454d8f9bb74bf2e9a416dd7d1a704c3cf1d50e535969a19a",
+      "matches": true
+    },
+    {
+      "depth": 11,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-11.zkey",
+      "bytes": 2801799,
+      "sha256": "04d46b1be01a5ff56129318e64f3ec2c833277674a6cb787ca562893de2ec49d",
+      "matches": true
+    },
+    {
+      "depth": 12,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-12.zkey",
+      "bytes": 2922502,
+      "sha256": "3beb3d676455cca9c7c66f34a6147f8ba213b1db1812e2c1be2c00f129477229",
+      "matches": true
+    },
+    {
+      "depth": 13,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-13.zkey",
+      "bytes": 3043615,
+      "sha256": "54378ba8d31fff7c89857228cb9dc089e837f6c8b256ab0a1b8c8cdbdcf815f9",
+      "matches": true
+    },
+    {
+      "depth": 14,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-14.zkey",
+      "bytes": 3164733,
+      "sha256": "2e85d8f4a841bc0d1e223316082d3f64c855ff52083a53278dae92f49b54ff9e",
+      "matches": true
+    },
+    {
+      "depth": 15,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-15.zkey",
+      "bytes": 3286261,
+      "sha256": "076f4d7e6e2484f4cd19226b5ef622f36f6de7a99e44570e4b29c9d4fb0dfca0",
+      "matches": true
+    },
+    {
+      "depth": 16,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-16.zkey",
+      "bytes": 3408199,
+      "sha256": "948763c7315a337b7722c0344a28af4be66fbbc618474d6dbe9036e799d1a3b5",
+      "matches": true
+    },
+    {
+      "depth": 17,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-17.zkey",
+      "bytes": 3529723,
+      "sha256": "5c750bf1fdec2b1bb4b04f66a4e64c08215c9f3f862ffb3f35de511cc6417112",
+      "matches": true
+    },
+    {
+      "depth": 18,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-18.zkey",
+      "bytes": 3650014,
+      "sha256": "ef278d79e103d6944be80428ad65acdef22bdd6fe32f95a8f0ed182e1b6601ce",
+      "matches": true
+    },
+    {
+      "depth": 19,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-19.zkey",
+      "bytes": 3770297,
+      "sha256": "7329ed1332c163788b36da10be73ac3eb004fbf1b8b308e1778cf815dd209e3b",
+      "matches": true
+    },
+    {
+      "depth": 20,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-20.zkey",
+      "bytes": 3890175,
+      "sha256": "33f9a067a80c7daf90e085449073613a9559a1904dd40aeb6d603afb7988c2cc",
+      "matches": true
+    },
+    {
+      "depth": 21,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-21.zkey",
+      "bytes": 4011703,
+      "sha256": "f5c502f249c5b11d8f87889a3c8a42f9b6b6c30ac0d37629c389a15883191793",
+      "matches": true
+    },
+    {
+      "depth": 22,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-22.zkey",
+      "bytes": 4133225,
+      "sha256": "2e5c4eec112cbaab97cb54897aa4640acce0b66a98d5a612840d794403dfdbd7",
+      "matches": true
+    },
+    {
+      "depth": 23,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-23.zkey",
+      "bytes": 4253927,
+      "sha256": "0cc98beaec499a27fb30d94316780ac61ec41e8c6fce4f79fe0af63ba3783621",
+      "matches": true
+    },
+    {
+      "depth": 24,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-24.zkey",
+      "bytes": 4376277,
+      "sha256": "b02f7c575b5057adf85d2d15f2aa274fd3c964d4ec9f0184d032fec94513263a",
+      "matches": true
+    },
+    {
+      "depth": 25,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-25.zkey",
+      "bytes": 4473015,
+      "sha256": "61e799d74d3d2628dbf12ed8d50b46b050baf5130b88da36e3b516c7b8b6ce85",
+      "matches": true
+    },
+    {
+      "depth": 26,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-26.zkey",
+      "bytes": 4595368,
+      "sha256": "8c358355090cd238acdd0b519004d84012f8b98a3c017c1926d93be9a0e8d401",
+      "matches": true
+    },
+    {
+      "depth": 27,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-27.zkey",
+      "bytes": 4717308,
+      "sha256": "acac2a49f009661188f5374cc8e499ec717b3316e8dc8cce07fe6e0a1c076d37",
+      "matches": true
+    },
+    {
+      "depth": 28,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-28.zkey",
+      "bytes": 5363125,
+      "sha256": "639dce9a7cb1ad94eeb367ae8cbe72f3a2108198a3458917b266a352885e89ad",
+      "matches": true
+    },
+    {
+      "depth": 29,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-29.zkey",
+      "bytes": 5484650,
+      "sha256": "9d29520b970b9e36df899a83d6ae22411db1c7478ace4ae73a0b7273eb19c11f",
+      "matches": true
+    },
+    {
+      "depth": 30,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-30.zkey",
+      "bytes": 5606178,
+      "sha256": "a4668a81cd85fdbd160befafe9e764ad846704c9b32ba875c1e29da87df4e4b8",
+      "matches": true
+    },
+    {
+      "depth": 31,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-31.zkey",
+      "bytes": 5728530,
+      "sha256": "c36a97eff543ff8df8079f84f9ef38ae078d691aaf1295545b66edc47309ecac",
+      "matches": true
+    },
+    {
+      "depth": 32,
+      "url": "https://snark-artifacts.pse.dev/semaphore/4.13.0/semaphore-32.zkey",
+      "bytes": 5850470,
+      "sha256": "2e5f7a9f880c337134ee4c7fc4e53573813b4c9c6ae46221c0b56e7992304650",
+      "matches": true
+    }
+  ]
+}

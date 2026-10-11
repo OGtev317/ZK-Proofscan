@@ -1,5 +1,5 @@
 import { MAX_EXPORT_CHARACTERS, writeExport } from '../src/export.js';
-import { TOOL, reportSections, type Report } from '../src/report.js';
+import { reportSections, unreadReport, type Report } from '../src/report.js';
 import { MAX_PROOF_CHARACTERS } from '../src/semaphore-v4/importer.js';
 import type { Request, Response } from './protocol.js';
 
@@ -74,7 +74,7 @@ function notChecked(message: string): void {
   current = undefined;
   rerunResult.hidden = true;
   download.hidden = true;
-  show({ reportVersion: 1, tool: TOOL, input: { sha256: 'not computed' }, outcome: 'error', message });
+  show(unreadReport('error', message));
 }
 
 async function busy(label: string, work: () => Promise<void>): Promise<void> {
@@ -97,7 +97,7 @@ async function busy(label: string, work: () => Promise<void>): Promise<void> {
 
 async function readFile(file: File, limit: number): Promise<string> {
   if (file.size > limit * 4) throw new Error('the file is too large to be a supported file');
-  return new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
+  return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(await file.arrayBuffer());
 }
 
 async function check(proof: string): Promise<void> {

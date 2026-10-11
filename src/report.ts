@@ -43,6 +43,12 @@ export type Report =
   | (Common & { outcome: 'unsupported'; reason: string })
   | (Common & { outcome: 'error'; message: string });
 
+/** A report for input that could not even be read, so there is nothing to hash. */
+export function unreadReport(outcome: 'unsupported' | 'error', detail: string): Report {
+  const common: Common = { reportVersion: 1, tool: TOOL, input: { sha256: 'not computed' } };
+  return outcome === 'unsupported' ? { ...common, outcome, reason: detail } : { ...common, outcome, message: detail };
+}
+
 export function buildReport(proofText: string, result: VerificationResult, adapter: LoadedAdapter): Report {
   const common: Common = { reportVersion: 1, tool: TOOL, input: { sha256: sha256Hex(utf8(proofText)) } };
   if (result.status === 'unsupported') return { ...common, outcome: 'unsupported', reason: result.reason };

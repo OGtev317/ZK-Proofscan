@@ -3,7 +3,7 @@ import { readFile, stat, writeFile } from 'node:fs/promises';
 import { MAX_EXPORT_CHARACTERS, rerunExport, writeExport } from './export.js';
 import { bundledSemaphoreV4 } from './node/bundled.js';
 import { stopSnarkjs } from './snarkjs-engine.js';
-import { renderReport, type Report } from './report.js';
+import { renderReport, unreadReport, type Report } from './report.js';
 import { MAX_PROOF_CHARACTERS } from './semaphore-v4/importer.js';
 import { scanSemaphoreV4 } from './semaphore-v4/scan.js';
 
@@ -21,25 +21,26 @@ class TooLarge extends Error {}
 
 async function readText(path: string, limit: number): Promise<string> {
   if ((await stat(path)).size > limit * 4) throw new TooLarge();
-  return new TextDecoder('utf-8', { fatal: true }).decode(await readFile(path));
+  // A byte-order mark is kept, and then refused as not JSON, so the hash in
+  // the report is always the hash of the file's exact bytes.
+  return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(await readFile(path));
 }
 
+const print = (report: Report, json: boolean): void => console.log(json ? JSON.stringify(report, null, 2) : renderReport(report));
+
 async function check(path: string, json: boolean, exportPath: string | undefined): Promise<number> {
-  let text: string;
+  let report: Report;
+  let text: string | undefined;
   try {
     text = await readText(path, MAX_PROOF_CHARACTERS);
+    report = await scanSemaphoreV4(text, await bundledSemaphoreV4());
   } catch (error) {
-    if (error instanceof TooLarge) {
-      console.log('Not checked: this is not a supported proof file (the file is too large).\nThis says nothing about whether a proof is valid.');
-      return EXIT.unsupported;
-    }
-    console.log(`Not checked: the verification could not be completed (could not read the file: ${message(error)}).\nThis says nothing about whether a proof is valid.`);
-    return EXIT.error;
+    // Text and JSON output must agree, including when nothing could be checked.
+    report = error instanceof TooLarge ? unreadReport('unsupported', 'the file is too large')
+      : unreadReport('error', text === undefined ? `could not read the file: ${message(error)}` : message(error));
   }
-  const bound = await bundledSemaphoreV4();
-  const report = await scanSemaphoreV4(text, bound);
-  console.log(json ? JSON.stringify(report, null, 2) : renderReport(report));
-  if (exportPath !== undefined) {
+  print(report, json);
+  if (exportPath !== undefined && text !== undefined) {
     try {
       // Never overwrite: an existing export may be someone's evidence.
       await writeFile(exportPath, writeExport(text, report), { flag: 'wx' });
@@ -47,6 +48,8 @@ async function check(path: string, json: boolean, exportPath: string | undefined
       console.error(`The export was not written: ${message(error)}`);
       return EXIT.error;
     }
+  } else if (exportPath !== undefined) {
+    console.error('The export was not written: the proof file could not be read.');
   }
   return EXIT[report.outcome];
 }

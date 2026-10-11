@@ -1,4 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -49,6 +50,27 @@ describe('command line', () => {
     expect(result.status).toBe(3);
     expect(result.stdout).toMatch(/could not be completed/);
     expect(cli('check', file('binary.json', Buffer.from([0xff, 0xfe, 0x00]) as never)).status).toBe(3);
+  });
+
+  it('reports the SHA-256 of the exact file, and refuses a byte-order mark', () => {
+    const path = file('hash.json', validText);
+    const digest = createHash('sha256').update(readFileSync(path)).digest('hex');
+    expect(JSON.parse(cli('check', '--json', path).stdout).input.sha256).toBe(digest);
+    const marked = cli('check', '--json', file('bom.json', `\ufeff${validText}`));
+    expect(marked.status).toBe(2);
+    expect(JSON.parse(marked.stdout).input.sha256).toBe(createHash('sha256').update(`\ufeff${validText}`).digest('hex'));
+  });
+
+  it('answers in JSON when asked, including when nothing could be checked', () => {
+    const missing = cli('check', '--json', join(dir, 'missing.json'));
+    expect(missing.status).toBe(3);
+    expect(JSON.parse(missing.stdout)).toMatchObject({ outcome: 'error', message: expect.stringMatching(/could not read the file/) });
+    const huge = cli('check', '--json', file('huge.json', 'x'.repeat(40_000)));
+    expect(huge.status).toBe(2);
+    expect(JSON.parse(huge.stdout)).toMatchObject({ outcome: 'unsupported', reason: 'the file is too large' });
+    const junk = cli('check', '--json', file('junk2.json', 'junk'));
+    expect(junk.status).toBe(2);
+    expect(JSON.parse(junk.stdout)).toMatchObject({ outcome: 'unsupported' });
   });
 
   it('writes the same result as JSON', () => {

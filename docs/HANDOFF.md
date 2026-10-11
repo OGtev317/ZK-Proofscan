@@ -6,7 +6,7 @@ Build steps 1 to 3 are written: strict import and verification, explanation
 binding, and the readable report with export and rerun, on the command line
 and in a browser page. Read
 [the prototype notes](VERIFICATION_PROTOTYPE.md) for what exists, what was
-measured and what is untested. 48 unit tests and 12 browser tests pass.
+measured and what is untested. 50 unit tests and 12 browser tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
 for the first version. The checkout `/Users/tevdev/Desktop/ZK-Proofscan` holds
@@ -16,14 +16,13 @@ to the other session, in its own checkout. One session per checkout.
 The adapter wording in `adapters/semaphore-v4/adapter.json` is a draft taken
 from the owner's illustrative report so the machinery could be built and
 tested. Whoever changes it must update `lock.json` with the new SHA-256 and
-raise the revision.
+raise the revision. It is at revision 2.
 
-Open, in order of importance:
-
-1. A named, qualified reviewer for the adapter wording. Until then it stays
-   marked unreviewed.
-2. Evidence linking the key file to the circuit source and trusted setup.
-3. Step 4, release review.
+Step 4, release review, is recorded in [the release review](RELEASE_REVIEW.md).
+Everything that can be done without other people is done. What remains needs
+a qualified reviewer for the adapter wording, an independent security review,
+real-device browser checks and owner decisions on hosting and publishing.
+Nothing is released or hosted.
 
 ## State on 2026-10-11
 

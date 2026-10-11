@@ -1,4 +1,4 @@
-# Prototype notes (build steps 1 to 3)
+# Prototype notes (build steps 1 to 4)
 
 Written 2026-10-11. Evaluation code: unaudited, unreviewed, not released.
 
@@ -112,6 +112,8 @@ The importer accepts only the six known fields, numbers as canonical decimal
 strings within range, exactly eight proof points, and refuses a field written
 twice. It never asks for an identity secret or witness.
 
+What blocks a release is listed in [the release review](RELEASE_REVIEW.md).
+
 ## Dependencies
 
 | Package | Version | Licence | Use |
@@ -146,7 +148,7 @@ No audit status has been confirmed for snarkjs 0.7.6 or for this code.
 
 ## Tested
 
-48 automated tests on macOS with Node 26.3.0:
+50 automated tests on macOS with Node 26.3.0:
 
 - Three real proofs, at tree depths 1, 3 and 10, each made from throwaway
   identities; each is rejected under a neighbouring depth.
@@ -175,9 +177,9 @@ and cross-reruns between page and command line, and a forged export.
   live status line.
 - Random testing covered one file with simple changes; there is no
   coverage-guided fuzzing.
-- The link between the key file and the Semaphore circuit source and trusted
-  setup is not established here. The hash shows only that the file is the one
-  shipped in the Semaphore package.
+- The bundled keys equal those in Semaphore's published proving keys, but
+  those proving keys are not tied here to the circuit source or the trusted
+  setup. See `artifacts/semaphore-v4/README.md`.
 - The fixture script downloads Semaphore's public proving files at run time;
   those downloads are not hash-checked by this repository.
 - Exports do not bundle the key file or adapter.
