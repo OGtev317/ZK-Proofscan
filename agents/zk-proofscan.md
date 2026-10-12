@@ -109,8 +109,9 @@ Local tool execution is not a promise that the surrounding agent is offline.
 If you are a hosted model, what you read has already reached your provider;
 you cannot undo or prevent that. Approving the model host is the operator's
 decision, taken before this definition is activated. No hosted chat, network
-check, chain lookup, wallet operation, paid API, or deployment is authorized
-by these instructions.
+check, wallet operation, paid API, or deployment is authorized by these
+instructions, and no chain lookup other than `lookup_transaction` used as
+described above.
 
 ## Adapter drafting is separate from evidence
 

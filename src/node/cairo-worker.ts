@@ -10,10 +10,13 @@ interface Glue {
   verify_proof(parsed: string): string;
 }
 const { glue, wasm, text } = workerData as { glue: string; wasm: string; text: string };
+let loaded = false;
 try {
   const module = (await import(glue)) as Glue;
   module.initSync({ module: readFileSync(wasm) });
+  loaded = true;
   parentPort!.postMessage({ ok: true, result: module.verify_proof(module.parse_proof(text)) });
 } catch (error) {
-  parentPort!.postMessage({ ok: false, message: error instanceof Error ? error.message : String(error) });
+  // `loaded` keeps "the verifier could not start" apart from "the verifier refused the file".
+  parentPort!.postMessage({ ok: false, loaded, message: error instanceof Error ? error.message : String(error) });
 }

@@ -41,9 +41,10 @@ export const swiftnessEngine: CairoEngine = {
         void worker.terminate();
         settle();
       };
-      worker.once('message', (message: { ok: true; result: string } | { ok: false; message: string }) =>
+      worker.once('message', (message: { ok: true; result: string } | { ok: false; loaded: boolean; message: string }) =>
         finish(() => {
           if (!message.ok) {
+            if (!message.loaded) return reject(new Error('the Cairo verifier could not be started'));
             // The library's own words are not passed on: they can quote the file.
             return reject(message.message.startsWith('Proof verification failed') ? new CairoRejected('the verifier rejected the proof') : new CairoUnreadable('the verifier could not read the file'));
           }
@@ -57,6 +58,8 @@ export const swiftnessEngine: CairoEngine = {
         }),
       );
       worker.once('error', () => finish(() => reject(new Error('the Cairo verifier stopped unexpectedly'))));
+      // Settling twice is harmless: after an answer this does nothing.
+      worker.once('exit', () => finish(() => reject(new Error('the Cairo verifier stopped unexpectedly'))));
     });
   },
 };

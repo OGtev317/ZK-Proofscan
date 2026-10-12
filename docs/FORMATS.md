@@ -347,10 +347,12 @@ need their own design note before any code.
 
 1. Who reviews the explanation wording, and which maintainer reviews the
    registry entry.
-2. Which ZK Email blueprint to pin, once candidates are researched.
+2. Whether to send the request to ZK Email's maintainers above, and whether
+   Proof of Twitter stays once a registry blueprint can be pinned.
 3. Whether section C belongs in this product or a later one.
 
-A chain lookup (is a root accepted, was a nullifier used) is out of this
-milestone. If added later it must name the provider, chain, contract, block
+Finding a proof by its transaction is built; see [the lookup notes](LOOKUP.md).
+Asking a chain about state (is a root accepted, was a nullifier used) is out
+of this milestone. If added later it must name the provider, chain, contract, block
 and query, be kept apart from local verification, and never turn "unused at
 block B" into "cannot be replayed".

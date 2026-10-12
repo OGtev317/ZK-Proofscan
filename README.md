@@ -9,29 +9,38 @@ report. Instead of `0x7a2f…3b1c — Verified`, a report states:
 - **Verification:** which verifier and verifying key were used, and the result.
 - **Limits:** what the proof does not establish.
 
-**Status: prototype.** A command-line tool and a browser page check
-Semaphore v4 proofs against bundled keys, and Groth16, PLONK and FFLONK
-proofs written by snarkjs, and UltraHonk proofs of Noir programs, against a
-key the user supplies. They also check Cairo STARK proofs, the kind Starknet
-uses, in the Stone prover's layout. A supplied key
-that matches a recorded one is named, and one such key, for a ZK Email
-demonstration circuit, has an explanation. A proof can also be looked up
-by transaction hash through a chain data provider and then checked locally;
-that is the only part that uses a network, and it has not yet been run
-against a real chain ([lookup notes](docs/LOOKUP.md)). They show the
-report above and export evidence another person can rerun. See
-[the formats](docs/FORMATS.md) for what each kind of result does and does
-not say. A local tool server lets an AI agent run
-the same check. Nothing is hosted. The explanation wording is a draft that no
-qualified person has reviewed, and reports say so. The code is unaudited and unreleased. Read
-[the charter](docs/PROJECT_CHARTER.md), [the handoff](docs/HANDOFF.md) and
-[the prototype notes](docs/VERIFICATION_PROTOTYPE.md). What blocks a release
-is in [the release review](docs/RELEASE_REVIEW.md).
+**Status: prototype.** A command-line tool, a browser page and a local tool
+server for AI agents check proofs and show the report above. Nothing is
+hosted, and the code is unaudited and unreleased.
 
-Instructions for an AI agent that uses the tool server are written but not
-activated, and no agent has been tested with them. See
-[the local agent notes](docs/LOCAL_AGENT.md) for the scope, the data-sharing
-decision that comes first, and the pending evaluations.
+| Proof | Checked against | Explained | Where |
+| --- | --- | --- | --- |
+| Semaphore v4 membership | Keys bundled with this tool | Yes, draft wording | Command line, page, tool server |
+| Groth16, PLONK, FFLONK written by snarkjs | A key the user supplies | Only ZK Email's Proof of Twitter demonstration, draft wording | Command line, page, tool server |
+| UltraHonk written by Barretenberg for a Noir program | A key the user supplies | No | Command line, tool server |
+| Cairo STARK, the kind Starknet uses, in the Stone prover's layout | No key; the program is known by its hash | No | Command line, tool server |
+
+"Explained" means the report says what the proof establishes. Without an
+explanation a pass says only that the proof fits the key, or that a program
+with a given hash ran. **No qualified person has reviewed any explanation
+wording, and reports say so.** A supplied key that matches a recorded one is
+named. See [the formats](docs/FORMATS.md) for what each kind of result does
+and does not say.
+
+Every check runs on the user's machine and can be exported as evidence
+another person reruns. One command uses a network: a proof can be looked up
+by transaction hash through a chain data provider and then checked locally.
+It has not yet been run against a real chain
+([lookup notes](docs/LOOKUP.md)).
+
+Read [the charter](docs/PROJECT_CHARTER.md), [the handoff](docs/HANDOFF.md)
+and [the prototype notes](docs/VERIFICATION_PROTOTYPE.md). What blocks a
+release is in [the release review](docs/RELEASE_REVIEW.md).
+
+Instructions for an AI agent that uses the tool server are written and were
+tested once on one model with throwaway proofs. They are not installed in
+any client. See [the local agent notes](docs/LOCAL_AGENT.md) for the scope,
+the data-sharing decision that comes first, and what the test does not show.
 
 Licensed GPL-3.0-or-later; see `LICENSE`.
 

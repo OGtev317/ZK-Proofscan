@@ -4,13 +4,20 @@ import { stopEngines } from './node/stop.js';
 import { renderReport, type Report } from './report.js';
 
 const USAGE = `Usage:
-  zk-proofscan check <semaphore-v4-proof.json> [--json] [--export <file>]
-  zk-proofscan check <proof.json> --public <public.json> --key <verification_key.json> [--json] [--export <file>]
+  zk-proofscan check <proof.json> [--json] [--export <file>]
+  zk-proofscan check <proof> --public <public inputs> --key <verification key> [--json] [--export <file>]
   zk-proofscan rerun <export.json>
   zk-proofscan lookup <transaction hash> --chain <name> [--json] [--export <file>]
 
-The second form checks a Groth16, PLONK or FFLONK proof written by snarkjs
-against the verification key you give. It cannot say what the circuit checks.
+The first form checks a Semaphore v4 proof against keys bundled with this
+tool, or a Cairo STARK proof in the Stone prover's JSON layout, which needs
+no key.
+
+The second form checks a proof against the verification key you give: a
+Groth16, PLONK or FFLONK proof written by snarkjs, or an UltraHonk proof
+written by Barretenberg for a Noir program (its proof, public_inputs and vk
+files). Unless the key is one this tool has on record with an explanation,
+it cannot say what the circuit checks.
 
 lookup asks a chain data provider for a transaction, reads a proof out of it
 and checks that proof here. It only reads. It needs ALCHEMY_API_KEY or

@@ -8,8 +8,8 @@ A TypeScript core and a command-line tool. This file describes the first
 format, a Semaphore v4 proof file as written by `@semaphore-protocol/proof`:
 the tool verifies it, explains the result from a fixed adapter, and can
 export the evidence so someone else can repeat the check. Proofs checked
-with a key the user supplies (Groth16, PLONK, FFLONK) are described in
-[the formats](FORMATS.md).
+with a key the user supplies (Groth16, PLONK, FFLONK, and UltraHonk for
+Noir) and Cairo proofs are described in [the formats](FORMATS.md).
 
 ```sh
 npm ci
@@ -19,6 +19,8 @@ node dist/cli.js check tests/fixtures/semaphore-v4-valid.json
 node dist/cli.js check <proof.json> --json
 node dist/cli.js check <proof.json> --export evidence.json
 node dist/cli.js check <proof.json> --public <public.json> --key <verification_key.json>
+node dist/cli.js check target/proof --public target/public_inputs --key target/vk   # Noir
+node dist/cli.js check <cairo-proof.json>
 node dist/cli.js rerun evidence.json
 
 npm run build:web        # the browser page, written to dist-web/
@@ -51,6 +53,10 @@ as the command line, and binds them the same way before checking anything.
   page's own origin only. The browser tests fail if the page requests
   anything else. File content is shown as text and never parsed as markup.
 
+The page does not check Noir or Cairo proofs, whose verifiers are not built
+for it, and has no transaction lookup. Given one, it says the proof was not
+checked.
+
 The page is built but not hosted anywhere. Hosting it is a separate decision
 for the owner.
 
@@ -58,14 +64,15 @@ for the owner.
 
 `dist/mcp.js` is a Model Context Protocol server, so an AI agent can run the
 check instead of guessing at a proof. It speaks over standard input and
-output, runs on the user's machine and uses no network. Step 1 of the agent
-work; the agent itself is described in [the agent notes](LOCAL_AGENT.md).
+output and runs on the user's machine. Three of its four tools use no
+network. Step 1 of the agent work; the agent itself is described in [the agent notes](LOCAL_AGENT.md).
 
 | Tool | Does | Writes |
 | --- | --- | --- |
 | `check_proof` | Checks a proof given as a file path or as text | Nothing |
 | `write_export` | The same check, then saves proof and report to a new file | One new file; never overwrites |
 | `rerun_export` | Repeats the check inside an export and compares | Nothing |
+| `lookup_transaction` | Asks a chain data provider for one transaction, then checks the proof in it locally. Sends the transaction hash to the provider; see [the lookup notes](LOOKUP.md) | Nothing |
 
 - A client may give its model the text part of a result or the structured
   part; Claude Code gives the structured part. Both carry the same lines.
@@ -83,10 +90,11 @@ work; the agent itself is described in [the agent notes](LOCAL_AGENT.md).
   reduce a risk and do not remove it.
 - The protocol handling is written here, about 150 lines, instead of using
   the official library, which would add about 95 packages, a web server among
-  them, to a tool that ships 27. The official client library is a
+  them, to a tool that then shipped 27 (44 now, with the Noir and Cairo
+  verifiers). The official client library is a
   development dependency, and the tests drive the server through it.
 
-- **The server uses no network; the agent calling it usually does.** A
+- **Checking uses no network; the agent calling the server usually does.** A
   cloud-hosted model receives every tool result: the public inputs, the
   message and scope, the report and the file paths. Connecting this server
   to such an agent sends that data to the model's provider, and needs the
@@ -175,19 +183,21 @@ What blocks a release is listed in [the release review](RELEASE_REVIEW.md).
 | --- | --- | --- | --- |
 | `snarkjs` | 0.7.6 | GPL-3.0 | Groth16 verification |
 | `@noble/hashes` | 2.4.0 | MIT | keccak256 and SHA-256 |
-| `swiftness` | 1.0.0 | Apache-2.0 | Cairo STARK verification. About 145 MB installed. Last released January 2025; no audit known |
+| `swiftness` | 1.0.0 | Apache-2.0, by its licence file; the package declares only "see LICENSE" | Cairo STARK verification. About 145 MB installed. Last released January 2025; no audit known |
 | `@aztec/bb.js` | 5.2.1 | MIT | UltraHonk verification for Noir proofs. About 150 MB installed, most of it native programs this tool does not use |
 | `@semaphore-protocol/proof`, `identity`, `group` | 4.14.3 | MIT | Tests and fixture generation only |
 | `@modelcontextprotocol/sdk` | 1.32.1 | MIT | Tests only: the client that drives the tool server |
 
 The project is GPL-3.0-or-later by owner decision (2026-10-11), because
-snarkjs is distributed with it. Production dependency licences found: MIT,
-GPL-3.0, Apache-2.0 and ISC. `npm audit --omit=dev` reports no known
+snarkjs is distributed with it. Production dependency licences, as each of
+the 44 packages declares: MIT, GPL-3.0, Apache-2.0, ISC, 0BSD and "MIT AND
+Zlib". `npm audit --omit=dev` reports no known
 vulnerabilities. The development-only Semaphore packages bring in older
 packages with open advisories (snarkjs 0.5.0, `ws`); they are not part of
 what the tool runs.
 
-No audit status has been confirmed for snarkjs 0.7.6 or for this code.
+No audit status has been confirmed for snarkjs 0.7.6, `@aztec/bb.js` 5.2.1,
+`swiftness` 1.0.0 or this code.
 
 ## Findings
 
@@ -206,7 +216,9 @@ No audit status has been confirmed for snarkjs 0.7.6 or for this code.
 
 ## Tested
 
-154 automated tests on macOS with Node 26.3.0:
+155 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
+registry, Proof of Twitter, lookup, Noir and Cairo are described in
+[the formats](FORMATS.md) and [the lookup notes](LOOKUP.md). The rest:
 
 - Three real proofs, at tree depths 1, 3 and 10, each made from throwaway
   identities; each is rejected under a neighbouring depth.
@@ -238,9 +250,10 @@ proof with its own key in each of the four supplied-key systems.
   Safari on a Mac or an iPhone, in Firefox, or on Windows.
 - The page has had no accessibility review beyond labelled controls and a
   live status line.
-- The tool server was used by a real model once, in eight scenarios; see
-  [the agent notes](LOCAL_AGENT.md). That is one run on one model, with no
-  other tools available to it.
+- The tool server was used by a real model in eleven scenarios, once each;
+  see [the agent notes](LOCAL_AGENT.md). That is one run on one model, with
+  no other tools available to it. No model has used `lookup_transaction`,
+  or checked a Noir or Cairo proof.
 - `check_proof` reads any file path the agent gives it and reports that
   file's SHA-256, or that it could not be read. An agent could use this to
   learn whether a file exists and to confirm a guess at its content.
@@ -251,4 +264,5 @@ proof with its own key in each of the four supplied-key systems.
   setup. See `artifacts/semaphore-v4/README.md`.
 - The fixture script downloads Semaphore's public proving files at run time;
   those downloads are not hash-checked by this repository.
-- Exports do not bundle the key file or adapter.
+- Exports do not bundle the bundled keys, the registry or any adapter. A
+  key the user supplied is in the export.

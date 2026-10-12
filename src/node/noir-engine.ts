@@ -54,6 +54,7 @@ export const bbJsEngine: UltraHonkEngine = {
    * Measured: one instance fed thousands of malformed inputs eventually
    * fails with a memory error, so no instance is reused and one input can
    * never affect the check of another. A new instance takes about 0.1 s.
+   * A failure to prepare the setup files or start an instance is thrown.
    */
   async verify(variant, key, publicInputs, proof) {
     const directory = await (setup ??= setupDirectory());
@@ -62,7 +63,10 @@ export const bbJsEngine: UltraHonkEngine = {
     // the native one fetches its own setup files.
     const api = await Barretenberg.new({ threads: 1, crsPath: directory, srsSize: SRS_SIZE, backend: BackendType.Wasm });
     try {
-      return await (new UltraHonkVerifierBackend(api) as unknown as Verifier).verifyProof({ proof, publicInputs, verificationKey: key }, { verifierTarget: variant });
+      // Setup is done, so a throw from here on is the verifier faulting on
+      // these files: it does not accept them. Measured: it throws for some
+      // proofs made as another variant.
+      return await (new UltraHonkVerifierBackend(api) as unknown as Verifier).verifyProof({ proof, publicInputs, verificationKey: key }, { verifierTarget: variant }).catch(() => false);
     } finally {
       await api.destroy().catch(() => undefined);
     }

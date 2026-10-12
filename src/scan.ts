@@ -39,6 +39,7 @@ export async function scan(inputs: ProofInputs, scanning: Scanning): Promise<Rep
       if (scanning.cairo === undefined) return unsupported(proof, 'this is a Cairo proof, which this build cannot check; use the command line');
       return buildCairoReport(proof, await verifyCairo(proof, scanning.cairo));
     }
+    if (isBinaryPart(proof)) return unsupported(proof, 'this is a binary proof, which needs its own public inputs file and verification key file, and they were not given');
     const report = await scanSemaphoreV4(proof, scanning.semaphoreV4);
     // Say what is missing when the file is plainly a snarkjs proof.
     if (report.outcome === 'unsupported' && /"protocol"\s*:\s*"(groth16|plonk|fflonk)"/.test(proof.slice(0, 65_536))) {

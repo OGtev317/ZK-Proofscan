@@ -58,6 +58,8 @@ export const looksLikeCairoProof = (text: string): boolean => text.includes('"pr
 /** Reads the parameters a Cairo proof declares for itself. */
 export function readCairoParameters(text: string): CairoParameters | { reason: string } {
   if (text.length > MAX_CAIRO_PROOF_CHARACTERS) return { reason: 'the file is too large' };
+  // An escape could spell a name a second way, so the count below would miss it.
+  if (text.includes('\\')) return { reason: 'the file contains a backslash, which no Cairo proof needs' };
   // Each name must be written once. Read twice, a file could show one
   // number to this tool and another to the verifier.
   for (const name of ['proof_parameters', 'public_input', 'stark', 'fri', 'n_queries', 'log_n_cosets', 'proof_of_work_bits', 'layout', 'commitment_hash']) {

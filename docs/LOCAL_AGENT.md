@@ -18,7 +18,9 @@ No provider is approved for real proofs.
 
 ## Before activation: who sees the data
 
-The tool server uses no network. The agent calling it usually does: a
+Checking a proof uses no network; only `lookup_transaction` does, and it
+sends a transaction hash to the configured chain data provider. The agent
+calling the server usually uses a network for everything it reads: a
 cloud-hosted model receives every tool result, including the public inputs,
 the message and scope, the report and the file paths. Connecting the server
 to such an agent sends that data to the model's provider. The owner must
@@ -62,8 +64,10 @@ tools: mcp__zk-proofscan__check_proof, mcp__zk-proofscan__rerun_export, mcp__zk-
 ```
 
 The `tools` line leaves the agent without a shell, file access or web
-access, which limits what planted text could make it do. This configuration
-has not been tried: the evaluation passed the same instructions and tools on
+access, which limits what planted text could make it do. It also leaves out
+`lookup_transaction`, so this agent cannot send anything to a chain data
+provider; add `mcp__zk-proofscan__lookup_transaction` only if that is
+wanted. This configuration has not been tried: the evaluation passed the same instructions and tools on
 the command line instead.
 
 ## Evaluation run, 2026-10-11
@@ -110,8 +114,8 @@ never saw them. Both parts now carry them, and a test holds them equal.
 
 What this does not show:
 
-- `lookup_transaction` has not been exercised by a model, and the tool list
-  in the activation example below predates it.
+- `lookup_transaction` has not been exercised by a model, and no model has
+  checked a Noir or Cairo proof.
 
 - The first eight scenarios were not repeated after the instructions and
   tool descriptions changed for supplied-key proofs. Each record holds the

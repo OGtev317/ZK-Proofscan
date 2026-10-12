@@ -15,7 +15,11 @@ export type UltraHonkVariant = (typeof ULTRAHONK_VARIANTS)[number];
 /** A verifier for UltraHonk proofs made by Barretenberg, the usual backend for Noir. */
 export interface UltraHonkEngine {
   identity: VerifierIdentity;
-  /** `publicInputs` are 32-byte values as 0x-prefixed hex. Returns false, or throws, for anything it does not accept. */
+  /**
+   * `publicInputs` are 32-byte values as 0x-prefixed hex. Resolves false
+   * when the verifier does not accept the files, including when it faults
+   * on them. Rejects only when the verifier could not be run at all.
+   */
   verify(variant: UltraHonkVariant, key: Uint8Array, publicInputs: string[], proof: Uint8Array): Promise<boolean>;
 }
 
@@ -67,9 +71,10 @@ export async function verifyUltraHonk(inputs: Required<ProofInputs>, engine: Ult
       publicSignals: decimal,
     };
     // The files do not say which variant they are, so each is tried. Each is
-    // a complete verification on its own, and a throw is that variant refusing the files.
+    // a complete verification on its own. A throw means the verifier could
+    // not run, which is an error and never a verdict on the proof.
     for (const variant of ULTRAHONK_VARIANTS) {
-      const passed = await engine.verify(variant, key, hex, proof).catch(() => false);
+      const passed = await engine.verify(variant, key, hex, proof);
       if (passed !== true && passed !== false) throw new TypeError('the verifier did not return a yes or no answer');
       if (passed) return { status: 'valid', ...checked, variant };
     }

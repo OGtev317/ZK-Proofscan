@@ -151,7 +151,7 @@ describe('Noir proofs (UltraHonk, made by Barretenberg)', () => {
       expect(report).toMatchObject({ outcome: 'unsupported', reason: expect.stringMatching(reason) });
     }
     // A binary proof on its own, or with half its files, is not checked.
-    expect(await check({ proof: good.proof })).toMatchObject({ outcome: 'unsupported' });
+    expect(await check({ proof: good.proof })).toMatchObject({ outcome: 'unsupported', reason: expect.stringMatching(/binary proof, which needs its own public inputs file/) });
     expect(await check({ proof: good.proof, verificationKey: good.verificationKey })).toMatchObject({ outcome: 'unsupported', reason: expect.stringMatching(/needs both/) });
     // A text proof with a binary key is read as snarkjs's format and refused there.
     expect(await check({ ...good, proof: '{"protocol":"groth16"}' })).toMatchObject({ outcome: 'unsupported' });
@@ -160,13 +160,30 @@ describe('Noir proofs (UltraHonk, made by Barretenberg)', () => {
     expect(await scan(good, without)).toMatchObject({ outcome: 'unsupported', reason: expect.stringMatching(/this build cannot check/) });
   });
 
-  it('reports a verifier that fails as an error, and one that throws for a variant as that variant refusing', async () => {
+  it('reports a verifier that could not run as an error, never as a rejected proof', async () => {
     const good = load('evm');
-    const only = (variant: string): UltraHonkEngine => ({ identity: bbJsEngine.identity, verify: async (tried) => { if (tried !== variant) throw new Error('assertion failed'); return true; } });
+    const only = (variant: string): UltraHonkEngine => ({ identity: bbJsEngine.identity, verify: async (tried) => tried === variant });
     expect(await verifyUltraHonk(good, only('noir-recursive'))).toMatchObject({ status: 'valid', variant: 'noir-recursive' });
-    expect(await verifyUltraHonk(good, { identity: bbJsEngine.identity, verify: async () => { throw new Error('boom'); } })).toMatchObject({ status: 'invalid' });
+    expect(await verifyUltraHonk(good, only('none'))).toMatchObject({ status: 'invalid' });
+    expect(await verifyUltraHonk(good, { identity: bbJsEngine.identity, verify: async () => { throw new Error('boom'); } })).toEqual({ status: 'error', message: 'boom' });
+    // Failing for a later variant only is still an error: the variant that might have passed was not tried.
+    expect(await verifyUltraHonk(good, { identity: bbJsEngine.identity, verify: async (tried) => { if (tried !== 'evm') throw new Error('boom'); return false; } })).toMatchObject({ status: 'error' });
     expect(await verifyUltraHonk(good, { identity: bbJsEngine.identity, verify: async () => 'yes' as unknown as boolean })).toMatchObject({ status: 'error' });
+    // The real verifier faulting on files it was given is that verifier refusing them.
+    await expect(bbJsEngine.verify('evm', new Uint8Array(96), [], new Uint8Array(32))).resolves.toBe(false);
   });
+
+  it('does not call a good proof invalid when the verifier cannot set up', () => {
+    // Found in review: with nowhere to put its setup files the check reported FAILED for a proof that passes.
+    const paths = at('evm');
+    const done = spawnSync(process.execPath, [join(root, 'dist/cli.js'), 'check', paths.proof, '--public', paths.publicInputs, '--key', paths.verificationKey], {
+      encoding: 'utf8', timeout: 120_000, env: { ...process.env, TMPDIR: join(root, 'no-such-directory'), TMP: join(root, 'no-such-directory'), TEMP: join(root, 'no-such-directory') },
+    });
+    expect(done.status).toBe(3);
+    expect(done.stdout).toMatch(/^Not checked/);
+    expect(done.stdout).toContain('This says nothing about whether a proof is valid.');
+    expect(done.stdout).not.toMatch(/FAILED|PASSED|Claim/);
+  }, 120_000);
 
   it('checks, exports and reruns from the command line with the files as they are on disk', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'zk-proofscan-noir-'));

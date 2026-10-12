@@ -121,6 +121,8 @@ describe('Cairo proofs (Stone prover layout)', () => {
       [strong.replace('"layout": "dynamic"', '"layout": "all_cairo"'), /layout or hash this tool does not check/],
       [strong.replace('blake256_masked248_lsb', 'sha3'), /layout or hash/],
       [`${strong.slice(0, -2)}`, /not valid JSON/],
+      // A second spelling of a name, which counting the plain spelling would miss.
+      [strong.replace('"n_queries"', '"n_querie\\u0073": 1, "n_queries"'), /backslash/],
       ['{"proof_parameters": 1, "public_input": 2, "stark": 0, "fri": 0, "n_queries": 0, "log_n_cosets": 0, "proof_of_work_bits": 0, "layout": 0, "commitment_hash": 0}', /does not have the parts of a Cairo proof/],
     ] as [string, RegExp][]) {
       expect(await check({ proof: text })).toMatchObject({ outcome: 'unsupported', reason: expect.stringMatching(reason) });
@@ -140,6 +142,9 @@ describe('Cairo proofs (Stone prover layout)', () => {
     // One cannot read it and the other rejects it: rejected.
     expect(await verifyCairo(strong, engine(async (_text, _parameters, stone) => { throw stone === 'stone6' ? new CairoUnreadable('no') : new CairoRejected('no'); }))).toMatchObject({ status: 'invalid' });
     expect(await verifyCairo(strong, engine(async () => { throw new Error('the Cairo verifier stopped unexpectedly'); }))).toMatchObject({ status: 'error' });
+    // A verifier build that cannot be loaded is a failure of this tool, not an unreadable proof.
+    await expect(swiftnessEngine.verify(strong, { ...(readCairoParameters(strong) as object), layout: 'no_such_layout' } as never, 'stone6')).rejects.toThrow('the Cairo verifier could not be started');
+    await expect(swiftnessEngine.verify('{}', readCairoParameters(strong) as never, 'stone6')).rejects.toBeInstanceOf(CairoUnreadable);
     for (const bad of [{ programHash: 'abc', output: [] }, { programHash: '0x1', output: ['<b>'] }, { programHash: '0x1' }, {}]) {
       expect(await verifyCairo(strong, engine(async () => bad as never))).toMatchObject({ status: 'error' });
     }

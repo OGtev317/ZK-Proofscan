@@ -8,7 +8,7 @@ still blocks one. **Nothing has been released, published or hosted.**
 | Item | Result |
 | --- | --- |
 | Licence | GPL-3.0-or-later, decided by the owner. `LICENSE` holds the text. |
-| Dependency licences | 27 production packages: MIT, GPL-3.0, Apache-2.0 and ISC, as each declares. Listed in `THIRD_PARTY_NOTICES.md`; CI fails if the list is out of date. |
+| Dependency licences | 44 production packages: MIT, GPL-3.0, Apache-2.0, ISC, 0BSD and "MIT AND Zlib", as each declares; `swiftness` declares only "see LICENSE", and its licence file is Apache-2.0. Listed in `THIRD_PARTY_NOTICES.md`; CI fails if the list is out of date. |
 | Known vulnerabilities | `npm audit --omit=dev` reports none; CI runs it on every push. |
 | Verifier version | snarkjs 0.7.6, pinned exactly. Compared with 0.7.5 on aliased public inputs: no difference found for Groth16. |
 | Keys and proving keys | All 32 bundled verification keys equal those inside Semaphore's published proving keys. See `artifacts/semaphore-v4/README.md`. |
@@ -45,6 +45,10 @@ still blocks one. **Nothing has been released, published or hosted.**
    no known audit and no release since January 2025, and it accepts the
    security level a proof declares; this tool adds its own floor. It reads
    the older Stone layout only.
+10. **Transaction lookup (added after this review)** has never been run
+    against a real chain. The Alchemy network names and the recorded
+    Sepolia contract are unconfirmed.
+11. **The browser page does not check Noir or Cairo proofs.**
 
 ## Owner decisions still open
 
@@ -53,4 +57,5 @@ still blocks one. **Nothing has been released, published or hosted.**
 - Whether the package is published to npm. It is marked private.
 - Whether exports should bundle the key file and adapter so a rerun does not
   depend on having the same version of the tool.
-- Which proof format comes second. Each one needs its own adapter and review.
+- Which further circuits or programs get an explanation. Each one needs its
+  own adapter and review.
