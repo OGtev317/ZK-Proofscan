@@ -1,5 +1,18 @@
 # ZK-Proofscan handoff
 
+## Public browser testing (2026-10-12)
+
+The owner approved publishing the real tester at https://akashi.zatrix.xyz/,
+committing/pushing this work, and removing the separate submission page.
+The root app now offers real valid/tampered Semaphore fixtures for immediate
+testing, using the existing worker and verifier. No cryptographic logic or
+adapter wording changed. Samples are public throwaway fixtures, not Stellar
+transactions. The static page and assets are hosted; proof checks remain local.
+Public hosting does not clear the independent review or production-release gates.
+The GitHub repository is now public; its visibility was changed separately by
+the owner, not by this work. Main is not changed by this feature-branch publish.
+See [hosting notes](SUBMISSION_PAGE.md) for the existing Sites project to reuse.
+
 ## Prototype (2026-10-11)
 
 Build steps 1 to 3 are written: strict import and verification, explanation
@@ -22,7 +35,7 @@ Step 4, release review, is recorded in [the release review](RELEASE_REVIEW.md).
 Everything that can be done without other people is done. What remains needs
 a qualified reviewer for the adapter wording, an independent security review,
 real-device browser checks and owner decisions on hosting and publishing.
-Nothing is released or hosted.
+This was the pre-hosting checkpoint; see the public testing update above.
 
 ## Agent work (2026-10-11)
 

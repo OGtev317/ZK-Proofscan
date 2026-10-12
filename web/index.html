@@ -6,20 +6,34 @@
     <!-- The page loads nothing from other sites and sends nothing anywhere. -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'" />
     <meta name="referrer" content="no-referrer" />
-    <title>ZK-Proofscan</title>
+    <meta name="description" content="Try ZK-Proofscan by OtakuLabz. Check supported zero-knowledge proofs locally, inspect their limits, and export reproducible evidence." />
+    <title>ZK-Proofscan by OtakuLabz</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <main>
+      <p class="brand">AKASHI / OTAKULABZ <span>PUBLIC TESTING PROTOTYPE</span></p>
       <h1>ZK-Proofscan</h1>
       <p class="lede">Checks a zero-knowledge proof on this device and says what it does and does not establish. Nothing is uploaded.</p>
-      <p>It reads a Semaphore v4 proof on its own, or a Groth16, PLONK or FFLONK proof written by snarkjs together with its public inputs and verification key.</p>
+      <p>Start with a sample, or check your own supported proof. Verification happens in your browser, not through an AI model.</p>
       <p class="notice">Prototype. Unaudited, and the explanation wording has not been reviewed by a qualified person.</p>
+
+      <section class="samples" aria-labelledby="sample-heading">
+        <h2 id="sample-heading">Try it without a proof file</h2>
+        <p>These buttons run a real Semaphore v4 test proof through the verifier. The tampered sample changes its nullifier and should be rejected. Neither sample is a Stellar transaction.</p>
+        <div class="sample-actions">
+          <button id="sample-valid" type="button">Try valid sample</button>
+          <button id="sample-tampered" class="secondary" type="button">Try tampered sample</button>
+        </div>
+        <p class="small">Generated from throwaway test identities. No private witness or identity secret is bundled.</p>
+      </section>
 
       <section aria-labelledby="check-heading">
         <h2 id="check-heading">Check a proof</h2>
-        <label for="proof-file">Proof file (.json)</label>
-        <input id="proof-file" type="file" accept=".json,application/json" />
+        <p class="small">Supported here: Semaphore v4; snarkjs Groth16, PLONK and FFLONK with public inputs and a key; and the supported RISC Zero Groth16 receipt text format. Noir and Cairo are CLI/MCP only.</p>
+        <p class="small">Only provide proofs and public inputs. Never paste private keys, seed phrases, email contents, or secret witness data.</p>
+        <label for="proof-file">Proof file (.json or .txt)</label>
+        <input id="proof-file" type="file" accept=".json,.txt,application/json,text/plain" />
         <label for="proof-text">Or paste the proof</label>
         <textarea id="proof-text" rows="6" spellcheck="false" autocomplete="off"></textarea>
         <fieldset>
@@ -45,6 +59,7 @@
         <div id="sections"></div>
         <button id="download" type="button" hidden>Download evidence export</button>
       </section>
+      <footer>Akashi by OtakuLabz · No wallet connection, payments, or chain submission.<br />A passing proof does not establish payment settlement or real-world truth.</footer>
     </main>
     <script type="module" src="./main.ts"></script>
   </body>

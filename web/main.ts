@@ -2,6 +2,7 @@ import { MAX_EXPORT_CHARACTERS, writeExport } from '../src/export.js';
 import { MAX_PROOF_PART_CHARACTERS, MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, type ProofInputs } from '../src/inputs.js';
 import { reportSections, unreadReport, type Report } from '../src/report.js';
 import type { Request, Response } from './protocol.js';
+import sampleProof from '../tests/fixtures/semaphore-v4-valid.json?raw';
 
 const $ = <T extends HTMLElement>(id: string): T => {
   const node = document.getElementById(id);
@@ -13,6 +14,8 @@ const proofText = $<HTMLTextAreaElement>('proof-text');
 const publicFile = $<HTMLInputElement>('public-file');
 const keyFile = $<HTMLInputElement>('key-file');
 const checkButton = $<HTMLButtonElement>('check');
+const validSampleButton = $<HTMLButtonElement>('sample-valid');
+const tamperedSampleButton = $<HTMLButtonElement>('sample-tampered');
 const exportFile = $<HTMLInputElement>('export-file');
 const status = $<HTMLParagraphElement>('status');
 const reportBox = $<HTMLElement>('report');
@@ -80,7 +83,7 @@ function notChecked(message: string): void {
 }
 
 async function busy(label: string, work: () => Promise<void>): Promise<void> {
-  const controls = [checkButton, proofFile, publicFile, keyFile, exportFile];
+  const controls = [checkButton, validSampleButton, tamperedSampleButton, proofText, proofFile, publicFile, keyFile, exportFile, download];
   for (const control of controls) control.disabled = true;
   status.textContent = label;
   try {
@@ -123,6 +126,27 @@ async function check(proof: string): Promise<void> {
 checkButton.addEventListener('click', () => {
   void busy('Checking on this device…', () => check(proofText.value));
 });
+
+// Both samples go through the same worker, pinned artifacts, and report path
+// as an uploaded proof. Only public fixture data is included in this bundle.
+for (const [button, tamper] of [[validSampleButton, false], [tamperedSampleButton, true]] as const) {
+  button.addEventListener('click', () => {
+    void busy('Checking the test sample on this device…', async () => {
+      proofFile.value = '';
+      publicFile.value = '';
+      keyFile.value = '';
+      exportFile.value = '';
+      let text = sampleProof;
+      if (tamper) {
+        const proof = JSON.parse(sampleProof) as { nullifier: string };
+        proof.nullifier = (BigInt(proof.nullifier) + 1n).toString();
+        text = JSON.stringify(proof, null, 2);
+      }
+      proofText.value = text;
+      await check(text);
+    });
+  });
+}
 
 proofFile.addEventListener('change', () => {
   const file = proofFile.files?.[0];

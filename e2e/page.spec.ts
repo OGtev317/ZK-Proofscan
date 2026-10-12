@@ -42,6 +42,36 @@ async function open(page: Page): Promise<string[]> {
 
 const outcome = (page: Page) => page.locator('#report');
 
+test('public tester checks both samples with the real verifier and clears extra files', async ({ page }) => {
+  const problems = await open(page);
+  await expect(page).toHaveTitle('ZK-Proofscan by OtakuLabz');
+  await page.setInputFiles('#public-file', fixture('snarkjs/groth16-bn128.public.json'));
+  await page.setInputFiles('#key-file', fixture('snarkjs/groth16-bn128.key.json'));
+  await page.getByRole('button', { name: 'Try valid sample', exact: true }).click();
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  await expect(page.locator('#proof-text')).toHaveValue(validText);
+  await expect(page.locator('#public-file')).toHaveValue('');
+  await expect(page.locator('#key-file')).toHaveValue('');
+  await expect(page.locator('#sections')).toContainText('PASSED using snarkjs 0.7.6.');
+  await expect(page.locator('#sections')).toContainText('NOT REVIEWED.');
+  await page.getByRole('button', { name: 'Try tampered sample', exact: true }).click();
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'invalid');
+  await expect(page.locator('#sections')).toContainText('FAILED using snarkjs 0.7.6.');
+  await expect(page.locator('#sections')).not.toContainText('Someone knew the secret');
+  await page.getByRole('button', { name: 'Try valid sample', exact: true }).click();
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  expect(problems).toEqual([]);
+});
+
+test('public tester samples work on a phone-sized viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  const problems = await open(page);
+  await page.getByRole('button', { name: 'Try valid sample', exact: true }).click();
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(problems).toEqual([]);
+});
+
 test('checks a valid proof and shows every section of the report', async ({ page }) => {
   const problems = await open(page);
   await page.setInputFiles('#proof-file', fixture('semaphore-v4-valid.json'));

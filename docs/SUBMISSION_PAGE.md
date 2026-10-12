@@ -1,45 +1,34 @@
-# Akashi submission page
+# Akashi / ZK-Proofscan hosting notes
 
-The local presentation page is at `/submission/`. The existing verifier remains
-at `/`; its cryptography, wording, and interface are unchanged. Akashi is the
-proposed presentation brand by OtakuLabz, developed as ZK-Proofscan.
+The separate submission page was removed at the owner's request on 2026-10-12.
+The actual browser proof checker is the only page, at https://akashi.zatrix.xyz/.
+Earlier submission-page source remains recoverable in Git history.
 
-Build with `npm run build:web`, then preview with
-`npx vite preview --host 127.0.0.1 --port 4318 --strictPort`.
-Open `http://127.0.0.1:4318/submission/`.
+The root app has valid and tampered Semaphore v4 sample buttons. Both use the
+same worker, pinned artifacts, and verifier as uploaded proofs. The fixture
+was generated from throwaway identities; it contains no secret witness values.
+Choosing a sample clears previously selected public-input/key files to avoid
+accidentally checking it against another circuit. Verification and report
+wording are unchanged. No account, wallet, analytics, or proof-upload service
+was introduced. This is a public testing prototype, not an audited release.
 
-The static page has no JavaScript, remote fonts, analytics, wallet integration,
-form, or automatic external requests. Its report diagram is explicitly an
-illustration, not a computed verdict. It links to the working browser verifier.
-Engineering figures are tied to main checkpoint `87a69c6`, not rolling counters.
-GitHub evidence links require private-repository access.
+## Hosting
 
-On 2026-10-12 the owner approved publication and a commit. Publication is
-handled through Sites using a separate build-only checkout, so unrelated
-uncommitted research is never uploaded. GitHub visibility remains private.
-This submission preview is not a claim of SCF acceptance or a production-ready
-verifier. See the delivery message for the confirmed deployment URL and access.
-
-## Publication checkpoint
-
-Sites confirmed a successful deployment on 2026-10-12:
-
-- Origin: https://akashi-otakulabz.finecorgi5.chatgpt.site
-- Submission page: https://akashi-otakulabz.finecorgi5.chatgpt.site/submission/
-- Access at publication: owner-private; public reviewer access awaits approval.
+- Public URL: https://akashi.zatrix.xyz/
+- Sites origin: https://akashi-otakulabz.finecorgi5.chatgpt.site
+- Access: public, explicitly approved by the owner.
 - Project: `appgprj_6acc5d97b79c8191b41062a48ea5d8c6`
-- Deployment: `appgdep_6acc5dd6d9b88191a759f3d17ecd515f`
-- App source: `3d2141571264898a8b702ada2c36c45f37b222fe`
-- Published build source: `a5359624e7f5bd08e94ebb16cf46abfcdbd97fb5`
-- Local publication checkout: `build/site-publication/` (ignored by the app repo).
+- Custom domain: `appgdom_6acd044845508191967aaa17a9a2a7cd`
+- Publication checkout: `build/site-publication/` (ignored by the app repo).
+- The parent `zatrix.xyz` DNS records are unchanged.
 
-Reuse this Sites project for subsequent updates; do not create a second Site.
-The original GitHub repo remains private. Main was not merged or modified.
+Reuse this project, not a new Site. Build with `npm run build:web`; publish the
+fresh `dist-web` output as the publication checkout's `dist` directory. Replace
+the old directory rather than overlaying it, so removed pages and old assets
+are not shipped. Use the Sites source helper, save, and public deploy workflow.
+Do not copy uncommitted research or private runtime files into the publication.
 
-Validation on 2026-10-12: typecheck passed; production browser build passed;
-all 30 Playwright tests passed on Chromium and WebKit (26 existing checks,
-four new submission-page checks). Desktop and 375px-wide mobile screenshots
-were visually inspected. Production dependency audit reported no known
-vulnerabilities; the full dependency install reported 10 development-tree
-advisories. No dependencies or lockfiles were changed. Unit tests were not
-rerun for this presentation-only change.
+For a local preview: `npx vite preview --host 127.0.0.1 --port 4318 --strictPort`.
+GitHub commits/pushes for this work use `feat/public-proofscan-testing`; main
+is not implicitly merged. Deployment IDs and live validation are recorded in
+the delivery message. The earlier page is recoverable from commit `3d21415`.

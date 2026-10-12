@@ -10,8 +10,11 @@ report. Instead of `0x7a2f…3b1c — Verified`, a report states:
 - **Limits:** what the proof does not establish.
 
 **Status: prototype.** A command-line tool, a browser page and a local tool
-server for AI agents check proofs and show the report above. Nothing is
-hosted, and the code is unaudited and unreleased.
+server for AI agents check proofs and show the report above. The public browser
+testing prototype is at **https://akashi.zatrix.xyz/**. It remains unaudited
+and is not a production release. Try the valid or tampered sample, or supply
+your own supported proof. Samples run through the real verifier on your device;
+no proof data is uploaded. Never provide private keys or secret witness data.
 
 | Proof | Checked against | Explained | Where |
 | --- | --- | --- | --- |
