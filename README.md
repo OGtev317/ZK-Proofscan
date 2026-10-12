@@ -10,8 +10,9 @@ report. Instead of `0x7a2f…3b1c — Verified`, a report states:
 - **Limits:** what the proof does not establish.
 
 **Status: prototype.** A command-line tool, a browser page and a local tool
-server for AI agents check proofs and show the report above. A copy of the page is
-published with GitHub Pages from each commit on `main` that passes the tests. The code is
+server for AI agents check proofs and show the report above. The page is published at
+<https://akashi.zatrix.xyz/> with GitHub Pages, from each commit on `main` that
+passes the tests. The code is
 unaudited and there is no versioned release.
 
 | Proof | Checked against | Explained | Where |

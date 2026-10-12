@@ -61,13 +61,13 @@ checked.
 Since 2026-10-12 the page is published with GitHub Pages. The `deploy` job
 in the CI workflow builds it from each commit on `main`, after the unit and
 browser tests pass. The published build was reviewed live in Chromium and
-WebKit the same day, at `https://ogtev317.github.io/ZK-Proofscan/`: the
+WebKit the same day, at `https://akashi.zatrix.xyz/`: the
 Semaphore, snarkjs and RISC Zero proofs and the three examples gave the
 expected results, a Cairo proof was reported as not checked, the page asked
 for nothing outside its own address, and no cookie was set. GitHub can see
-visits, as the page says. An earlier copy that the owner deployed by
-hand to another host is not built from here and can be older than `main`
-until the owner retires it.
+visits, as the page says. The address used to point at a copy
+the owner deployed by hand to another host; it has pointed at this build,
+over HTTPS only, since the same day.
 
 The page offers three examples made from throwaway values, links to this
 repository, and says what it does not check.
