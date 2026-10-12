@@ -58,13 +58,15 @@ The page checks RISC Zero receipts. It does not check Noir or Cairo proofs,
 whose verifiers are not built for it, and has no transaction lookup. Given one, it says the proof was not
 checked.
 
-On 2026-10-12 the owner put a copy of the page on a public address, deployed
-by hand from a build of this repository; nothing here deploys it, so that
-copy can be older than `main`. It was reviewed live in Chromium and WebKit
-the same day: the Semaphore, snarkjs and RISC Zero examples verified, and
-the page asked for nothing outside its own address. The host adds a script
-of its own to the page, which the page's content security policy refuses to
-run, and sets two cookies. The page says that a host can see visits.
+Since 2026-10-12 the page is published with GitHub Pages. The `deploy` job
+in the CI workflow builds it from each commit on `main`, after the unit and
+browser tests pass. The published build was reviewed live in Chromium and
+WebKit the same day, at `https://ogtev317.github.io/ZK-Proofscan/`: the
+Semaphore, snarkjs and RISC Zero proofs and the three examples gave the
+expected results, a Cairo proof was reported as not checked, the page asked
+for nothing outside its own address, and no cookie was set. GitHub can see
+visits, as the page says. An earlier copy that the owner had deployed by
+hand to another host was replaced by this one.
 
 The page offers three examples made from throwaway values, links to this
 repository, and says what it does not check.
