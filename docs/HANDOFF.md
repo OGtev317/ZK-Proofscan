@@ -6,7 +6,7 @@ Build steps 1 to 3 are written: strict import and verification, explanation
 binding, and the readable report with export and rerun, on the command line
 and in a browser page. Read
 [the prototype notes](VERIFICATION_PROTOTYPE.md) for what exists, what was
-measured and what is untested. 177 unit tests and 26 browser tests pass.
+measured and what is untested. 177 unit tests and 28 browser tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
 for the first version. The main checkout holds the core, command line and
@@ -22,7 +22,8 @@ Step 4, release review, is recorded in [the release review](RELEASE_REVIEW.md).
 Everything that can be done without other people is done. What remains needs
 a qualified reviewer for the adapter wording, an independent security review,
 real-device browser checks and owner decisions on hosting and publishing.
-Nothing is released or hosted.
+Nothing is released. The owner hosted a copy of the page on 2026-10-12;
+see the prototype notes.
 
 ## Agent work (2026-10-11)
 

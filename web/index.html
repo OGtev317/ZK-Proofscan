@@ -6,6 +6,7 @@
     <!-- The page loads nothing from other sites and sends nothing anywhere. -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'" />
     <meta name="referrer" content="no-referrer" />
+    <meta name="description" content="Checks a zero-knowledge proof in your browser and says what it does and does not establish. Prototype, unaudited." />
     <title>ZK-Proofscan</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
@@ -13,13 +14,23 @@
     <main>
       <h1>ZK-Proofscan</h1>
       <p class="lede">Checks a zero-knowledge proof on this device and says what it does and does not establish. Nothing is uploaded.</p>
-      <p>It reads a Semaphore v4 proof on its own, or a Groth16, PLONK or FFLONK proof written by snarkjs together with its public inputs and verification key.</p>
-      <p class="notice">Prototype. Unaudited, and the explanation wording has not been reviewed by a qualified person.</p>
+      <p>It reads a Semaphore v4 proof or a RISC Zero Groth16 receipt on its own, or a Groth16, PLONK or FFLONK proof written by snarkjs together with its public inputs and verification key. Noir and Cairo proofs are checked by the command-line tool, not by this page.</p>
+      <p class="notice">Prototype. Unaudited, and the explanation wording has not been reviewed by a qualified person. Do not rely on a result from this page for a decision.</p>
+
+      <section aria-labelledby="example-heading">
+        <h2 id="example-heading">Try an example</h2>
+        <p>Test proofs made from throwaway values. Each is checked on this device like any other file.</p>
+        <div class="examples">
+          <button id="example-semaphore" type="button" class="quiet">A valid membership proof</button>
+          <button id="example-tampered" type="button" class="quiet">The same proof, altered</button>
+          <button id="example-risc-zero" type="button" class="quiet">A RISC Zero receipt</button>
+        </div>
+      </section>
 
       <section aria-labelledby="check-heading">
         <h2 id="check-heading">Check a proof</h2>
-        <label for="proof-file">Proof file (.json)</label>
-        <input id="proof-file" type="file" accept=".json,application/json" />
+        <label for="proof-file">Proof file (.json, or .txt for a RISC Zero receipt)</label>
+        <input id="proof-file" type="file" accept=".json,.txt,application/json,text/plain" />
         <label for="proof-text">Or paste the proof</label>
         <textarea id="proof-text" rows="6" spellcheck="false" autocomplete="off"></textarea>
         <fieldset>
@@ -45,6 +56,10 @@
         <div id="sections"></div>
         <button id="download" type="button" hidden>Download evidence export</button>
       </section>
+      <footer>
+        <p>The check runs in your browser, and the files you choose are not sent anywhere. Like any website, the company that hosts this page can see that you visited it and may set its own cookies. Public inputs in a proof can identify a person, so think before sharing a report or an export.</p>
+        <p>Open source, GPL-3.0-or-later. <a href="https://github.com/OGtev317/ZK-Proofscan" rel="noopener">Source, documentation and known limits</a>.</p>
+      </footer>
     </main>
     <script type="module" src="./main.ts"></script>
   </body>

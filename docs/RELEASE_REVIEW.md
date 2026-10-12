@@ -1,7 +1,9 @@
 # Release review (build step 4)
 
 Written 2026-10-11. This records what was checked before any release and what
-still blocks one. **Nothing has been released, published or hosted.**
+still blocks one. **Nothing has been released or published to npm.** The repository was made
+public and the owner hosted a copy of the page on 2026-10-12, both before
+the blockers below were cleared; the page says it is an unaudited prototype.
 
 ## Done
 
@@ -62,7 +64,8 @@ still blocks one. **Nothing has been released, published or hosted.**
 ## Owner decisions still open
 
 - Who reviews the adapter, and what evidence a review must leave behind.
-- Whether and where the page is hosted. Hosting needs explicit approval.
+- Whether the hosted page is rebuilt automatically from `main`. Today it is
+  deployed by hand and can fall behind.
 - Whether the package is published to npm. It is marked private.
 - Whether exports should bundle the key file and adapter so a rerun does not
   depend on having the same version of the tool.

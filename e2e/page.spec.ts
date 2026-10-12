@@ -201,6 +201,33 @@ test('checks a RISC Zero receipt, the same as the command line', async ({ page }
   expect(problems).toEqual([]);
 });
 
+test('runs each example, and an example leaves earlier files out', async ({ page }) => {
+  const problems = await open(page);
+  // Files chosen for an earlier check are not carried into an example.
+  await page.setInputFiles('#public-file', fixture('snarkjs/groth16-bn128.public.json'));
+  await page.setInputFiles('#key-file', fixture('snarkjs/groth16-bn128.key.json'));
+  await page.click('#example-semaphore');
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  await expect(page.locator('#sections')).toContainText('Someone knew the secret behind a membership commitment');
+  expect(await page.locator('#public-file').inputValue()).toBe('');
+  // The example is the same file the command line checks, byte for byte.
+  expect(await page.locator('#proof-text').inputValue()).toBe(validText);
+
+  await page.click('#example-tampered');
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'invalid');
+  await expect(page.locator('#sections')).toContainText('None. The verifier rejected this proof');
+  await expect(page.locator('#sections')).not.toContainText('PASSED');
+
+  await page.click('#example-risc-zero');
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  await expect(page.locator('#sections')).toContainText('PASSED using snarkjs 0.7.6 (RISC Zero Groth16 receipt');
+  expect(await page.locator('#proof-text').inputValue()).toBe(readFileSync(fixture('risc-zero/nethermind-test-receipt.txt'), 'utf8'));
+
+  await expect(page.locator('footer a')).toHaveAttribute('href', 'https://github.com/OGtev317/ZK-Proofscan');
+  await expect(page.locator('#proof-file')).toHaveAttribute('accept', /\.txt/);
+  expect(problems).toEqual([]);
+});
+
 test('notices a forged export', async ({ page }) => {
   const problems = await open(page);
   const exported = join(dir, `forge-source-${Date.now()}.json`);

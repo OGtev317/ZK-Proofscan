@@ -58,8 +58,16 @@ The page checks RISC Zero receipts. It does not check Noir or Cairo proofs,
 whose verifiers are not built for it, and has no transaction lookup. Given one, it says the proof was not
 checked.
 
-The page is built but not hosted anywhere. Hosting it is a separate decision
-for the owner.
+On 2026-10-12 the owner put a copy of the page on a public address, deployed
+by hand from a build of this repository; nothing here deploys it, so that
+copy can be older than `main`. It was reviewed live in Chromium and WebKit
+the same day: the Semaphore, snarkjs and RISC Zero examples verified, and
+the page asked for nothing outside its own address. The host adds a script
+of its own to the page, which the page's content security policy refuses to
+run, and sets two cookies. The page says that a host can see visits.
+
+The page offers three examples made from throwaway values, links to this
+repository, and says what it does not check.
 
 ## Tool server for AI agents
 
@@ -242,7 +250,7 @@ keys are described in
   refused arguments, exports that the command line reproduces, a forged
   export, malformed and oversized protocol messages.
 
-26 browser tests (thirteen scenarios, each in Chromium and WebKit, run headless
+28 browser tests (fourteen scenarios, each in Chromium and WebKit, run headless
 through Playwright on macOS): a valid proof, a rejected proof, an unsupported
 file containing markup, recovery after an unreadable file, identical exports
 and cross-reruns between page and command line, a forged export, and a

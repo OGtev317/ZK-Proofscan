@@ -1,3 +1,6 @@
+/// <reference types="vite/client" />
+import receiptUrl from '../tests/fixtures/risc-zero/nethermind-test-receipt.txt?url';
+import membershipUrl from '../tests/fixtures/semaphore-v4-valid.json?url';
 import { MAX_EXPORT_CHARACTERS, writeExport } from '../src/export.js';
 import { MAX_PROOF_PART_CHARACTERS, MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, type ProofInputs } from '../src/inputs.js';
 import { reportSections, unreadReport, type Report } from '../src/report.js';
@@ -19,6 +22,7 @@ const reportBox = $<HTMLElement>('report');
 const rerunResult = $<HTMLParagraphElement>('rerun-result');
 const sections = $<HTMLDivElement>('sections');
 const download = $<HTMLButtonElement>('download');
+const examples = [$<HTMLButtonElement>('example-semaphore'), $<HTMLButtonElement>('example-tampered'), $<HTMLButtonElement>('example-risc-zero')] as const;
 
 const worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
 let nextId = 1;
@@ -80,7 +84,7 @@ function notChecked(message: string): void {
 }
 
 async function busy(label: string, work: () => Promise<void>): Promise<void> {
-  const controls = [checkButton, proofFile, publicFile, keyFile, exportFile];
+  const controls = [checkButton, proofFile, publicFile, keyFile, exportFile, ...examples];
   for (const control of controls) control.disabled = true;
   status.textContent = label;
   try {
@@ -133,6 +137,26 @@ proofFile.addEventListener('change', () => {
     await check(text);
   });
 });
+
+/** A test proof shipped with the page. It is fetched from the page's own address and checked like a chosen file. */
+async function example(url: string, change: (text: string) => string = (text) => text): Promise<void> {
+  const response = await fetch(url, { cache: 'no-store', credentials: 'omit' });
+  if (!response.ok) throw new Error(`could not load the example (${response.status})`);
+  const text = change(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(await response.arrayBuffer()));
+  // An example is one file: any files chosen earlier are not part of it.
+  for (const input of [proofFile, publicFile, keyFile]) input.value = '';
+  proofText.value = text;
+  await check(text);
+}
+/** One number of the proof raised by one, which is enough for the verifier to reject it. */
+function altered(text: string): string {
+  const proof = JSON.parse(text) as { nullifier: string };
+  proof.nullifier = (BigInt(proof.nullifier) + 1n).toString();
+  return `${JSON.stringify(proof, null, 2)}\n`;
+}
+examples[0].addEventListener('click', () => void busy('Checking on this device…', () => example(membershipUrl)));
+examples[1].addEventListener('click', () => void busy('Checking on this device…', () => example(membershipUrl, altered)));
+examples[2].addEventListener('click', () => void busy('Checking on this device…', () => example(receiptUrl)));
 
 // Choosing either extra file checks again once a proof is there.
 for (const extra of [publicFile, keyFile]) {
