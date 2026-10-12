@@ -4,9 +4,9 @@ Written 2026-10-11. The owner approved read-only chain lookups through
 Alchemy, on any chain, on that date. Nothing else on a chain is approved:
 no wallet, no signing, no transactions, no deployment.
 
-**Not yet run against a real chain.** No provider key was configured when
-this was built, so every test uses a stand-in provider on this machine and
-call data built from the test proofs. The first real lookup is still to do.
+**Run against a real chain once, on 2026-10-12** (see "Run on a real
+chain" below). The automated tests still use a stand-in provider on this
+machine and call data built from the test proofs, so they need no key.
 
 ## What it does
 
@@ -24,8 +24,10 @@ node --env-file=.env dist/cli.js lookup <transaction hash> --chain sepolia
    same report under a "Source" section.
 
 Chains: `ethereum`, `sepolia`, `base`, `base-sepolia`, `optimism`,
-`arbitrum`, `polygon`. The Alchemy network names for these are from memory
-and untested.
+`arbitrum`, `polygon`. On 2026-10-12 Alchemy answered with the expected
+chain id for `ethereum`, `sepolia`, `base` and `base-sepolia`. The network
+names for `optimism`, `arbitrum` and `polygon` are from memory and
+untested: they were not enabled for the owner's key.
 
 ## What is trusted, and what is not
 
@@ -46,7 +48,7 @@ a transaction whose proof this tool will not accept.
 
 | Call | Proof | Contract on record |
 | --- | --- | --- |
-| `mint(uint256[8],uint256[3])` | ZK Email Proof of Twitter, checked with the recorded key | Sepolia `0xab157f13e9643f45aea693fdb1a3c22dbdb984a5`, named in the demonstration's app settings. Not checked to be live |
+| `mint(uint256[8],uint256[3])` | ZK Email Proof of Twitter, checked with the recorded key | Sepolia `0xab157f13e9643f45aea693fdb1a3c22dbdb984a5`, named in the demonstration's app settings. Has contract code and 16 `mint` transactions, as reported by Alchemy on 2026-10-12 |
 | `validateProof(uint256,(…))` | Semaphore v4, checked with the bundled keys | None |
 
 A call is matched by its shape, which any contract can copy. The report
@@ -80,10 +82,26 @@ declined without being called invalid; answers that contradict each other
 stop the lookup; six kinds of provider failure give fixed messages with no
 key and no provider text; the command line, export, rerun and agent tool.
 
+## Run on a real chain
+
+On 2026-10-12, with the owner's Alchemy key in a local `.env`, every
+transaction Alchemy listed as sent to the recorded Proof of Twitter
+contract on Sepolia was looked up: 16 transactions, from block 7339733
+back. In each, the chain had accepted the transaction, the proof was read
+from the `mint` call, and it passed here against the recorded key. For
+example:
+
+```sh
+node --env-file=.env dist/cli.js lookup 0xca718b1f6cd0eb1d4bc47cd95a73d085bd0077cfc7553de6e61ae5d80669c787 --chain sepolia
+```
+
+This is one contract, one call shape and one provider. No reverted
+transaction, no proof this tool rejects and no Semaphore call has been met
+on a real chain; those cases are covered only by the stand-in provider.
+The list of transactions came from the provider and may be incomplete.
+
 ## Not done
 
-- A real lookup on any chain, and confirmation that the recorded Sepolia
-  contract exists and has `mint` transactions.
 - Finding proofs inside nested calls, which needs transaction traces.
 - Checking with the chain whether a group root is accepted or a nullifier
   used. Each is specific to one application's contract.

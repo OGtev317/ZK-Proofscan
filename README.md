@@ -34,7 +34,7 @@ and does not say.
 Every check runs on the user's machine and can be exported as evidence
 another person reruns. One command uses a network: a proof can be looked up
 by transaction hash through a chain data provider and then checked locally.
-It has not yet been run against a real chain
+It has been run against one real contract, on the Sepolia test network
 ([lookup notes](docs/LOOKUP.md)).
 
 Read [the charter](docs/PROJECT_CHARTER.md), [the handoff](docs/HANDOFF.md)

@@ -47,9 +47,10 @@ the blockers below were cleared; the page says it is an unaudited prototype.
    no known audit and no release since January 2025, and it accepts the
    security level a proof declares; this tool adds its own floor. It reads
    the older Stone layout only.
-10. **Transaction lookup (added after this review)** has never been run
-    against a real chain. The Alchemy network names and the recorded
-    Sepolia contract are unconfirmed.
+10. **Transaction lookup (added after this review)** has been run
+    against one real contract only, on Sepolia, on 2026-10-12. Three of
+    the seven Alchemy network names are unconfirmed, and no rejected or
+    reverted case has been met on a real chain.
 11. **The browser page does not check Noir or Cairo proofs.**
 12. **Barretenberg 0.87.0 (added after this review)** is an old verifier
     with no confirmed audit status. Testing found it accepts an all-zero

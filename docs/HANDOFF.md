@@ -86,9 +86,10 @@ a registry entry, an adapter and fixtures, not new code.
 ## Approvals given, and their limits
 
 - 2026-10-11: read-only chain lookups through Alchemy, on any chain.
-  `zk-proofscan lookup` and the `lookup_transaction` tool are built for that
-  and tested against a stand-in provider only; no key was configured, so no
-  real chain has been read. Read [the lookup notes](LOOKUP.md). Wallet
+  `zk-proofscan lookup` and the `lookup_transaction` tool are built for that.
+  On 2026-10-12 the owner put a key in a local `.env` and the lookup was run
+  on Sepolia: 16 real transactions, all verified. Read [the lookup
+  notes](LOOKUP.md). Wallet
   actions, signing, transactions, deployment, hosted services and paid
   infrastructure are not approved.
 - 2026-10-11: verifier libraries so that the first test release covers four
@@ -122,8 +123,6 @@ mistake. The lost part was restored from `01d2144` in the next change.
 
 ## Next, for the owner
 
-- Put an Alchemy key in a local `.env` so the first real lookup can be run
-  and the recorded Sepolia contract confirmed.
 - Name who reviews the explanation wording and the registry entries. Until
   then every explanation says NOT REVIEWED.
 - Choose which Noir circuits, Cairo programs or RISC Zero programs, if any,
