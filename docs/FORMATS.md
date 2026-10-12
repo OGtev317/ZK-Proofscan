@@ -341,7 +341,11 @@ What this does not give:
   the same pinned second-group point 5.2.1 uses. Its own downloader is
   never called, and a test fails if anything is fetched.
 - Fixtures were made with the library's JavaScript interface, not the `bb`
-  program. Making them downloads setup points; checking does not.
+  program. Making them downloads setup points; checking does not. The
+  fixture without hiding was also accepted by Nethermind's verifier, run
+  locally from its source at commit `9aae958` on 2026-10-12, so the two
+  agree on that one real proof. The fixture with hiding is a kind that
+  verifier does not check.
 - The guard against keys with a point at infinity is a judgement from one
   real key. A real circuit whose key holds such a point would be reported
   as not checked, not as invalid.
