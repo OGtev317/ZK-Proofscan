@@ -22,8 +22,8 @@ Step 4, release review, is recorded in [the release review](RELEASE_REVIEW.md).
 Everything that can be done without other people is done. What remains needs
 a qualified reviewer for the adapter wording, an independent security review,
 real-device browser checks and owner decisions on hosting and publishing.
-Nothing is released. The owner hosted a copy of the page on 2026-10-12;
-see the prototype notes.
+Nothing is released. With the owner's approval, the page has been published with GitHub
+Pages from `main` since 2026-10-12, by the `deploy` job in the CI workflow.
 
 ## Agent work (2026-10-11)
 

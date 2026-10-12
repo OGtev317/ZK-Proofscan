@@ -10,8 +10,8 @@ report. Instead of `0x7a2f…3b1c — Verified`, a report states:
 - **Limits:** what the proof does not establish.
 
 **Status: prototype.** A command-line tool, a browser page and a local tool
-server for AI agents check proofs and show the report above. The owner hosts a copy
-of the page, deployed by hand from a build of this repository. The code is
+server for AI agents check proofs and show the report above. A copy of the page is
+published with GitHub Pages from each commit on `main` that passes the tests. The code is
 unaudited and there is no versioned release.
 
 | Proof | Checked against | Explained | Where |
