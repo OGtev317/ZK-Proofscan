@@ -23,6 +23,7 @@
   "dependencies": {
     "@aztec/bb.js": "5.2.1",
     "@noble/hashes": "2.4.0",
+    "aztec-bb-js-0-87-0": "npm:@aztec/bb.js@0.87.0",
     "snarkjs": "0.7.6",
     "swiftness": "1.0.0"
   },
@@ -36,6 +37,8 @@
     "@semaphore-protocol/proof": "4.14.3",
     "@types/node": "26.6.5",
     "@types/snarkjs": "0.7.9",
+    "noir-js-1-0-0-beta-9": "npm:@noir-lang/noir_js@1.0.0-beta.9",
+    "noir-wasm-1-0-0-beta-9": "npm:@noir-lang/noir_wasm@1.0.0-beta.9",
     "typescript": "7.0.2",
     "vite": "8.3.4",
     "vitest": "5.0.3"

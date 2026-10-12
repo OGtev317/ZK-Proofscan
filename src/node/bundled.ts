@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { bindRecordedCircuit } from '../recorded/bind.js';
 import { swiftnessEngine } from './cairo-engine.js';
 import { bbJsEngine } from './noir-engine.js';
+import { bbJsLegacyEngine } from './noir-legacy-engine.js';
 import { loadKeyRegistry } from '../registry.js';
 import { loadRiscZeroParameters } from '../risc-zero/parameters.js';
 import type { Scanning } from '../scan.js';
@@ -48,5 +49,5 @@ export async function bundledScanning(): Promise<Scanning> {
     ),
   );
   const riscZero = { parameters: loadRiscZeroParameters(await file('artifacts/risc-zero-groth16/parameters-3.0.0.json')), engine: snarkjsEngine };
-  return { semaphoreV4: await bundledSemaphoreV4(), suppliedKey: snarkjsSuppliedKeyEngine, registry, recorded, riscZero, ultraHonk: bbJsEngine, cairo: swiftnessEngine };
+  return { semaphoreV4: await bundledSemaphoreV4(), suppliedKey: snarkjsSuppliedKeyEngine, registry, recorded, riscZero, ultraHonk: bbJsEngine, ultraHonkLegacy: bbJsLegacyEngine, cairo: swiftnessEngine };
 }

@@ -17,14 +17,16 @@ hosted, and the code is unaudited and unreleased.
 | --- | --- | --- | --- |
 | Semaphore v4 membership | Keys bundled with this tool | Yes, draft wording | Command line, page, tool server |
 | Groth16, PLONK, FFLONK written by snarkjs | A key the user supplies | Only ZK Email's Proof of Twitter demonstration, draft wording | Command line, page, tool server |
-| UltraHonk written by Barretenberg for a Noir program | A key the user supplies | No | Command line, tool server |
+| UltraHonk written by Barretenberg for a Noir program (5.2.1, or 0.87.0 with the Keccak transcript) | A key the user supplies | No | Command line, tool server |
+| RISC Zero Groth16 receipt | RISC Zero's version 3.0.0 verifier parameters, pinned in this tool | No; the program is known by its image ID | Command line, page, tool server |
 | Cairo STARK, the kind Starknet uses, in the Stone prover's layout | No key; the program is known by its hash | No | Command line, tool server |
 
 "Explained" means the report says what the proof establishes. Without an
 explanation a pass says only that the proof fits the key, or that a program
 with a given hash ran. **No qualified person has reviewed any explanation
 wording, and reports say so.** A supplied key that matches a recorded one is
-named. See [the formats](docs/FORMATS.md) for what each kind of result does
+named; the record holds Semaphore v4's keys, the Proof of Twitter key and
+the testnet keys of Nethermind's Stellar Private Payments. See [the formats](docs/FORMATS.md) for what each kind of result does
 and does not say.
 
 Every check runs on the user's machine and can be exported as evidence

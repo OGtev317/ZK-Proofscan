@@ -10,13 +10,15 @@ const USAGE = `Usage:
   zk-proofscan lookup <transaction hash> --chain <name> [--json] [--export <file>]
 
 The first form checks a Semaphore v4 proof against keys bundled with this
-tool, or a Cairo STARK proof in the Stone prover's JSON layout, which needs
-no key.
+tool; a Cairo STARK proof in the Stone prover's JSON layout, which needs no
+key; or a RISC Zero Groth16 receipt written as three lines of hex (seal,
+image ID, SHA-256 of the journal), against RISC Zero's version 3.0.0
+verifier parameters.
 
 The second form checks a proof against the verification key you give: a
 Groth16, PLONK or FFLONK proof written by snarkjs, or an UltraHonk proof
 written by Barretenberg for a Noir program (its proof, public_inputs and vk
-files). Unless the key is one this tool has on record with an explanation,
+files; version 5.2.1, or 0.87.0 with the Keccak transcript). Unless the key is one this tool has on record with an explanation,
 it cannot say what the circuit checks.
 
 lookup asks a chain data provider for a transaction, reads a proof out of it

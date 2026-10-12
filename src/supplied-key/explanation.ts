@@ -19,8 +19,9 @@ export const SUPPLIED_KEY = {
   hidden: ['The private inputs.'],
   publicNote: 'What each public input means depends on the circuit, which this tool does not know.',
   review: 'General wording for any circuit. No circuit was examined, and no qualified person has reviewed this wording.',
-  limits(protocol: Protocol, recognised: boolean): string[] {
-    return [recognised ? RECOGNISED_KEY : UNKNOWN_KEY, ...GENERAL_LIMITS, ...(protocol === 'fflonk' ? [FFLONK_INV] : []), ...(protocol === 'ultrahonk' ? [ULTRAHONK_VERSION] : [])];
+  /** `legacy`: checked with Barretenberg 0.87.0, the older verifier kept for proofs a current one does not read. */
+  limits(protocol: Protocol, recognised: boolean, legacy = false): string[] {
+    return [recognised ? RECOGNISED_KEY : UNKNOWN_KEY, ...GENERAL_LIMITS, ...(protocol === 'fflonk' ? [FFLONK_INV] : []), ...(protocol === 'ultrahonk' ? [ULTRAHONK_VERSION] : []), ...(legacy ? LEGACY_ULTRAHONK : [])];
   },
   assumptions(protocol: Protocol, curve: Curve): string[] {
     return [
@@ -35,6 +36,16 @@ export const SUPPLIED_KEY = {
 
 const ULTRAHONK_VERSION =
   'UltraHonk proofs and keys change between versions of Barretenberg. A proof made with another version may fail here without being wrong, and this tool cannot tell which version made a proof.';
+
+// Barretenberg 0.87.0 is kept for the proofs Nethermind's UltraHonk verifier
+// for Stellar is built for. Measured on it: a number written above the field
+// size, and the last point of a proof written with its halves split another
+// way, both still verify. This tool refuses those two before verifying.
+const LEGACY_ULTRAHONK = [
+  'This proof was checked with Barretenberg 0.87.0, an older version kept for proofs that a current version does not read. Fixes made to Barretenberg since that version are not in it.',
+  'A pass here does not show that a contract would accept this proof. A verifier written for a chain, such as the UltraHonk verifier for Stellar, is separate code with its own rules, and may refuse a proof that passes here.',
+  'The bytes of a proof do not identify it. Whoever made this proof can make other proof files for the same statement, so two different files can be the same claim.',
+];
 
 // Measured: snarkjs 0.7.6 accepts an FFLONK proof whatever "inv" holds.
 const FFLONK_INV =

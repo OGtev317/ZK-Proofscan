@@ -1,5 +1,6 @@
 import { looksLikeCairoProof, verifyCairo, type CairoEngine } from './cairo/verify.js';
 import { isBinaryPart, partBytes, type ProofInputs } from './inputs.js';
+import { looksLikeLegacyKey, verifyLegacyUltraHonk, type LegacyUltraHonkEngine } from './noir/legacy.js';
 import { verifyUltraHonk, type UltraHonkEngine } from './noir/verify.js';
 import type { BoundRecordedCircuit } from './recorded/bind.js';
 import type { KeyRegistry } from './registry.js';
@@ -22,6 +23,8 @@ export interface Scanning {
   riscZero: RiscZeroBound;
   /** Absent where Barretenberg is not available, such as the browser page. */
   ultraHonk?: UltraHonkEngine;
+  /** Barretenberg 0.87.0, for the older proofs a current version does not read. Absent on the browser page. */
+  ultraHonkLegacy?: LegacyUltraHonkEngine;
   /** Absent where the Cairo verifier is not available, such as the browser page. */
   cairo?: CairoEngine;
 }
@@ -60,7 +63,11 @@ export async function scan(inputs: ProofInputs, scanning: Scanning): Promise<Rep
   let result;
   if (isBinaryPart(proof)) {
     if (scanning.ultraHonk === undefined) return unsupported(proof, 'this is a binary proof, which this build cannot check; use the command line');
-    result = await verifyUltraHonk({ proof, publicInputs, verificationKey }, scanning.ultraHonk);
+    // The key says which version of Barretenberg wrote it, and each version's verifier reads only its own.
+    if (looksLikeLegacyKey(partBytes(verificationKey))) {
+      if (scanning.ultraHonkLegacy === undefined) return unsupported(proof, 'this is a binary proof, which this build cannot check; use the command line');
+      result = await verifyLegacyUltraHonk({ proof, publicInputs, verificationKey }, scanning.ultraHonkLegacy);
+    } else result = await verifyUltraHonk({ proof, publicInputs, verificationKey }, scanning.ultraHonk);
   } else {
     result = await verifySuppliedKey({ proof, publicInputs, verificationKey }, scanning.suppliedKey);
   }

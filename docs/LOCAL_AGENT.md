@@ -115,7 +115,8 @@ never saw them. Both parts now carry them, and a test holds them equal.
 What this does not show:
 
 - `lookup_transaction` has not been exercised by a model, and no model has
-  checked a Noir or Cairo proof.
+  checked a Noir, Cairo or RISC Zero proof. The instructions gained a
+  paragraph on RISC Zero receipts after the last run.
 
 - The first eight scenarios were not repeated after the instructions and
   tool descriptions changed for supplied-key proofs. Each record holds the

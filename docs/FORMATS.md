@@ -4,7 +4,7 @@ Written 2026-10-11. The owner asked for the idea to cover as many proof
 formats as possible. This file records what is supported, the rule every
 format follows, and what each further format would need.
 
-## Four bases for a result
+## Five bases for a result
 
 Every `valid` or `invalid` report carries a `basis`, because a pass means
 very different things in each case.
@@ -15,6 +15,7 @@ very different things in each case.
 | `recorded-circuit` | The user's key is an exact match to a recorded key, and an explanation is bound to that key | The circuit's claim, in the adapter's wording, with the key's provenance stated |
 | `supplied-key` | Only the key the user gave with the proof | The proof fits that key. No explanation is applied, so nothing about meaning |
 | `cairo-program` | A proof about a program known only by its hash; there is no key | A program with that hash ran and wrote that output. Nothing about what the program does |
+| `risc-zero-program` | RISC Zero's verifier parameters pinned by hash; the program is known only by its image ID | A program with that image ID ran and wrote a journal with that hash. Nothing about what the program does or what the journal says |
 
 A supplied key is never used for a bundled format, so it cannot stand in for
 the pinned keys. A program reading reports must check `basis` before
@@ -31,6 +32,8 @@ treating `valid` as a statement about any claim.
 | snarkjs FFLONK on BN254 | `supplied-key` | Proof, public inputs, verification key | snarkjs 0.7.6 |
 | Cairo STARK proof (Stone prover layout) | `cairo-program` | Proof | `swiftness` 1.0.0. Command line and tool server only |
 | Noir (UltraHonk on BN254, written by Barretenberg) | `supplied-key` | `proof`, `public_inputs`, `vk`, all binary | `@aztec/bb.js` 5.2.1. Command line and tool server only |
+| Noir, as Barretenberg 0.87.0 wrote it with the Keccak transcript | `supplied-key` | The same three files | `@aztec/bb.js` 0.87.0. Command line and tool server only |
+| RISC Zero Groth16 receipt, verifier parameters 3.0.0 | `risc-zero-program` | One file: three lines of hex | snarkjs 0.7.6, Groth16 on BN254 |
 
 ```sh
 node dist/cli.js check proof.json --public public.json --key verification_key.json
@@ -231,6 +234,118 @@ Not tested or not done:
 - The package is about 145 MB installed: one build per layout, hash and
   Stone version. The browser page does not check Cairo proofs.
 
+### Stellar: three candidates reviewed on 2026-10-11
+
+The owner forwarded three candidates for proofs used on Stellar and asked
+for the libraries to be added. Each was read at a pinned commit. Two needed
+no new library. **No Stellar network was contacted, and nothing here reads
+a Stellar transaction or contract.**
+
+| Candidate | New library | What is built | What is not |
+| --- | --- | --- | --- |
+| Nethermind Stellar Private Payments (circom, Groth16) | None: snarkjs reads its keys | Its 16 testnet keys are recognised | No explanation; no valid proof was available to test with |
+| Nethermind Stellar RISC Zero verifier | None: the seal is a Groth16 proof | Receipts are verified, with a new basis | Nothing says what a program does |
+| Soroban UltraHonk verifier (Noir) | `@aztec/bb.js` 0.87.0, beside 5.2.1 | Proofs of the version that verifier is built for are checked | The Stellar verifier itself is Rust and is not run here |
+
+#### Stellar Private Payments keys
+
+`NethermindEth/stellar-private-payments` at commit `ef42a47` publishes 16
+Groth16 verification keys for its testnet deployment, in the layout
+snarkjs reads. They are copied to `artifacts/stellar-private-payments/` and
+recorded in the registry, each as its own entry, so a proof presented with
+one is reported as using a known key.
+
+- **Every key was generated locally with no trusted ceremony**, as the
+  publisher states. Whoever generated one can make passing proofs of false
+  statements. The registry entry says so, and the link to circuit source
+  is recorded as unconfirmed.
+- The publisher calls the project a work in progress, unaudited, for
+  testnet only. Its keys were replaced three times in six weeks; a proof
+  for an earlier or later key is reported as an unrecognised key.
+- No explanation is applied. An adapter would need the meaning of each
+  public input, a real proof to test with, and a qualified review.
+- **No valid proof was available.** The repository holds none, and making
+  one needs the project's prover and a pool's state. Tests show each key is
+  read, named, and rejects a proof made for another circuit.
+- Found on the way: the keys were refused at first, because they leave out
+  `vk_alphabeta_12`. The verifier does not read that value and only snarkjs
+  writes it, so a Groth16 key may now come with or without it.
+
+#### RISC Zero receipts
+
+A RISC Zero Groth16 receipt is a 260-byte seal, the image ID of the program
+and the journal the program wrote. The seal is a Groth16 proof with five
+public inputs, so snarkjs verifies it. The file read here is the one
+Nethermind's guide has a prover write: three lines of lower-case hex, the
+seal, the image ID and the SHA-256 of the journal.
+
+```sh
+node dist/cli.js check proof.txt
+```
+
+- The verifier parameters (key, control root, control ID) are pinned by
+  hash in `artifacts/risc-zero-groth16/`. They are Nethermind's file byte
+  for byte, and all 26 key numbers, the control root and the control ID
+  equal RISC Zero's own Ethereum contracts at `v3.0.0`
+  (`scripts/check-risc-zero-parameters.mjs`). These parameters are not
+  specific to Stellar.
+- Only seals that begin with the selector `73c457ba`, version 3.0.0, are
+  checked. Any other is reported as not checked.
+- The statement a seal is checked against is built here from the image ID
+  and journal hash, in the layout RISC Zero's contracts use: the program
+  ran with no declared input, stopped normally with exit code zero, and
+  relies on no other unproven receipt. That layout is fixed-width, and the
+  real receipt passes only if it is right.
+- The report does not see the journal, only its hash.
+- **One real receipt was available**, from Nethermind's contract tests. A
+  changed seal, image ID or journal hash is rejected.
+- Works on the command line, the page and the tool server.
+
+#### Barretenberg 0.87.0, for the Soroban UltraHonk verifier
+
+`NethermindEth/rs-soroban-ultrahonk` verifies Noir proofs made with
+Barretenberg 0.87.0 and the Keccak transcript, without hiding. Version
+5.2.1 does not read those proofs or keys, so `@aztec/bb.js` 0.87.0 is
+installed beside it under the name `aztec-bb-js-0-87-0`. A key says which
+version wrote it: an 0.87.0 key is 1,760 bytes and opens with the circuit
+size, where a 5.2.1 key opens with 24 zero bytes.
+
+Proofs with the Keccak transcript are checked, with or without hiding. The
+version's default transcript and its Starknet one are not; such a proof is
+reported as not checked.
+
+**This is an old verifier, and testing it found faults that the current one
+does not have.** Each is pinned in a test as the library behaves, and each
+is refused by this tool before the verifier runs:
+
+| Measured on 0.87.0 | What this tool does |
+| --- | --- |
+| A key whose points are all zero accepts an all-zero proof, for any public inputs | A key holding a point at infinity is not read. The key of the real circuit examined holds none |
+| A number in a proof written as itself plus the field size still verifies | Every 32-byte value of a proof must be inside the field |
+| The last point of a proof still verifies with its halves split another way, or with unread high bytes set | The last point must be written the one way a prover writes it |
+| The key's opening numbers are not compared with each other, and four bytes are not read | Circuit size, its logarithm and the public-input count must agree |
+
+Every byte of a proof without hiding and of one with hiding was changed in
+turn, and every byte of a key: no other single change was accepted. The
+same sweep of a 5.2.1 proof of the `evm` kind found no accepted change at
+all; the other three kinds were not swept in full.
+
+What this does not give:
+
+- **A pass is not the Stellar verifier's answer.** That verifier is
+  separate Rust code with stricter rules, audited by OpenZeppelin in August
+  2026 according to its repository. It is not run here.
+- Fixes made to Barretenberg after 0.87.0 are not in it. No audit status is
+  confirmed for this version of `@aztec/bb.js`.
+- The setup points are given to the library directly: the generator, and
+  the same pinned second-group point 5.2.1 uses. Its own downloader is
+  never called, and a test fails if anything is fetched.
+- Fixtures were made with the library's JavaScript interface, not the `bb`
+  program. Making them downloads setup points; checking does not.
+- The guard against keys with a point at infinity is a judgement from one
+  real key. A real circuit whose key holds such a point would be reported
+  as not checked, not as invalid.
+
 ### How the three files are read
 
 - Each file must be JSON that can be read only one way: no escapes, no
@@ -330,8 +445,8 @@ its own fixtures and input rules. This project does not write verifiers.
 | System | Likely verifier | Open questions |
 | --- | --- | --- |
 | gnark Groth16 and PLONK | None known in JavaScript | Proof encoding differs from snarkjs; converting it is new code that needs review |
-| RISC Zero receipts | Rust crate; receipts can also be wrapped in Groth16 | Whether the wrapped form can use the verifier already here, and how the program is bound |
-| SP1 proofs | Succinct's verifier; offers STARK, Groth16 and PLONK forms | The same |
+| RISC Zero receipts not wrapped in Groth16, or other parameter versions | Rust crate | Groth16 receipts for parameters 3.0.0 are read; these are not |
+| SP1 proofs | Succinct's verifier; offers STARK, Groth16 and PLONK forms | Whether a wrapped form can use the verifier already here, and how the program is bound |
 | Halo2 | No standard one | Proof layout is specific to each application |
 | Cairo proofs from the S-two prover | None found for JavaScript | Stone-layout proofs are read; these are not |
 | Bulletproofs range proofs | Rust `bulletproofs` | Not circuit proofs; the report shape needs thought |

@@ -314,7 +314,7 @@ export function buildSuppliedKeyReport(
     verification: { result: 'passed', ...verification },
     keyRecognition,
     explanation: { review: { status: 'unreviewed', note: SUPPLIED_KEY.review } },
-    limits: SUPPLIED_KEY.limits(result.protocol, recognised),
+    limits: SUPPLIED_KEY.limits(result.protocol, recognised, result.legacy === true),
     assumptions: SUPPLIED_KEY.assumptions(result.protocol, result.curve),
   };
 }

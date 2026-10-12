@@ -8,7 +8,7 @@ still blocks one. **Nothing has been released, published or hosted.**
 | Item | Result |
 | --- | --- |
 | Licence | GPL-3.0-or-later, decided by the owner. `LICENSE` holds the text. |
-| Dependency licences | 44 production packages: MIT, GPL-3.0, Apache-2.0, ISC, 0BSD and "MIT AND Zlib", as each declares; `swiftness` declares only "see LICENSE", and its licence file is Apache-2.0. Listed in `THIRD_PARTY_NOTICES.md`; CI fails if the list is out of date. |
+| Dependency licences | 48 production packages: MIT, GPL-3.0, Apache-2.0, ISC, 0BSD and "MIT AND Zlib", as each declares; `swiftness` declares only "see LICENSE", and its licence file is Apache-2.0. Listed in `THIRD_PARTY_NOTICES.md`; CI fails if the list is out of date. |
 | Known vulnerabilities | `npm audit --omit=dev` reports none; CI runs it on every push. |
 | Verifier version | snarkjs 0.7.6, pinned exactly. Compared with 0.7.5 on aliased public inputs: no difference found for Groth16. |
 | Keys and proving keys | All 32 bundled verification keys equal those inside Semaphore's published proving keys. See `artifacts/semaphore-v4/README.md`. |
@@ -49,6 +49,15 @@ still blocks one. **Nothing has been released, published or hosted.**
     against a real chain. The Alchemy network names and the recorded
     Sepolia contract are unconfirmed.
 11. **The browser page does not check Noir or Cairo proofs.**
+12. **Barretenberg 0.87.0 (added after this review)** is an old verifier
+    with no confirmed audit status. Testing found it accepts an all-zero
+    proof under an all-zero key and several rewritten forms of a proof.
+    This tool refuses each before the verifier runs, but faults that were
+    not looked for may remain. See [the formats](FORMATS.md).
+13. **RISC Zero receipts and Stellar keys (added after this review).** One
+    real receipt was available; the statement layout is written here and
+    has had no review. The Stellar Private Payments keys have no trusted
+    setup and no valid proof was available to test with.
 
 ## Owner decisions still open
 

@@ -15,6 +15,8 @@ export interface SuppliedChecked {
   curve: Curve;
   /** For a proof system with several ways of making a proof, the one this proof verified under. */
   variant?: string;
+  /** Checked with an older version of a verifier, kept for proofs a current one does not read. */
+  legacy?: true;
   verifier: VerifierIdentity;
   /** Of the key file's exact bytes. */
   verificationKeySha256: string;

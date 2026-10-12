@@ -21,6 +21,7 @@ node dist/cli.js check <proof.json> --export evidence.json
 node dist/cli.js check <proof.json> --public <public.json> --key <verification_key.json>
 node dist/cli.js check target/proof --public target/public_inputs --key target/vk   # Noir
 node dist/cli.js check <cairo-proof.json>
+node dist/cli.js check <risc-zero-receipt.txt>
 node dist/cli.js rerun evidence.json
 
 npm run build:web        # the browser page, written to dist-web/
@@ -53,8 +54,8 @@ as the command line, and binds them the same way before checking anything.
   page's own origin only. The browser tests fail if the page requests
   anything else. File content is shown as text and never parsed as markup.
 
-The page does not check Noir or Cairo proofs, whose verifiers are not built
-for it, and has no transaction lookup. Given one, it says the proof was not
+The page checks RISC Zero receipts. It does not check Noir or Cairo proofs,
+whose verifiers are not built for it, and has no transaction lookup. Given one, it says the proof was not
 checked.
 
 The page is built but not hosted anywhere. Hosting it is a separate decision
@@ -90,7 +91,7 @@ network. Step 1 of the agent work; the agent itself is described in [the agent n
   reduce a risk and do not remove it.
 - The protocol handling is written here, about 150 lines, instead of using
   the official library, which would add about 95 packages, a web server among
-  them, to a tool that then shipped 27 (44 now, with the Noir and Cairo
+  them, to a tool that then shipped 27 (48 now, with the Noir and Cairo
   verifiers). The official client library is a
   development dependency, and the tests drive the server through it.
 
@@ -158,6 +159,8 @@ report also shows that text as a reading aid.
 | `src/chain/` | Read-only lookup of a proof by transaction, through a provider |
 | `src/cairo/`, `src/node/cairo-engine.ts` | Cairo STARK proofs, with a security floor, each checked in its own worker |
 | `src/noir/`, `src/node/noir-engine.ts` | UltraHonk proofs written by Barretenberg, checked offline |
+| `src/noir/legacy.ts`, `src/node/noir-legacy-engine.ts` | The same for Barretenberg 0.87.0, with the checks that version needs |
+| `src/risc-zero/` | RISC Zero Groth16 receipts against pinned verifier parameters |
 | `src/recorded/` | Binds an explanation to one recorded key and reads public inputs as text or an address |
 | `src/supplied-key/` | Strict reading, verification and fixed wording for a proof with its own key |
 | `src/cli.ts` | Command line |
@@ -184,20 +187,21 @@ What blocks a release is listed in [the release review](RELEASE_REVIEW.md).
 | `snarkjs` | 0.7.6 | GPL-3.0 | Groth16 verification |
 | `@noble/hashes` | 2.4.0 | MIT | keccak256 and SHA-256 |
 | `swiftness` | 1.0.0 | Apache-2.0, by its licence file; the package declares only "see LICENSE" | Cairo STARK verification. About 145 MB installed. Last released January 2025; no audit known |
+| `@aztec/bb.js` as `aztec-bb-js-0-87-0` | 0.87.0 | MIT | UltraHonk verification for proofs of that older version, which the Soroban UltraHonk verifier is built for. About 14 MB. Faults found in it are listed in [the formats](FORMATS.md) |
 | `@aztec/bb.js` | 5.2.1 | MIT | UltraHonk verification for Noir proofs. About 150 MB installed, most of it native programs this tool does not use |
 | `@semaphore-protocol/proof`, `identity`, `group` | 4.14.3 | MIT | Tests and fixture generation only |
 | `@modelcontextprotocol/sdk` | 1.32.1 | MIT | Tests only: the client that drives the tool server |
 
 The project is GPL-3.0-or-later by owner decision (2026-10-11), because
 snarkjs is distributed with it. Production dependency licences, as each of
-the 44 packages declares: MIT, GPL-3.0, Apache-2.0, ISC, 0BSD and "MIT AND
+the 48 packages declares: MIT, GPL-3.0, Apache-2.0, ISC, 0BSD and "MIT AND
 Zlib". `npm audit --omit=dev` reports no known
 vulnerabilities. The development-only Semaphore packages bring in older
 packages with open advisories (snarkjs 0.5.0, `ws`); they are not part of
 what the tool runs.
 
-No audit status has been confirmed for snarkjs 0.7.6, `@aztec/bb.js` 5.2.1,
-`swiftness` 1.0.0 or this code.
+No audit status has been confirmed for snarkjs 0.7.6, `@aztec/bb.js` 5.2.1
+or 0.87.0, `swiftness` 1.0.0 or this code.
 
 ## Findings
 
@@ -216,8 +220,9 @@ No audit status has been confirmed for snarkjs 0.7.6, `@aztec/bb.js` 5.2.1,
 
 ## Tested
 
-155 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
-registry, Proof of Twitter, lookup, Noir and Cairo are described in
+177 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
+registry, Proof of Twitter, lookup, Noir, Cairo, RISC Zero and the Stellar
+keys are described in
 [the formats](FORMATS.md) and [the lookup notes](LOOKUP.md). The rest:
 
 - Three real proofs, at tree depths 1, 3 and 10, each made from throwaway
@@ -237,7 +242,7 @@ registry, Proof of Twitter, lookup, Noir and Cairo are described in
   refused arguments, exports that the command line reproduces, a forged
   export, malformed and oversized protocol messages.
 
-24 browser tests (twelve scenarios, each in Chromium and WebKit, run headless
+26 browser tests (thirteen scenarios, each in Chromium and WebKit, run headless
 through Playwright on macOS): a valid proof, a rejected proof, an unsupported
 file containing markup, recovery after an unreadable file, identical exports
 and cross-reruns between page and command line, a forged export, and a
@@ -253,7 +258,7 @@ proof with its own key in each of the four supplied-key systems.
 - The tool server was used by a real model in eleven scenarios, once each;
   see [the agent notes](LOCAL_AGENT.md). That is one run on one model, with
   no other tools available to it. No model has used `lookup_transaction`,
-  or checked a Noir or Cairo proof.
+  or checked a Noir, Cairo or RISC Zero proof.
 - `check_proof` reads any file path the agent gives it and reports that
   file's SHA-256, or that it could not be read. An agent could use this to
   learn whether a file exists and to confirm a guess at its content.
