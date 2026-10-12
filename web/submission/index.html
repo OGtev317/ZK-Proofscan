@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Akashi by OtakuLabz makes supported zero-knowledge proofs readable and independently checkable. A local-first prototype exploring Stellar integration." />
+    <meta name="referrer" content="no-referrer" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; base-uri 'none'; form-action 'none'" />
+    <meta name="theme-color" content="#f3f3e9" />
+    <title>Akashi by OtakuLabz — Proofs, made legible.</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="shell">
+      <header>
+        <a class="brand" href="#" aria-label="Akashi home"><span class="mark" aria-hidden="true">a.</span><span>akashi<span class="byline">BY OTAKULABZ</span></span></a>
+        <nav aria-label="Main navigation"><a href="#stellar">Stellar integration</a><a href="#progress">Build status</a><a class="nav-cta" href="../">Open prototype <span aria-hidden="true">↗</span></a></nav>
+      </header>
+      <main id="main">
+        <section class="hero" aria-labelledby="hero-heading">
+          <div class="intro">
+            <p class="eyebrow"><span class="dot" aria-hidden="true"></span> ZERO-KNOWLEDGE. MORE CLARITY.</p>
+            <h1 id="hero-heading">Proofs,<br />made <span class="accent">legible.</span></h1>
+            <p class="lead">A proof can pass.<br />Understanding it is another thing.</p>
+            <p class="description">Akashi turns supported cryptographic proofs into readable, checkable evidence reports. See what was verified, what stayed hidden, and what was never checked.</p>
+            <div class="actions"><a class="button" href="../">Explore the working prototype <span aria-hidden="true">↗</span></a><a class="text-link" href="#stellar">Our Stellar direction <span aria-hidden="true">↓</span></a></div>
+            <p class="fine">Local verification. No wallet required. No secret witness requested.</p>
+          </div>
+          <aside class="report" aria-labelledby="report-title">
+            <div class="report-top"><span>AKASHI / EVIDENCE FORMAT</span><span aria-hidden="true">↗</span></div>
+            <div class="report-body">
+              <p class="eyebrow muted">FROM OPAQUE BYTES TO CONTEXT</p>
+              <h2 id="report-title">More than<br />a green check.</h2>
+              <p class="sample-label">Illustrative layout · no proof run</p>
+              <dl>
+                <div><dt><span>01</span> Claim</dt><dd>The statement enforced by a known circuit—not a claim about the whole application.</dd></div>
+                <div><dt><span>02</span> Disclosure</dt><dd>Which inputs are public, and which information the circuit keeps private.</dd></div>
+                <div><dt><span>03</span> Verification</dt><dd>The verifier, key, and result needed to repeat the check.</dd></div>
+                <div><dt><span>04</span> Limits</dt><dd>What this check cannot establish, including unchecked contract state.</dd></div>
+              </dl>
+            </div>
+            <div class="report-bottom"><span class="square" aria-hidden="true"></span> Explanation review: pending</div>
+          </aside>
+        </section>
+        <div class="principle"><span class="eyebrow">THE DISTINCTION THAT MATTERS</span><p>Valid proof <span>≠</span> settled payment <span>≠</span> trustworthy real-world data.</p></div>
+        <section id="stellar" class="stellar" aria-labelledby="stellar-heading">
+          <div class="section-intro"><p class="eyebrow">01 / BUILT TOWARD STELLAR</p><h2 id="stellar-heading">Understand the proof.<br />Then check the context.</h2><p>For Soroban developers, reviewers, and the people using their applications. A focused path from local verification to useful transaction diagnostics.</p></div>
+          <ol class="roadmap">
+            <li><div class="step-top"><span class="step">01</span><span class="tag">IMPLEMENTED LOCALLY</span></div><h3>Recognize &amp; verify</h3><p>Recognition of 16 Stellar Private Payments testnet keys, supported RISC Zero receipt verification, and an UltraHonk format compatible with a referenced Soroban verifier.</p><p class="caveat">Key recognition is not end-to-end payment validation. No valid Private Payments proof tested yet.</p></li>
+            <li><div class="step-top"><span class="step">02</span><span class="tag planned">PROPOSED NEXT</span></div><h3>Connect the transaction</h3><p>Inspect a supported Stellar transaction, extract available proof data, and separate local verification from the network outcome reported by an RPC provider.</p><p class="caveat">Stellar transaction lookup is not implemented.</p></li>
+            <li><div class="step-top"><span class="step">03</span><span class="tag planned">PROPOSED NEXT</span></div><h3>Explain the boundaries</h3><p>Add reviewed circuit explanations and application-specific checks for accepted roots and spent nullifiers, followed by preflight diagnostics.</p><p class="caveat">Simulation is not settlement. State can change.</p></li>
+          </ol>
+        </section>
+        <section id="progress" class="progress" aria-labelledby="progress-heading">
+          <div class="section-intro"><p class="eyebrow">02 / EVIDENCE, NOT HYPE</p><h2 id="progress-heading">A working foundation.<br />An honest starting point.</h2></div>
+          <div class="metrics"><div><strong>177</strong><span>Unit tests passing</span><small>Node 22 &amp; 24</small></div><div><strong>26</strong><span>Browser tests passing</span><small>Chromium &amp; WebKit</small></div><div><strong>3</strong><span>Ways to use the engine</span><small>CLI · browser · local MCP</small></div></div>
+          <p class="evidence-note">Engineering baseline: ZK-Proofscan commit <code>87a69c6</code>. Counts describe that checkpoint, not this page or an independent audit. <a href="https://github.com/OGtev317/ZK-Proofscan/actions/runs/38201200156">View CI evidence ↗</a> <span>(Repository access required.)</span></p>
+          <div class="boundaries"><div><h3>What works today</h3><p>Local proof checks, artifact identification, readable reports, and evidence export and rerun. Supported formats vary by interface. Developed as ZK-Proofscan under GPL-3.0-or-later.</p></div><div><h3>What is still ahead</h3><p>Qualified explanation review, independent security review, a complete Stellar application integration, and external developer pilots. Prototype only; unaudited and not a production release.</p></div></div>
+        </section>
+        <section class="closing" aria-labelledby="closing-heading"><div><p class="eyebrow">INSPECT IT FOR YOURSELF</p><h2 id="closing-heading">Start with evidence.</h2><p>The browser prototype checks supported files on your device.<br />It does not upload them or connect to a wallet.</p></div><a class="button" href="../">Open ZK-Proofscan <span aria-hidden="true">↗</span></a></section>
+      </main>
+      <footer><span><strong>akashi</strong> / OtakuLabz</span><span>Stellar-focused developer tooling · Submission preview</span><a href="https://github.com/OGtev317/ZK-Proofscan">GitHub <span class="private">(private)</span> ↗</a></footer>
+    </div>
+  </body>
+</html>
