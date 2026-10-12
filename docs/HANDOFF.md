@@ -9,8 +9,8 @@ and in a browser page. Read
 measured and what is untested. 177 unit tests and 26 browser tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
-for the first version. The checkout `/Users/tevdev/Desktop/ZK-Proofscan` holds
-the core, command line and tests. Adapter wording and source research belong
+for the first version. The main checkout holds the core, command line and
+tests. Adapter wording and source research belong
 to the other session, in its own checkout. One session per checkout.
 
 The adapter wording in `adapters/semaphore-v4/adapter.json` is a draft taken
@@ -70,20 +70,17 @@ a registry entry, an adapter and fixtures, not new code.
 
 ## State on 2026-10-11
 
-- The project was renamed and refocused from "OtakuCoin" to ZK-Proofscan on
-  the owner's instruction. Private remote:
-  `https://github.com/OGtev317/ZK-Proofscan`.
-- This checkout is `/Users/tevdev/Desktop/ZK-Proofscan`. The older folder
-  `/Users/tevdev/Desktop/OtakuCoin` still exists and holds another session's
-  uncommitted work; it is to be left alone until that work is inventoried
+- The project was renamed and refocused to ZK-Proofscan on the owner's
+  instruction. Remote: `https://github.com/OGtev317/ZK-Proofscan`, made
+  public on 2026-10-12 by the owner's decision.
+- An older local folder from before the rename holds another session's
+  uncommitted work. It is to be left alone until that work is inventoried
   and a recoverable copy is confirmed.
 - At the rename the repository held only guidance and a charter. There is no
   hosted service.
 - Nothing was copied from any other project.
-- The OtakuCoin charter (physical-encounter receipts) is in Git history at
-  commit `8c0373c`. A local branch `research/exchange-receipts-2026-10-11` held
-  uncommitted research for that earlier direction when the refocus was made; it
-  was left untouched and is not part of this project's direction.
+- The earlier charter is in Git history at commit `8c0373c`. It is not part
+  of this project's direction.
 
 ## Approvals given, and their limits
 

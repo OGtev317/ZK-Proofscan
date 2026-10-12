@@ -46,5 +46,5 @@ the data-sharing decision that comes first, and what the test does not show.
 
 Licensed GPL-3.0-or-later; see `LICENSE`.
 
-This repository was created on 2026-10-11 as "OtakuCoin" and refocused the same
-day. The earlier charter is in Git history at commit `8c0373c`.
+This repository was created on 2026-10-11 under another name and refocused
+the same day. The earlier charter is in Git history at commit `8c0373c`.

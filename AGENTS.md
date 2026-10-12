@@ -1,9 +1,8 @@
 # ZK-Proofscan project guidance
 
 This is a new, independent project. Keep changes inside this checkout. Do not
-modify, link to or copy code from another project (including OFFLINE /
-OtakuOffline, Zanime / OtakuSpace, Zellar / Zatrix Wallet, Zeero) unless the
-owner explicitly asks for that specific reuse.
+modify, link to or copy code from any other project of the owner's unless
+the owner explicitly asks for that specific reuse.
 
 Read `docs/PROJECT_CHARTER.md` and `docs/HANDOFF.md` and inspect Git status
 before continuing. The charter records a proposed direction, not settled
