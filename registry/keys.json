@@ -1,6 +1,6 @@
 {
   "registryVersion": 1,
-  "revision": 2,
+  "revision": 3,
   "artifacts": [
     {
       "id": "semaphore-v4-verification-keys",
@@ -185,6 +185,502 @@
         {
           "label": "the circuit's only key",
           "contentSha256": "8ec8eed842e424293d5a084c8adbfbdd7f62128835142d3ad4759425133b8237"
+        }
+      ]
+    },
+    {
+      "id": "stellar-private-payments-testnet-policy-tx-2-2-ab-gvk-t",
+      "description": "Stellar Private Payments (Nethermind), testnet key. Pool transaction with two inputs and two outputs, allowlist and blocklist, with a view key for an authority (traceable)",
+      "provenance": {
+        "publisher": "Nethermind",
+        "package": "NethermindEth/stellar-private-payments",
+        "version": "commit ef42a47ee6a84b5c7a289b979e2fa2526c73aabc, circuits bundle 0.5",
+        "file": "deployments/testnet/circuit_keys/policy_tx_2_2_AB_gvk_T_vk.json",
+        "url": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/policy_tx_2_2_AB_gvk_T_vk.json",
+        "sha256": "270d802adb19d96c8a3932b69edd0092a93284f77fc90c6574241491b7b8ba81"
+      },
+      "circuit": {
+        "name": "policy_tx_2_2_AB_gvk_T",
+        "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/policy_tx_2_2_AB_gvk_T.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
+      },
+      "explanationAdapter": null,
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "911724a9f9f4ead290bac763d7f5c5b30995e3d67159a355cafeb5e5865e978a"
+        }
+      ]
+    },
+    {
+      "id": "stellar-private-payments-testnet-policy-tx-2-2-ab-gvk-v",
+      "description": "Stellar Private Payments (Nethermind), testnet key. Pool transaction with two inputs and two outputs, allowlist and blocklist, with a view key for an authority (view only)",
+      "provenance": {
+        "publisher": "Nethermind",
+        "package": "NethermindEth/stellar-private-payments",
+        "version": "commit ef42a47ee6a84b5c7a289b979e2fa2526c73aabc, circuits bundle 0.5",
+        "file": "deployments/testnet/circuit_keys/policy_tx_2_2_AB_gvk_V_vk.json",
+        "url": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/policy_tx_2_2_AB_gvk_V_vk.json",
+        "sha256": "131cb1a805c0e3be5a8dfce649af9a1714a7bf4be1f8832a1acb260c3cf4fa5d"
+      },
+      "circuit": {
+        "name": "policy_tx_2_2_AB_gvk_V",
+        "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/policy_tx_2_2_AB_gvk_V.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
+      },
+      "explanationAdapter": null,
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "275581da70fdd3348850fd15eb58c454d39f1abcbc60274cf6bd797b8a13d589"
+        }
+      ]
+    },
+    {
+      "id": "stellar-private-payments-testnet-policy-tx-2-2-ab",
+      "description": "Stellar Private Payments (Nethermind), testnet key. Pool transaction with two inputs and two outputs, allowlist and blocklist",
+      "provenance": {
+        "publisher": "Nethermind",
+        "package": "NethermindEth/stellar-private-payments",
+        "version": "commit ef42a47ee6a84b5c7a289b979e2fa2526c73aabc, circuits bundle 0.5",
+        "file": "deployments/testnet/circuit_keys/policy_tx_2_2_AB_vk.json",
+        "url": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/policy_tx_2_2_AB_vk.json",
+        "sha256": "f67b4e2095a00df3dd03f9962e5c318d0819dabbd236bfa35c4b74750a674ea1"
+      },
+      "circuit": {
+        "name": "policy_tx_2_2_AB",
+        "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/policy_tx_2_2_AB.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
+      },
+      "explanationAdapter": null,
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "daa0deb0a2cad8fdbe799d3cd9532da180e4d3326410d3d99d5bba6a96882b27"
+        }
+      ]
+    },
+    {
+      "id": "stellar-private-payments-testnet-policy-tx-2-2-a-gvk-t",
+      "description": "Stellar Private Payments (Nethermind), testnet key. Pool transaction with two inputs and two outputs, allowlist, with a view key for an authority (traceable)",
+      "provenance": {
+        "publisher": "Nethermind",
+        "package": "NethermindEth/stellar-private-payments",
+        "version": "commit ef42a47ee6a84b5c7a289b979e2fa2526c73aabc, circuits bundle 0.5",
+        "file": "deployments/testnet/circuit_keys/policy_tx_2_2_A_gvk_T_vk.json",
+        "url": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/policy_tx_2_2_A_gvk_T_vk.json",
+        "sha256": "b8a631e07e9432a8884219309cdb924850c97317e88adeea5da326e9075d806a"
+      },
+      "circuit": {
+        "name": "policy_tx_2_2_A_gvk_T",
+        "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/policy_tx_2_2_A_gvk_T.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
+      },
+      "explanationAdapter": null,
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "28f663e7df26f020eec9149765ce2d06981730cd57c0a64928f957a63a2baad9"
+        }
+      ]
+    },
+    {
+      "id": "stellar-private-payments-testnet-policy-tx-2-2-a-gvk-v",
+      "description": "Stellar Private Payments (Nethermind), testnet key. Pool transaction with two inputs and two outputs, allowlist, with a view key for an authority (view only)",
+      "provenance": {
+        "publisher": "Nethermind",
+        "package": "NethermindEth/stellar-private-payments",
+        "version": "commit ef42a47ee6a84b5c7a289b979e2fa2526c73aabc, circuits bundle 0.5",
+        "file": "deployments/testnet/circuit_keys/policy_tx_2_2_A_gvk_V_vk.json",
+        "url": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/policy_tx_2_2_A_gvk_V_vk.json",
+        "sha256": "1be48e44e51fbab1c57666890d22646b718a9fd89cbcac732f2eda97bf740d31"
+      },
+      "circuit": {
+        "name": "policy_tx_2_2_A_gvk_V",
+        "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/policy_tx_2_2_A_gvk_V.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
+      },
+      "explanationAdapter": null,
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "4628507818bef21496a612e9b0d00efeee0ae36b6cbc8590b21211b5871ed250"
+        }
+      ]
+    },
+    {
+      "id": "stellar-private-payments-testnet-policy-tx-2-2-a",
+      "description": "Stellar Private Payments (Nethermind), testnet key. Pool transaction with two inputs and two outputs, allowlist",
+      "provenance": {
+        "publisher": "Nethermind",
+        "package": "NethermindEth/stellar-private-payments",
+        "version": "commit ef42a47ee6a84b5c7a289b979e2fa2526c73aabc, circuits bundle 0.5",
+        "file": "deployments/testnet/circuit_keys/policy_tx_2_2_A_vk.json",
+        "url": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/policy_tx_2_2_A_vk.json",
+        "sha256": "77a314bc046ec48c07cb8cbe181410cb88ea0df669fa7990fd0e2529d4491d11"
+      },
+      "circuit": {
+        "name": "policy_tx_2_2_A",
+        "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/policy_tx_2_2_A.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
+      },
+      "explanationAdapter": null,
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "f6e69ef01ce543907395567aec04c3e91a7585c59b8cf978f276c2ffe9081d06"
+        }
+      ]
+    },
+    {
+      "id": "stellar-private-payments-testnet-policy-tx-2-2-b-gvk-t",
+      "description": "Stellar Private Payments (Nethermind), testnet key. Pool transaction with two inputs and two outputs, blocklist, with a view key for an authority (traceable)",
+      "provenance": {
+        "publisher": "Nethermind",
+        "package": "NethermindEth/stellar-private-payments",
+        "version": "commit ef42a47ee6a84b5c7a289b979e2fa2526c73aabc, circuits bundle 0.5",
+        "file": "deployments/testnet/circuit_keys/policy_tx_2_2_B_gvk_T_vk.json",
+        "url": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/policy_tx_2_2_B_gvk_T_vk.json",
+        "sha256": "e52956c18ba17c5be2a74507ba9daf7af3ef19a0a917e25d43a848d28882cf25"
+      },
+      "circuit": {
+        "name": "policy_tx_2_2_B_gvk_T",
+        "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/policy_tx_2_2_B_gvk_T.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
+      },
+      "explanationAdapter": null,
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "5bbd4edc53cf93674068f97911094d1a35e3b32420ad8c9fef5cb9f965ff93fd"
+        }
+      ]
+    },
+    {
+      "id": "stellar-private-payments-testnet-policy-tx-2-2-b-gvk-v",
+      "description": "Stellar Private Payments (Nethermind), testnet key. Pool transaction with two inputs and two outputs, blocklist, with a view key for an authority (view only)",
+      "provenance": {
+        "publisher": "Nethermind",
+        "package": "NethermindEth/stellar-private-payments",
+        "version": "commit ef42a47ee6a84b5c7a289b979e2fa2526c73aabc, circuits bundle 0.5",
+        "file": "deployments/testnet/circuit_keys/policy_tx_2_2_B_gvk_V_vk.json",
+        "url": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/policy_tx_2_2_B_gvk_V_vk.json",
+        "sha256": "6c79b3a7c2bc48b6b2f9dc6228e98d8653cfcbf6a8ff7708028cac3a94a5d0bd"
+      },
+      "circuit": {
+        "name": "policy_tx_2_2_B_gvk_V",
+        "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/policy_tx_2_2_B_gvk_V.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
+      },
+      "explanationAdapter": null,
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "37a67fd358a86403ad9f264bbd3b52cee0a3eb8ad62dc771dd3ae5c54d614099"
+        }
+      ]
+    },
+    {
+      "id": "stellar-private-payments-testnet-policy-tx-2-2-b",
+      "description": "Stellar Private Payments (Nethermind), testnet key. Pool transaction with two inputs and two outputs, blocklist",
+      "provenance": {
+        "publisher": "Nethermind",
+        "package": "NethermindEth/stellar-private-payments",
+        "version": "commit ef42a47ee6a84b5c7a289b979e2fa2526c73aabc, circuits bundle 0.5",
+        "file": "deployments/testnet/circuit_keys/policy_tx_2_2_B_vk.json",
+        "url": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/policy_tx_2_2_B_vk.json",
+        "sha256": "e30ed2a42074bd6e4f7afb8f2a3068cfd9c08467213cff6b687ed13b45e63afc"
+      },
+      "circuit": {
+        "name": "policy_tx_2_2_B",
+        "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/policy_tx_2_2_B.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
+      },
+      "explanationAdapter": null,
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "1f21995a50c49951388a599c5f183428f4baad48bdfab6a9fe2084b97995bb08"
+        }
+      ]
+    },
+    {
+      "id": "stellar-private-payments-testnet-policy-tx-2-2-gvk-t",
+      "description": "Stellar Private Payments (Nethermind), testnet key. Pool transaction with two inputs and two outputs, no allowlist or blocklist, with a view key for an authority (traceable)",
+      "provenance": {
+        "publisher": "Nethermind",
+        "package": "NethermindEth/stellar-private-payments",
+        "version": "commit ef42a47ee6a84b5c7a289b979e2fa2526c73aabc, circuits bundle 0.5",
+        "file": "deployments/testnet/circuit_keys/policy_tx_2_2_gvk_T_vk.json",
+        "url": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/policy_tx_2_2_gvk_T_vk.json",
+        "sha256": "e61fc1f3333014b83fc9d0744c6971d449de0bc2decdd6c84b82300a5cc270eb"
+      },
+      "circuit": {
+        "name": "policy_tx_2_2_gvk_T",
+        "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/policy_tx_2_2_gvk_T.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
+      },
+      "explanationAdapter": null,
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "895636968fec33afa483be60fee4e6f60ffe685ad52ba4629cc42987cae1723e"
+        }
+      ]
+    },
+    {
+      "id": "stellar-private-payments-testnet-policy-tx-2-2-gvk-v",
+      "description": "Stellar Private Payments (Nethermind), testnet key. Pool transaction with two inputs and two outputs, no allowlist or blocklist, with a view key for an authority (view only)",
+      "provenance": {
+        "publisher": "Nethermind",
+        "package": "NethermindEth/stellar-private-payments",
+        "version": "commit ef42a47ee6a84b5c7a289b979e2fa2526c73aabc, circuits bundle 0.5",
+        "file": "deployments/testnet/circuit_keys/policy_tx_2_2_gvk_V_vk.json",
+        "url": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/policy_tx_2_2_gvk_V_vk.json",
+        "sha256": "db60b8f5f3187fae0892967dd6315d629cd10ecc9bd7031b7d20c2d7f1c185ca"
+      },
+      "circuit": {
+        "name": "policy_tx_2_2_gvk_V",
+        "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/policy_tx_2_2_gvk_V.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
+      },
+      "explanationAdapter": null,
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "8de21a3d84596967a37669ca34802536896492c1f4dfd1e1040a3c60dc6f1a7f"
+        }
+      ]
+    },
+    {
+      "id": "stellar-private-payments-testnet-policy-tx-2-2",
+      "description": "Stellar Private Payments (Nethermind), testnet key. Pool transaction with two inputs and two outputs, no allowlist or blocklist",
+      "provenance": {
+        "publisher": "Nethermind",
+        "package": "NethermindEth/stellar-private-payments",
+        "version": "commit ef42a47ee6a84b5c7a289b979e2fa2526c73aabc, circuits bundle 0.5",
+        "file": "deployments/testnet/circuit_keys/policy_tx_2_2_vk.json",
+        "url": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/policy_tx_2_2_vk.json",
+        "sha256": "df2fa5026acd88a27b3721b93ee6ddefc6e7f4d656a4a68bc372b728e6546a3f"
+      },
+      "circuit": {
+        "name": "policy_tx_2_2",
+        "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/policy_tx_2_2.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
+      },
+      "explanationAdapter": null,
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "6c3981b5355a815086e927726c755add2ad7c2ad9b1443b4917b2024e9b3302f"
+        }
+      ]
+    },
+    {
+      "id": "stellar-private-payments-testnet-selectivedisclosure-1",
+      "description": "Stellar Private Payments (Nethermind), testnet key. Selective-disclosure receipt for 1 note, checked off-chain",
+      "provenance": {
+        "publisher": "Nethermind",
+        "package": "NethermindEth/stellar-private-payments",
+        "version": "commit ef42a47ee6a84b5c7a289b979e2fa2526c73aabc, circuits bundle 0.5",
+        "file": "deployments/testnet/circuit_keys/selectiveDisclosure_1_vk.json",
+        "url": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/selectiveDisclosure_1_vk.json",
+        "sha256": "1b0300241e2ec2482f4d73a5025db9df4cbea8b80e32aa7a721662a6ee3605a6"
+      },
+      "circuit": {
+        "name": "selectiveDisclosure_1",
+        "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/selectiveDisclosure_1.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
+      },
+      "explanationAdapter": null,
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "95928d14a1441024cb14243cbff3f27ef4b4076454c70d2ddda482af4be6593c"
+        }
+      ]
+    },
+    {
+      "id": "stellar-private-payments-testnet-selectivedisclosure-2",
+      "description": "Stellar Private Payments (Nethermind), testnet key. Selective-disclosure receipt for 2 notes, checked off-chain",
+      "provenance": {
+        "publisher": "Nethermind",
+        "package": "NethermindEth/stellar-private-payments",
+        "version": "commit ef42a47ee6a84b5c7a289b979e2fa2526c73aabc, circuits bundle 0.5",
+        "file": "deployments/testnet/circuit_keys/selectiveDisclosure_2_vk.json",
+        "url": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/selectiveDisclosure_2_vk.json",
+        "sha256": "fcf5489a68d90282e304a37e039949b59f195d4ea065c28b3d7ca03f1c52bda9"
+      },
+      "circuit": {
+        "name": "selectiveDisclosure_2",
+        "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/selectiveDisclosure_2.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
+      },
+      "explanationAdapter": null,
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "5394c26798132aab19ec74363fc8acccab9c72ba83d4e62bc6b2994c21a65f42"
+        }
+      ]
+    },
+    {
+      "id": "stellar-private-payments-testnet-selectivedisclosure-3",
+      "description": "Stellar Private Payments (Nethermind), testnet key. Selective-disclosure receipt for 3 notes, checked off-chain",
+      "provenance": {
+        "publisher": "Nethermind",
+        "package": "NethermindEth/stellar-private-payments",
+        "version": "commit ef42a47ee6a84b5c7a289b979e2fa2526c73aabc, circuits bundle 0.5",
+        "file": "deployments/testnet/circuit_keys/selectiveDisclosure_3_vk.json",
+        "url": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/selectiveDisclosure_3_vk.json",
+        "sha256": "97052346e00072015a01f6ab1a2943336ae18299eba46f7233b491447ca09a00"
+      },
+      "circuit": {
+        "name": "selectiveDisclosure_3",
+        "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/selectiveDisclosure_3.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
+      },
+      "explanationAdapter": null,
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "17e93a3fc84b8b279bf19395d4e440c1fb4ed5969c13731aa8371c6894b01e61"
+        }
+      ]
+    },
+    {
+      "id": "stellar-private-payments-testnet-selectivedisclosure-4",
+      "description": "Stellar Private Payments (Nethermind), testnet key. Selective-disclosure receipt for 4 notes, checked off-chain",
+      "provenance": {
+        "publisher": "Nethermind",
+        "package": "NethermindEth/stellar-private-payments",
+        "version": "commit ef42a47ee6a84b5c7a289b979e2fa2526c73aabc, circuits bundle 0.5",
+        "file": "deployments/testnet/circuit_keys/selectiveDisclosure_4_vk.json",
+        "url": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/selectiveDisclosure_4_vk.json",
+        "sha256": "c34d684c11602786c479055c2df084317bd338f688a03a0481970e7c185a951d"
+      },
+      "circuit": {
+        "name": "selectiveDisclosure_4",
+        "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/selectiveDisclosure_4.circom"
+      },
+      "circuitLink": {
+        "status": "unconfirmed",
+        "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
+      },
+      "explanationAdapter": null,
+      "entryReview": {
+        "status": "unreviewed",
+        "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."
+      },
+      "keys": [
+        {
+          "label": "the circuit's only key",
+          "contentSha256": "c250ba050871758cf70637a0ffe8f7b4d0ebe760c971b10e07428039cfecb370"
         }
       ]
     }

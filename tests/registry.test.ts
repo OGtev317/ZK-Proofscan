@@ -42,7 +42,7 @@ describe('key registry', () => {
     const registry = loadKeyRegistry(registryBytes);
     expect(registry.sha256).toBe(KEY_REGISTRY_SHA256);
     const [artifact] = registry.artifacts;
-    expect(registry.artifacts.map((entry) => entry.id)).toEqual(['semaphore-v4-verification-keys', 'zk-email-proof-of-twitter-verification-key']);
+    expect(registry.artifacts.map((entry) => entry.id).slice(0, 2)).toEqual(['semaphore-v4-verification-keys', 'zk-email-proof-of-twitter-verification-key']);
     expect(artifact!.provenance.sha256).toBe(SEMAPHORE_V4_KEYS_SHA256);
     expect(artifact!.explanationAdapter).toBe(scanning.semaphoreV4.adapter.manifest.id);
     expect(artifact!.circuit.source).toBe(scanning.semaphoreV4.adapter.manifest.circuit.source);
@@ -101,7 +101,7 @@ describe('a supplied key that is on record', () => {
     expect(report.keyRecognition).toMatchObject({
       match: 'exact',
       key: 'tree depth 3',
-      registry: { revision: 2, sha256: KEY_REGISTRY_SHA256 },
+      registry: { revision: 3, sha256: KEY_REGISTRY_SHA256 },
       artifact: { id: 'semaphore-v4-verification-keys', circuitLink: { status: 'partly-established' }, entryReview: { status: 'unreviewed' } },
       explanation: { adapter: 'semaphore-v4', review: { status: 'unreviewed' }, applied: false },
     });

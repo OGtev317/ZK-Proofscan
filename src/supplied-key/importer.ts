@@ -76,8 +76,10 @@ function shapes(curve: Curve, protocol: SnarkjsProtocol): { proof: Check; key: (
     case 'groth16':
       return {
         proof: record({ pi_a: g1, pi_b: g2, pi_c: g1, ...names }),
+        // `vk_alphabeta_12` is worked out from two other values and the verifier
+        // does not read it. snarkjs writes it; keys exported by other tools leave it out.
         key: (value) =>
-          record({ ...keyHead, vk_alpha_1: g1, vk_beta_2: g2, vk_gamma_2: g2, vk_delta_2: g2, vk_alphabeta_12: tuple(fq6, fq6), IC: Array.isArray })(value) &&
+          record({ ...keyHead, vk_alpha_1: g1, vk_beta_2: g2, vk_gamma_2: g2, vk_delta_2: g2, IC: Array.isArray, ...(isRecord(value) && Object.hasOwn(value, 'vk_alphabeta_12') ? { vk_alphabeta_12: tuple(fq6, fq6) } : {}) })(value) &&
           (value as { IC: unknown[]; nPublic: number }).IC.length === (value as { nPublic: number }).nPublic + 1 &&
           (value as { IC: unknown[] }).IC.every(g1OrInfinity),
       };

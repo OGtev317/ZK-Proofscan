@@ -2,7 +2,7 @@ import { ordered } from './canonical.js';
 import { sha256Hex, utf8 } from './sha256.js';
 
 /** SHA-256 of `registry/keys.json` as shipped. Changing the registry means changing this. */
-export const KEY_REGISTRY_SHA256 = 'eb8446396745cd62009c364dd5c9dadd074cb047a2e79ba111616bc5ae70c246';
+export const KEY_REGISTRY_SHA256 = '3fd434f7fadaf4e9bdb9da99eed18acde6ade0027a897d3586dba86ec2c86edf';
 
 /** How far a recorded key has been tied to the source of its circuit. */
 export type CircuitLink = 'established' | 'partly-established' | 'unconfirmed';
