@@ -5,12 +5,14 @@ import adapterUrl from '../adapters/semaphore-v4/adapter.json?url';
 import lockUrl from '../adapters/semaphore-v4/lock.json?url';
 import keysUrl from '../artifacts/semaphore-v4/verification-keys.json?url';
 import registryUrl from '../registry/keys.json?url';
+import riscZeroUrl from '../artifacts/risc-zero-groth16/parameters-3.0.0.json?url';
 import twitterAdapterUrl from '../adapters/zk-email-proof-of-twitter/adapter.json?url';
 import twitterLockUrl from '../adapters/zk-email-proof-of-twitter/lock.json?url';
 import { rerunExport } from '../src/export.js';
 import { bindSemaphoreV4, type AdapterLock } from '../src/semaphore-v4/bind.js';
 import { bindRecordedCircuit } from '../src/recorded/bind.js';
 import { loadKeyRegistry } from '../src/registry.js';
+import { loadRiscZeroParameters } from '../src/risc-zero/parameters.js';
 import { scan, type Scanning } from '../src/scan.js';
 import { snarkjsEngine, snarkjsSuppliedKeyEngine } from '../src/snarkjs-engine.js';
 import type { Request, Response } from './protocol.js';
@@ -24,15 +26,15 @@ async function bytes(url: string): Promise<Uint8Array> {
 let binding: Promise<Scanning> | undefined;
 const bound = (): Promise<Scanning> =>
   (binding ??= (async () => {
-    const [adapterBytes, lockBytes, keyBytes, registryBytes, twitterAdapter, twitterLock] = await Promise.all(
-      [adapterUrl, lockUrl, keysUrl, registryUrl, twitterAdapterUrl, twitterLockUrl].map(bytes),
-    ) as [Uint8Array, Uint8Array, Uint8Array, Uint8Array, Uint8Array, Uint8Array];
+    const [adapterBytes, lockBytes, keyBytes, registryBytes, twitterAdapter, twitterLock, riscZeroBytes] = await Promise.all(
+      [adapterUrl, lockUrl, keysUrl, registryUrl, twitterAdapterUrl, twitterLockUrl, riscZeroUrl].map(bytes),
+    ) as [Uint8Array, Uint8Array, Uint8Array, Uint8Array, Uint8Array, Uint8Array, Uint8Array];
     const lock = JSON.parse(new TextDecoder().decode(lockBytes)) as AdapterLock;
     const registry = loadKeyRegistry(registryBytes);
     const recorded = [
       bindRecordedCircuit({ adapterBytes: twitterAdapter, lock: JSON.parse(new TextDecoder().decode(twitterLock)) as AdapterLock, registry, verifier: snarkjsSuppliedKeyEngine.identity }),
     ];
-    return { semaphoreV4: bindSemaphoreV4({ adapterBytes, lock, keyBytes, engine: snarkjsEngine }), suppliedKey: snarkjsSuppliedKeyEngine, registry, recorded };
+    return { semaphoreV4: bindSemaphoreV4({ adapterBytes, lock, keyBytes, engine: snarkjsEngine }), suppliedKey: snarkjsSuppliedKeyEngine, registry, recorded, riscZero: { parameters: loadRiscZeroParameters(riscZeroBytes), engine: snarkjsEngine } };
   })());
 
 const scope = self as unknown as { onmessage: ((event: MessageEvent<Request>) => void) | null; postMessage(message: Response): void };

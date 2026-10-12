@@ -190,6 +190,10 @@ describe('tool server, through the official client', () => {
     const cairo = await call('check_proof', { path: join(root, 'tests/fixtures/cairo/dynamic-stone6-96-bits.json') });
     expect(cairo.structuredContent).toMatchObject({ outcome: 'valid', report: { basis: 'cairo-program', verification: { proofSystem: { securityBits: 96 } } } });
     expect(cairo.structuredContent?.notes).toContainEqual(expect.stringMatching(/do not say what the program does/));
+    // A RISC Zero receipt is one file too, with its own note.
+    const receipt = await call('check_proof', { path: join(root, 'tests/fixtures/risc-zero/nethermind-test-receipt.txt') });
+    expect(receipt.structuredContent).toMatchObject({ outcome: 'valid', report: { basis: 'risc-zero-program', verification: { proofSystem: { parametersVersion: '3.0.0' } } } });
+    expect(receipt.structuredContent?.notes).toContainEqual(expect.stringMatching(/do not say what the program does or what it wrote/));
 
     // On its own it is not checked; half the set, or pasted text with a key, is refused.
     expect((await call('check_proof', { path: part('proof') })).structuredContent).toMatchObject({ outcome: 'unsupported' });

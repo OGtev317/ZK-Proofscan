@@ -1,0 +1,26 @@
+{
+  "checked": "2026-10-12",
+  "file": {
+    "name": "parameters-3.0.0.json",
+    "sha256": "290b10f9fed64871c33bcd2624fc5bd50f22d72b44063ce269648800642ad29a"
+  },
+  "copiedFrom": {
+    "repository": "NethermindEth/stellar-risc0-verifier",
+    "commit": "e8ff6ea202db195352c0141ecc533ff649393fe4",
+    "path": "contracts/groth16-verifier/parameters.json",
+    "identicalBytes": true
+  },
+  "comparedWith": {
+    "repository": "risc0/risc0-ethereum",
+    "commit": "32aa0b6f23ddd02dd93fc71717667606e5c7db86",
+    "tag": "v3.0.0",
+    "keyConstantsCompared": 26,
+    "keyConstantsDiffering": [],
+    "controlRootEqual": true,
+    "bn254ControlIdEqual": true
+  },
+  "notChecked": [
+    "That the selector 73c457ba follows from these parameters. It was not recomputed; a seal with that selector passes under them.",
+    "How the trusted setup behind the key was run, and the RISC Zero circuits the control root allows."
+  ]
+}

@@ -3,6 +3,7 @@ import { bindRecordedCircuit } from '../recorded/bind.js';
 import { swiftnessEngine } from './cairo-engine.js';
 import { bbJsEngine } from './noir-engine.js';
 import { loadKeyRegistry } from '../registry.js';
+import { loadRiscZeroParameters } from '../risc-zero/parameters.js';
 import type { Scanning } from '../scan.js';
 import { bindSemaphoreV4, type AdapterLock, type BoundSemaphoreV4 } from '../semaphore-v4/bind.js';
 import { snarkjsEngine, snarkjsSuppliedKeyEngine } from '../snarkjs-engine.js';
@@ -46,5 +47,6 @@ export async function bundledScanning(): Promise<Scanning> {
       }),
     ),
   );
-  return { semaphoreV4: await bundledSemaphoreV4(), suppliedKey: snarkjsSuppliedKeyEngine, registry, recorded, ultraHonk: bbJsEngine, cairo: swiftnessEngine };
+  const riscZero = { parameters: loadRiscZeroParameters(await file('artifacts/risc-zero-groth16/parameters-3.0.0.json')), engine: snarkjsEngine };
+  return { semaphoreV4: await bundledSemaphoreV4(), suppliedKey: snarkjsSuppliedKeyEngine, registry, recorded, riscZero, ultraHonk: bbJsEngine, cairo: swiftnessEngine };
 }

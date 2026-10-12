@@ -3,7 +3,8 @@ import { isBinaryPart, partBytes, type ProofInputs } from './inputs.js';
 import { verifyUltraHonk, type UltraHonkEngine } from './noir/verify.js';
 import type { BoundRecordedCircuit } from './recorded/bind.js';
 import type { KeyRegistry } from './registry.js';
-import { buildCairoReport, buildSuppliedKeyReport, TOOL, type KeyRecognition, type Report } from './report.js';
+import { buildCairoReport, buildRiscZeroReport, buildSuppliedKeyReport, TOOL, type KeyRecognition, type Report } from './report.js';
+import { looksLikeRiscZeroReceipt, verifyRiscZero, type RiscZeroBound } from './risc-zero/verify.js';
 import type { BoundSemaphoreV4 } from './semaphore-v4/bind.js';
 import { scanSemaphoreV4 } from './semaphore-v4/scan.js';
 import { sha256Hex } from './sha256.js';
@@ -17,6 +18,8 @@ export interface Scanning {
   registry: KeyRegistry;
   /** Explanations bound to single recorded keys. */
   recorded: BoundRecordedCircuit[];
+  /** RISC Zero's Groth16 receipt verifier parameters, pinned, and the verifier to use them with. */
+  riscZero: RiscZeroBound;
   /** Absent where Barretenberg is not available, such as the browser page. */
   ultraHonk?: UltraHonkEngine;
   /** Absent where the Cairo verifier is not available, such as the browser page. */
@@ -39,6 +42,8 @@ export async function scan(inputs: ProofInputs, scanning: Scanning): Promise<Rep
       if (scanning.cairo === undefined) return unsupported(proof, 'this is a Cairo proof, which this build cannot check; use the command line');
       return buildCairoReport(proof, await verifyCairo(proof, scanning.cairo));
     }
+    // A RISC Zero receipt is one file, checked against parameters pinned in this tool.
+    if (!isBinaryPart(proof) && looksLikeRiscZeroReceipt(proof)) return buildRiscZeroReport(proof, await verifyRiscZero(proof, scanning.riscZero));
     if (isBinaryPart(proof)) return unsupported(proof, 'this is a binary proof, which needs its own public inputs file and verification key file, and they were not given');
     const report = await scanSemaphoreV4(proof, scanning.semaphoreV4);
     // Say what is missing when the file is plainly a snarkjs proof.

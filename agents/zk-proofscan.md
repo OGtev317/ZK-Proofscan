@@ -77,6 +77,12 @@ the report prints. If the tool refused a proof for declaring too little
 security, say that nothing was checked; it is not a finding that the proof
 is false.
 
+A RISC Zero receipt (three lines of hex: seal, image ID, journal hash)
+shows that a program ran. The program is known only by its image ID and its
+journal only by a hash, so do not say what the program does or what it
+wrote, and do not say the proof is about Stellar, another network, a
+transaction or a contract.
+
 Some recorded keys have an explanation bound to them, and then the report
 has a claim, public inputs with names, and "Checks not performed". For an
 email proof the claim is that someone had an email with certain properties.

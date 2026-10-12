@@ -3,6 +3,8 @@ import { readPublicInput } from './recorded/reading.js';
 import { CAIRO } from './cairo/explanation.js';
 import type { CairoParameters, CairoResult } from './cairo/verify.js';
 import type { RecognisedKey } from './registry.js';
+import { RISC_ZERO } from './risc-zero/explanation.js';
+import type { RiscZeroResult } from './risc-zero/verify.js';
 import type { VerificationResult } from './result.js';
 import { asPaddedAscii } from './semaphore-v4/text.js';
 import { partBytes } from './inputs.js';
@@ -39,6 +41,12 @@ interface CairoVerification {
   proofSystem: { name: 'cairo-stark'; proverFormat?: string } & CairoParameters;
 }
 
+interface RiscZeroVerification {
+  verifier: { name: string; version: string };
+  /** The pinned verifier parameters the seal was checked against. */
+  proofSystem: { name: 'risc-zero-groth16'; parametersVersion: string; selector: string; parametersSha256: string };
+}
+
 /**
  * Whether a supplied key is one this tool has on record. A match answers
  * "which published key is this" and nothing else: provenance, the link to
@@ -67,7 +75,9 @@ export type KeyRecognition =
  * `supplied-key` the key came with the proof and no explanation is applied,
  * so a program must not read `valid` there as a statement about any claim.
  * With `cairo-program` the proof is about a run of a program known only by
- * its hash, and likewise says nothing about what that program does.
+ * its hash, and likewise says nothing about what that program does. With
+ * `risc-zero-program` the same holds for a program known only by its image
+ * ID, and the journal it wrote is known only by its hash.
  */
 export type Report =
   | (Common & {
@@ -130,6 +140,19 @@ export type Report =
       assumptions: string[];
     })
   | (Common & { outcome: 'invalid'; basis: 'cairo-program'; verification: { result: 'failed' } & CairoVerification })
+  | (Common & {
+      outcome: 'valid';
+      basis: 'risc-zero-program';
+      claim: string;
+      hidden: string[];
+      program: { imageId: string };
+      journal: { sha256: string };
+      verification: { result: 'passed' } & RiscZeroVerification;
+      explanation: { review: { status: 'unreviewed'; note: string } };
+      limits: string[];
+      assumptions: string[];
+    })
+  | (Common & { outcome: 'invalid'; basis: 'risc-zero-program'; verification: { result: 'failed' } & RiscZeroVerification })
   | (Common & { outcome: 'unsupported'; reason: string })
   | (Common & { outcome: 'error'; message: string });
 
@@ -206,6 +229,31 @@ export function buildCairoReport(proofText: string, result: CairoResult): Report
     explanation: { review: { status: 'unreviewed', note: CAIRO.review } },
     limits: [...CAIRO.limits],
     assumptions: CAIRO.assumptions(result.parameters),
+  };
+}
+
+/** The report for a RISC Zero receipt: a run of a program known only by its image ID. */
+export function buildRiscZeroReport(receiptText: string, result: RiscZeroResult): Report {
+  const common: Common = { reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(partBytes(receiptText)) } };
+  if (result.status === 'unsupported') return { ...common, outcome: 'unsupported', reason: result.reason };
+  if (result.status === 'error') return { ...common, outcome: 'error', message: result.message };
+  const verification: RiscZeroVerification = {
+    verifier: result.verifier,
+    proofSystem: { name: 'risc-zero-groth16', parametersVersion: result.parameters.version, selector: result.parameters.selector, parametersSha256: result.parameters.sha256 },
+  };
+  if (result.status === 'invalid') return { ...common, outcome: 'invalid', basis: 'risc-zero-program', verification: { result: 'failed', ...verification } };
+  return {
+    ...common,
+    outcome: 'valid',
+    basis: 'risc-zero-program',
+    claim: RISC_ZERO.claim,
+    hidden: [...RISC_ZERO.hidden],
+    program: { imageId: result.imageId },
+    journal: { sha256: result.journalSha256 },
+    verification: { result: 'passed', ...verification },
+    explanation: { review: { status: 'unreviewed', note: RISC_ZERO.review } },
+    limits: [...RISC_ZERO.limits],
+    assumptions: [...RISC_ZERO.assumptions],
   };
 }
 
@@ -287,6 +335,9 @@ const usingCairo = (verification: CairoVerification): string =>
   `using ${verification.verifier.name} ${verification.verifier.version} (Cairo STARK proof, layout ${verification.proofSystem.layout}${verification.proofSystem.proverFormat === undefined ? '' : `, ${verification.proofSystem.proverFormat === 'stone6' ? 'Stone 6' : 'Stone 5'} format`}).`;
 const securityLine = (system: CairoVerification['proofSystem']): string =>
   `Security the proof declares: ${system.securityBits} bits (${system.queries} queries × ${system.logCosets} + ${system.proofOfWorkBits} proof-of-work bits). This tool requires at least 80.`;
+const usingRiscZero = (verification: RiscZeroVerification): string =>
+  `using ${verification.verifier.name} ${verification.verifier.version} (RISC Zero Groth16 receipt, verifier parameters version ${verification.proofSystem.parametersVersion}).`;
+const riscZeroParameters = (system: RiscZeroVerification['proofSystem']): string[] => [`Verifier parameters (SHA-256): ${system.parametersSha256}`, `Seal selector: ${system.selector}`];
 const using = (verification: SuppliedKeyVerification): string =>
   `using ${verification.verifier.name} ${verification.verifier.version}, against the verification key supplied with the proof (${SYSTEM_NAME[verification.proofSystem.protocol]} on ${CURVE_NAME[verification.proofSystem.curve]}${verification.proofSystem.variant === undefined ? '' : `, variant ${verification.proofSystem.variant}`}).`;
 const suppliedFiles = (verification: SuppliedKeyVerification): string[] => [
@@ -351,6 +402,13 @@ export function reportSections(report: Report): ReportSection[] {
           file,
         ];
       }
+      if (report.basis === 'risc-zero-program') {
+        return [
+          { heading: 'Claim', summary: 'None. The verifier rejected this proof, so it establishes nothing.', items: [], tone: 'fail' },
+          { heading: 'Cryptographic verification', summary: `FAILED ${usingRiscZero(report.verification)}`, items: riscZeroParameters(report.verification.proofSystem), tone: 'fail' },
+          file,
+        ];
+      }
       if (report.basis === 'supplied-key') {
         return [
           { heading: 'Claim', summary: 'None. The verifier rejected this proof, so it establishes nothing.', items: [], tone: 'fail' },
@@ -383,6 +441,18 @@ export function reportSections(report: Report): ReportSection[] {
             tone: 'plain',
           },
           { heading: 'Cryptographic verification', summary: `PASSED ${usingCairo(report.verification)}`, items: [securityLine(report.verification.proofSystem)], tone: 'pass' },
+          { heading: 'Explanation', summary: `NOT REVIEWED. ${report.explanation.review.note}`, items: [], tone: 'caution' },
+          { heading: 'Limits', items: report.limits, tone: 'caution' },
+          { heading: 'This result assumes', items: report.assumptions, tone: 'plain' },
+          file,
+        ];
+      }
+      if (report.basis === 'risc-zero-program') {
+        return [
+          { heading: 'Claim', summary: report.claim, items: [], tone: 'caution' },
+          { heading: 'Hidden by the proof', items: report.hidden, tone: 'plain' },
+          { heading: 'Public', summary: RISC_ZERO.publicNote, items: [`image ID of the program: ${report.program.imageId}`, `SHA-256 of the journal: ${report.journal.sha256}`], tone: 'plain' },
+          { heading: 'Cryptographic verification', summary: `PASSED ${usingRiscZero(report.verification)}`, items: riscZeroParameters(report.verification.proofSystem), tone: 'pass' },
           { heading: 'Explanation', summary: `NOT REVIEWED. ${report.explanation.review.note}`, items: [], tone: 'caution' },
           { heading: 'Limits', items: report.limits, tone: 'caution' },
           { heading: 'This result assumes', items: report.assumptions, tone: 'plain' },

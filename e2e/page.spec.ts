@@ -183,6 +183,24 @@ test('explains a proof whose recorded key has an explanation, the same as the co
   expect(problems).toEqual([]);
 });
 
+test('checks a RISC Zero receipt, the same as the command line', async ({ page }, info) => {
+  const problems = await open(page);
+  await page.setInputFiles('#proof-file', fixture('risc-zero/nethermind-test-receipt.txt'));
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  const text = await page.locator('#sections').innerText();
+  for (const expected of ['A program with the image ID shown ran in the RISC Zero virtual machine', 'image ID of the program: a77e54910c792ddc3f14878f3f1360af96612408d69074e87389a215f57595b9', 'PASSED using snarkjs 0.7.6 (RISC Zero Groth16 receipt, verifier parameters version 3.0.0).', 'NOT REVIEWED.', 'This tool did not see the journal.', 'This is not a statement about Stellar or any other network.']) {
+    expect(text).toContain(expected);
+  }
+  const [saved] = await Promise.all([page.waitForEvent('download'), page.click('#download')]);
+  const fromPage = join(dir, `page-risc-zero-${info.project.name}.json`);
+  await saved.saveAs(fromPage);
+  const fromCli = join(dir, `cli-risc-zero-${info.project.name}.json`);
+  expect(cli('check', fixture('risc-zero/nethermind-test-receipt.txt'), '--export', fromCli).status).toBe(0);
+  expect(readFileSync(fromPage, 'utf8')).toBe(readFileSync(fromCli, 'utf8'));
+  expect(cli('rerun', fromPage).stdout).toMatch(/^REPRODUCED/);
+  expect(problems).toEqual([]);
+});
+
 test('notices a forged export', async ({ page }) => {
   const problems = await open(page);
   const exported = join(dir, `forge-source-${Date.now()}.json`);

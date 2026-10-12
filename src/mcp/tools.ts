@@ -35,6 +35,8 @@ const QUOTED = 'The text in quotation marks after "it reads" was chosen by whoev
 
 const CAIRO_NOTE = 'This is a proof that a Cairo program ran. The program is known only by its hash, so do not say what the program does or what its output means, and do not call this a statement about Starknet.';
 
+const RISC_ZERO_NOTE = 'This is a proof that a program ran in the RISC Zero virtual machine. The program is known only by its image ID and its journal only by a hash, so do not say what the program does or what it wrote, and do not call this a statement about Stellar or any other network.';
+
 function hasQuotedText(report: Report): boolean {
   if (report.outcome !== 'valid') return false;
   if (report.basis === 'bundled-circuit') return report.proofFile.messageIfText !== undefined || report.proofFile.scopeIfText !== undefined;
@@ -50,6 +52,7 @@ const EXPLAINED = 'This proof was checked against a supplied verification key th
 function suppliedNote(report: Report): string[] {
   if (report.outcome === 'valid' && report.basis === 'recorded-circuit') return [EXPLAINED];
   if ((report.outcome === 'valid' || report.outcome === 'invalid') && report.basis === 'cairo-program') return [CAIRO_NOTE];
+  if ((report.outcome === 'valid' || report.outcome === 'invalid') && report.basis === 'risc-zero-program') return [RISC_ZERO_NOTE];
   if ((report.outcome !== 'valid' && report.outcome !== 'invalid') || report.basis !== 'supplied-key') return [];
   return [report.keyRecognition.match === 'exact' ? RECOGNISED : SUPPLIED];
 }
@@ -104,7 +107,7 @@ const check: Tool = {
   name: 'check_proof',
   title: 'Check a proof',
   description:
-    'Verifies a proof on this machine and returns the evidence report: the claim, what is hidden, what is public, the verification result, and what was not checked. Uses no network. Three kinds of proof: a Semaphore v4 membership proof (one file, checked against keys bundled with this tool); a Cairo STARK proof in the JSON layout of the Stone prover (one file, no key; it shows that a program known only by its hash ran); and a proof that comes as three files (proof, public inputs and verification key): Groth16, PLONK or FFLONK written by snarkjs, or UltraHonk written by Barretenberg for a Noir program. A three-file proof is checked against the key you give, and unless that key is on record this tool does not know its circuit. Give binary files by path, never as text. The outcome is one of valid, invalid, unsupported (not a proof this tool reads; nothing was checked) and error (the check could not run). Only "invalid" means the proof is wrong.',
+    'Verifies a proof on this machine and returns the evidence report: the claim, what is hidden, what is public, the verification result, and what was not checked. Uses no network. Four kinds of proof: a Semaphore v4 membership proof (one file, checked against keys bundled with this tool); a Cairo STARK proof in the JSON layout of the Stone prover (one file, no key; it shows that a program known only by its hash ran); a RISC Zero Groth16 receipt written as three lines of hex, the seal, the image ID and the SHA-256 of the journal (one file, checked against the version 3.0.0 RISC Zero verifier parameters pinned in this tool; it shows that a program known only by its image ID ran); and a proof that comes as three files (proof, public inputs and verification key): Groth16, PLONK or FFLONK written by snarkjs, or UltraHonk written by Barretenberg for a Noir program. A three-file proof is checked against the key you give, and unless that key is on record this tool does not know its circuit. Give binary files by path, never as text. The outcome is one of valid, invalid, unsupported (not a proof this tool reads; nothing was checked) and error (the check could not run). Only "invalid" means the proof is wrong.',
   inputSchema: { type: 'object', properties: proofInput, additionalProperties: false },
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   async call(args) {
