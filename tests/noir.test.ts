@@ -9,6 +9,7 @@ import { rerunExport, writeExport } from '../src/export.js';
 import { binaryBytes, binaryPart, isBinaryPart, partBytes, type ProofInputs } from '../src/inputs.js';
 import { bundledScanning } from '../src/node/bundled.js';
 import { AZTEC_CRS_SHA256, BB_JS_VERSION, bbJsEngine } from '../src/node/noir-engine.js';
+import { bbJsEngine as bbJsEngine_, type BbJsModule } from '../src/noir/bb-engine.js';
 import { stopEngines } from '../src/node/stop.js';
 import { ULTRAHONK_VARIANTS, verifyUltraHonk, type UltraHonkEngine } from '../src/noir/verify.js';
 import { renderReport, type Report } from '../src/report.js';
@@ -173,16 +174,18 @@ describe('Noir proofs (UltraHonk, made by Barretenberg)', () => {
     await expect(bbJsEngine.verify('evm', new Uint8Array(96), [], new Uint8Array(32))).resolves.toBe(false);
   });
 
-  it('does not call a good proof invalid when the verifier cannot set up', () => {
-    // Found in review: with nowhere to put its setup files the check reported FAILED for a proof that passes.
-    const paths = at('evm');
-    const done = spawnSync(process.execPath, [join(root, 'dist/cli.js'), 'check', paths.proof, '--public', paths.publicInputs, '--key', paths.verificationKey], {
-      encoding: 'utf8', timeout: 120_000, env: { ...process.env, TMPDIR: join(root, 'no-such-directory'), TMP: join(root, 'no-such-directory'), TEMP: join(root, 'no-such-directory') },
-    });
-    expect(done.status).toBe(3);
-    expect(done.stdout).toMatch(/^Not checked/);
-    expect(done.stdout).toContain('This says nothing about whether a proof is valid.');
-    expect(done.stdout).not.toMatch(/FAILED|PASSED|Claim/);
+  it('does not call a good proof invalid when the verifier cannot set up', async () => {
+    // Found in review: when setup failed the check reported FAILED for a proof that passes.
+    const good = load('evm');
+    const real = async () => (await import('@aztec/bb.js')) as unknown as BbJsModule;
+    const g2 = () => Promise.resolve(readFileSync(join(root, 'artifacts/aztec-crs/bn254_g2.dat')));
+    const broken = [
+      bbJsEngine_(real, () => Promise.reject(new Error('cannot read'))),
+      bbJsEngine_(real, () => Promise.resolve(new Uint8Array(128))),
+      bbJsEngine_(() => Promise.reject(new Error('cannot load')), g2),
+    ];
+    for (const engine of broken) expect(await verifyUltraHonk(good, engine)).toMatchObject({ status: 'error' });
+    expect(await verifyUltraHonk(good, bbJsEngine_(real, g2))).toMatchObject({ status: 'valid', variant: 'evm' });
   }, 120_000);
 
   it('checks, exports and reruns from the command line with the files as they are on disk', async () => {

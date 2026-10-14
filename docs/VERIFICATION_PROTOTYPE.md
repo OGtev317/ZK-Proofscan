@@ -54,9 +54,18 @@ as the command line, and binds them the same way before checking anything.
   page's own origin only. The browser tests fail if the page requests
   anything else. File content is shown as text and never parsed as markup.
 
-The page checks RISC Zero receipts. It does not check Noir or Cairo proofs,
-whose verifiers are not built for it, and has no transaction lookup. Given one, it says the proof was not
-checked.
+The page checks RISC Zero receipts, and since 2026-10-14 Noir proofs from
+Barretenberg 5.2.1 and Cairo proofs. A file that is not text, such as a
+Noir proof, is read the way the command line reads it. Each check runs in
+a new worker that is discarded afterwards, with a five-minute limit, so no
+verifier instance outlasts the check it was made for. The Noir verifier is
+given only Aztec's pinned G2 point and the curve's generator: measured on
+both Barretenberg versions, verifying needs no other setup point, so the
+command line no longer copies 8 MB of setup files for each run either. In
+WebKit the Cairo verifier can run out of stack in a worker; the page then
+runs it on its own thread (see the formats document). The page does not
+check Noir proofs from Barretenberg 0.87.0 and has no transaction lookup;
+given either, it says the proof was not checked.
 
 Since 2026-10-12 the page is published with GitHub Pages. The `deploy` job
 in the CI workflow builds it from each commit on `main`, after the unit and
@@ -69,7 +78,8 @@ visits, as the page says. The address used to point at a copy
 the owner deployed by hand to another host; it has pointed at this build,
 over HTTPS only, since the same day.
 
-The page offers three examples made from throwaway values, links to this
+The page offers five examples made from throwaway values or taken from a
+library's own test proofs, links to this
 repository, and says what it does not check.
 
 ## Tool server for AI agents
@@ -231,7 +241,7 @@ or 0.87.0, `swiftness` 1.0.0 or this code.
 
 ## Tested
 
-177 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
+178 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
 registry, Proof of Twitter, lookup, Noir, Cairo, RISC Zero and the Stellar
 keys are described in
 [the formats](FORMATS.md) and [the lookup notes](LOOKUP.md). The rest:
@@ -253,11 +263,15 @@ keys are described in
   refused arguments, exports that the command line reproduces, a forged
   export, malformed and oversized protocol messages.
 
-28 browser tests (fourteen scenarios, each in Chromium and WebKit, run headless
+32 browser tests (sixteen scenarios, each in Chromium and WebKit, run headless
 through Playwright on macOS): a valid proof, a rejected proof, an unsupported
-file containing markup, recovery after an unreadable file, identical exports
-and cross-reruns between page and command line, a forged export, and a
-proof with its own key in each of the four supplied-key systems.
+file containing markup, recovery after a file that is not text, identical
+exports and cross-reruns between page and command line, a forged export, a
+proof with its own key in each of the four supplied-key systems, a RISC
+Zero receipt, a Noir proof from its three binary files (and rejected with
+one public input changed), a Cairo proof and a Cairo proof that declares
+too little security, a Barretenberg 0.87.0 proof declined by name, and the
+five examples.
 
 ## Not tested or not done
 

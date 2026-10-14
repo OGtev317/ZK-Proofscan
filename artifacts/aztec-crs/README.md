@@ -13,8 +13,11 @@ downloads anything.
 | `grumpkin_g1_v2.flat.dat` | Points for the Grumpkin curve, which need no trusted setup | `64236c9455e75aeea77a94587ea607eed2e978d2609a421d66bf10bb9698b8fd` |
 | `grumpkin_size` | The number of Grumpkin points, as text | `0f255ec16482c343fd099ba9668863778be40dc166a6856b1d470e0bc97cc6fd` |
 
-The hashes are pinned in `src/node/noir-engine.ts`. A file with any other
-content is refused, and each check works from a private copy.
+The hashes are pinned in `src/node/noir-engine.ts`, and the G2 point's in
+`src/noir/bb-engine.ts`. Verifying reads only `bn254_g2.dat`, together with
+the curve's generator: measured on Barretenberg 5.2.1 and 0.87.0, no other
+point is needed to verify. A G2 file with any other content is refused.
+The other files are kept for making test proofs.
 
 ## Not checked
 

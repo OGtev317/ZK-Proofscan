@@ -9,6 +9,7 @@ import { CairoRejected, CairoUnreadable, MINIMUM_SECURITY_BITS, readCairoParamet
 import { rerunExport, writeExport } from '../src/export.js';
 import type { ProofInputs } from '../src/inputs.js';
 import { bundledScanning } from '../src/node/bundled.js';
+import { swiftnessFailure } from '../src/cairo/swiftness.js';
 import { SWIFTNESS_VERSION, swiftnessEngine } from '../src/node/cairo-engine.js';
 import { stopEngines } from '../src/node/stop.js';
 import { renderReport, type Report } from '../src/report.js';
@@ -148,6 +149,20 @@ describe('Cairo proofs (Stone prover layout)', () => {
     for (const bad of [{ programHash: 'abc', output: [] }, { programHash: '0x1', output: ['<b>'] }, { programHash: '0x1' }, {}]) {
       expect(await verifyCairo(strong, engine(async () => bad as never))).toMatchObject({ status: 'error' });
     }
+  });
+
+  it('never reads the verifier running out of stack or memory as an answer', async () => {
+    // Found on WebKit: one Stone layout overflowed a worker's stack, and the other layout's rejection was reported as FAILED.
+    for (const message of ['Maximum call stack size exceeded.', 'RangeError: Maximum call stack size exceeded', 'unreachable', 'memory access out of bounds', 'Out of memory', '']) {
+      const failure = swiftnessFailure(message);
+      expect(failure, message).not.toBeInstanceOf(CairoRejected);
+      expect(failure, message).not.toBeInstanceOf(CairoUnreadable);
+    }
+    expect(swiftnessFailure('Proof verification failed: Commit Error')).toBeInstanceOf(CairoRejected);
+    expect(swiftnessFailure('Error parsing proof: missing field')).toBeInstanceOf(CairoUnreadable);
+    const engine = (verify: CairoEngine['verify']): CairoEngine => ({ identity: swiftnessEngine.identity, verify });
+    const overflowThenReject = engine(async (_text, _parameters, stone) => { throw swiftnessFailure(stone === 'stone6' ? 'Maximum call stack size exceeded.' : 'Proof verification failed: Commit Error'); });
+    expect(await verifyCairo(strong, overflowThenReject)).toMatchObject({ status: 'error', message: 'the Cairo verifier failed while running' });
   });
 
   it('checks, exports and reruns from the command line', async () => {

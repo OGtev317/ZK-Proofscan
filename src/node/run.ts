@@ -3,7 +3,7 @@ import { lookupTransaction } from '../chain/lookup.js';
 import { CHAINS, httpRpc, rpcUrlFromEnvironment } from '../chain/rpc.js';
 import { renderChainSource, type ChainSource } from '../chain/source.js';
 import { MAX_EXPORT_CHARACTERS, rerunExport, writeExport, type RerunResult } from '../export.js';
-import { MAX_PROOF_PART_CHARACTERS, binaryPart, isBinaryPart, MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, type ProofInputs } from '../inputs.js';
+import { MAX_PROOF_PART_CHARACTERS, MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, partFromBytes, type ProofInputs } from '../inputs.js';
 import { renderReport, unreadReport, type Report } from '../report.js';
 import { scan } from '../scan.js';
 import { bundledScanning, recordedKeyText } from './bundled.js';
@@ -19,23 +19,11 @@ async function readText(path: string, limit: number): Promise<string> {
   return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(await readFile(path));
 }
 
-/**
- * Reads one file of a check as a part. Text stays text. A file that is not
- * text (not UTF-8, or holding control characters no text format uses) is
- * carried as its bytes, as is a text file that happens to begin like one.
- */
+/** Reads one file of a check as a part (see `partFromBytes`). */
 async function readPart(path: string, limit: number): Promise<string> {
   // A limit in characters is also the limit in bytes: no supported file needs more bytes than characters.
   if ((await stat(path)).size > limit) throw new TooLarge();
-  const bytes = await readFile(path);
-  let text: string | undefined;
-  try {
-    text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
-  } catch {
-    text = undefined;
-  }
-  // eslint-disable-next-line no-control-regex
-  return text === undefined || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(text) || isBinaryPart(text) ? binaryPart(bytes) : text;
+  return partFromBytes(await readFile(path));
 }
 
 /** Checks proof text with the bundled adapter, keys and verifier. Never throws. */

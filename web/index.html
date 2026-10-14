@@ -14,7 +14,7 @@
     <main>
       <h1>ZK-Proofscan</h1>
       <p class="lede">Checks a zero-knowledge proof on this device and says what it does and does not establish. Nothing is uploaded.</p>
-      <p>It reads a Semaphore v4 proof or a RISC Zero Groth16 receipt on its own, or a Groth16, PLONK or FFLONK proof written by snarkjs together with its public inputs and verification key. Noir and Cairo proofs are checked by the command-line tool, not by this page.</p>
+      <p>It reads a Semaphore v4 proof, a RISC Zero Groth16 receipt or a Cairo proof from the Stone prover on its own. A Groth16, PLONK or FFLONK proof written by snarkjs, or a Noir proof written by Barretenberg, needs its public inputs and verification key as well. Noir proofs from Barretenberg 0.87.0, and looking a proof up by transaction, need the command-line tool.</p>
       <p class="notice">Prototype. Unaudited, and the explanation wording has not been reviewed by a qualified person. Do not rely on a result from this page for a decision.</p>
 
       <section aria-labelledby="example-heading">
@@ -24,21 +24,23 @@
           <button id="example-semaphore" type="button" class="quiet">A valid membership proof</button>
           <button id="example-tampered" type="button" class="quiet">The same proof, altered</button>
           <button id="example-risc-zero" type="button" class="quiet">A RISC Zero receipt</button>
+          <button id="example-noir" type="button" class="quiet">A Noir proof, with its key</button>
+          <button id="example-cairo" type="button" class="quiet">A Cairo proof (1 MB, slower)</button>
         </div>
       </section>
 
       <section aria-labelledby="check-heading">
         <h2 id="check-heading">Check a proof</h2>
-        <label for="proof-file">Proof file (.json, or .txt for a RISC Zero receipt)</label>
-        <input id="proof-file" type="file" accept=".json,.txt,application/json,text/plain" />
+        <label for="proof-file">Proof file (.json, a .txt RISC Zero receipt, or a Noir <code>proof</code> file)</label>
+        <input id="proof-file" type="file" />
         <label for="proof-text">Or paste the proof</label>
         <textarea id="proof-text" rows="6" spellcheck="false" autocomplete="off"></textarea>
         <fieldset>
-          <legend>Only for a proof checked with its own verification key</legend>
-          <label for="public-file">Public inputs file (.json)</label>
-          <input id="public-file" type="file" accept=".json,application/json" />
-          <label for="key-file">Verification key file (.json)</label>
-          <input id="key-file" type="file" accept=".json,application/json" />
+          <legend>Only for a snarkjs or Noir proof, which is checked with its own verification key</legend>
+          <label for="public-file">Public inputs file (.json, or Noir's <code>public_inputs</code>)</label>
+          <input id="public-file" type="file" />
+          <label for="key-file">Verification key file (.json, or Noir's <code>vk</code>)</label>
+          <input id="key-file" type="file" />
         </fieldset>
         <button id="check" type="button">Check proof</button>
       </section>

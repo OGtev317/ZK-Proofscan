@@ -44,6 +44,22 @@ function toBase64(bytes: Uint8Array): string {
 export const binaryPart = (bytes: Uint8Array): string => `${BINARY_PREFIX}${toBase64(bytes)}`;
 
 /**
+ * Turns one file of a check into a part. Text stays text. A file that is not
+ * text (not UTF-8, or holding control characters no text format uses) is
+ * carried as its bytes, as is a text file that happens to begin like one.
+ */
+export function partFromBytes(bytes: Uint8Array): string {
+  let text: string | undefined;
+  try {
+    text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
+  } catch {
+    text = undefined;
+  }
+  // eslint-disable-next-line no-control-regex
+  return text === undefined || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(text) || isBinaryPart(text) ? binaryPart(bytes) : text;
+}
+
+/**
  * The exact bytes of the file a part stands for: the decoded bytes of a
  * binary part, or the UTF-8 bytes of a text part. Hashes of inputs are
  * always over these bytes. A malformed binary part stands for its own text.

@@ -51,7 +51,10 @@ the blockers below were cleared; the page says it is an unaudited prototype.
     against one real contract only, on Sepolia, on 2026-10-12. Three of
     the seven Alchemy network names are unconfirmed, and no rejected or
     reverted case has been met on a real chain.
-11. **The browser page does not check Noir or Cairo proofs.**
+11. **The browser page does not check Noir proofs from Barretenberg
+    0.87.0** (5.2.1 Noir proofs and Cairo proofs are checked there since
+    2026-10-14). It has also not been tried on real Safari, Firefox or a
+    phone; Playwright's WebKit is the nearest tested.
 12. **Barretenberg 0.87.0 (added after this review)** is an old verifier
     with no confirmed audit status. Testing found it accepts an all-zero
     proof under an all-zero key and several rewritten forms of a proof.

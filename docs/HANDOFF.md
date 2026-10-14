@@ -6,7 +6,7 @@ Build steps 1 to 3 are written: strict import and verification, explanation
 binding, and the readable report with export and rerun, on the command line
 and in a browser page. Read
 [the prototype notes](VERIFICATION_PROTOTYPE.md) for what exists, what was
-measured and what is untested. 177 unit tests and 28 browser tests pass.
+measured and what is untested. 178 unit tests and 32 browser tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
 for the first version. The main checkout holds the core, command line and
@@ -90,8 +90,13 @@ a registry entry, an adapter and fixtures, not new code.
   On 2026-10-12 the owner put a key in a local `.env` and the lookup was run
   on Sepolia: 16 real transactions, all verified. Read [the lookup
   notes](LOOKUP.md). Wallet
-  actions, signing, transactions, deployment, hosted services and paid
-  infrastructure are not approved.
+  actions, signing, transactions, deployment and paid infrastructure are
+  not approved.
+- 2026-10-12: publishing the page with GitHub Pages, from `main`, at the
+  owner's own domain. No other hosted service is approved.
+- 2026-10-14: read-only requests to a public Stellar RPC, testnet first, to
+  look a proof up by Stellar transaction. No wallet, signing or
+  transactions. Not yet built.
 - 2026-10-11: verifier libraries so that the first test release covers four
   kinds of proof: snarkjs, Groth16, Noir and Starknet. Noir is built with
   `@aztec/bb.js` 5.2.1, and Cairo proofs (the proof system Starknet uses)

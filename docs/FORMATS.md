@@ -175,8 +175,10 @@ Not tested or not done: one tiny circuit; the fixtures were made with
 tried; proofs are tied to the Barretenberg version, and a proof from
 another version may fail here without being wrong; the `starknet` and
 rollup variants are not checked (this build of the library refused to make
-a `starknet` proof); no audit status is confirmed for this version; the
-browser page does not check Noir proofs.
+a `starknet` proof); no audit status is confirmed for this version. The
+browser page checks 5.2.1 proofs with the library's browser build, given
+its WebAssembly as a file of the page's own; it does not check 0.87.0
+proofs, and says so.
 
 ### Cairo proofs (the Starknet proof system)
 
@@ -232,7 +234,15 @@ Not tested or not done:
 - Proofs fetched from Starknet, facts registered on Ethereum, and storage
   proofs are different things and are not read.
 - The package is about 145 MB installed: one build per layout, hash and
-  Stone version. The browser page does not check Cairo proofs.
+  Stone version. The browser page ships every build and fetches only the
+  one a proof needs, about 2.5 to 3.5 MB.
+- Measured on WebKit: a worker's stack is too small for the verifier with
+  some proofs, including the test proof here, while the page's own thread
+  is not. The page runs the verifier in its worker and, if that runs out of
+  stack, runs it again on the page's own thread. Running out of stack or
+  memory is never read as an answer about the proof: before this was found
+  it made the verifier's rejection under the other Stone layout show as
+  FAILED for a valid proof.
 
 ### Stellar: three candidates reviewed on 2026-10-11
 

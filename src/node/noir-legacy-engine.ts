@@ -1,7 +1,6 @@
-import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { GENERATOR, pinnedG2 } from '../noir/bb-engine.js';
 import type { LegacyUltraHonkEngine } from '../noir/legacy.js';
-import { AZTEC_CRS_SHA256 } from './noir-engine.js';
 
 /** The pinned older verifier, installed beside the current one under its own name. A test checks this against the installed package. */
 export const BB_JS_LEGACY_VERSION = '0.87.0';
@@ -18,20 +17,8 @@ interface LegacyModule {
   RawBuffer: new (bytes: Uint8Array) => unknown;
 }
 
-// The first point of the setup: the curve's generator, (1, 2). Verifying
-// needs no other point of the first group.
-const GENERATOR = new Uint8Array(64);
-GENERATOR[31] = 1;
-GENERATOR[63] = 2;
-
 /** The second-group point a verification's soundness rests on: the same pinned file the current verifier uses. */
 let g2: Promise<Uint8Array> | undefined;
-async function pinnedG2(): Promise<Uint8Array> {
-  const bytes = await readFile(new URL('../../artifacts/aztec-crs/bn254_g2.dat', import.meta.url));
-  const actual = createHash('sha256').update(bytes).digest('hex');
-  if (actual !== AZTEC_CRS_SHA256['bn254_g2.dat']) throw new Error(`the setup file bn254_g2.dat has SHA-256 ${actual}, expected ${AZTEC_CRS_SHA256['bn254_g2.dat']}`);
-  return bytes;
-}
 
 export const bbJsLegacyEngine: LegacyUltraHonkEngine = {
   identity: { name: '@aztec/bb.js', version: BB_JS_LEGACY_VERSION },
@@ -41,7 +28,7 @@ export const bbJsLegacyEngine: LegacyUltraHonkEngine = {
    * downloader, which would fetch them, is never used.
    */
   async verify(variant, key, publicInputs, proof) {
-    const point = await (g2 ??= pinnedG2());
+    const point = await (g2 ??= readFile(new URL('../../artifacts/aztec-crs/bn254_g2.dat', import.meta.url)).then(pinnedG2));
     const { Barretenberg, RawBuffer } = (await import(BB_JS_LEGACY_PACKAGE)) as LegacyModule;
     const api = await Barretenberg.new({ threads: 1 });
     try {

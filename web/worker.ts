@@ -15,13 +15,9 @@ import { loadKeyRegistry } from '../src/registry.js';
 import { loadRiscZeroParameters } from '../src/risc-zero/parameters.js';
 import { scan, type Scanning } from '../src/scan.js';
 import { snarkjsEngine, snarkjsSuppliedKeyEngine } from '../src/snarkjs-engine.js';
-import type { Request, Response } from './protocol.js';
-
-async function bytes(url: string): Promise<Uint8Array> {
-  const response = await fetch(url, { cache: 'no-store', credentials: 'omit' });
-  if (!response.ok) throw new Error(`could not load a bundled file (${response.status})`);
-  return new Uint8Array(await response.arrayBuffer());
-}
+import { bytes, cairoEngine, ultraHonkEngine } from './engines.js';
+import type { CairoDone, Request, ToPage, ToWorker } from './protocol.js';
+import type { SwiftnessOutcome } from './swiftness.js';
 
 let binding: Promise<Scanning> | undefined;
 const bound = (): Promise<Scanning> =>
@@ -34,15 +30,31 @@ const bound = (): Promise<Scanning> =>
     const recorded = [
       bindRecordedCircuit({ adapterBytes: twitterAdapter, lock: JSON.parse(new TextDecoder().decode(twitterLock)) as AdapterLock, registry, verifier: snarkjsSuppliedKeyEngine.identity }),
     ];
-    return { semaphoreV4: bindSemaphoreV4({ adapterBytes, lock, keyBytes, engine: snarkjsEngine }), suppliedKey: snarkjsSuppliedKeyEngine, registry, recorded, riscZero: { parameters: loadRiscZeroParameters(riscZeroBytes), engine: snarkjsEngine } };
+    return { semaphoreV4: bindSemaphoreV4({ adapterBytes, lock, keyBytes, engine: snarkjsEngine }), suppliedKey: snarkjsSuppliedKeyEngine, registry, recorded, riscZero: { parameters: loadRiscZeroParameters(riscZeroBytes), engine: snarkjsEngine }, ultraHonk: ultraHonkEngine, cairo: cairoEngine(onPage) };
   })());
 
-const scope = self as unknown as { onmessage: ((event: MessageEvent<Request>) => void) | null; postMessage(message: Response): void };
+const scope = self as unknown as { onmessage: ((event: MessageEvent<ToWorker>) => void) | null; postMessage(message: ToPage): void };
+
+/** Runs one Cairo verifier build on the page's own thread and waits for its answer. */
+const onPageCalls = new Map<number, (outcome: SwiftnessOutcome) => void>();
+let nextCall = 1;
+function onPage(build: string, text: string): Promise<SwiftnessOutcome> {
+  return new Promise((resolve) => {
+    const call = nextCall++;
+    onPageCalls.set(call, resolve);
+    scope.postMessage({ kind: 'cairo-on-page', call, build, text });
+  });
+}
+const finishOnPage = (done: CairoDone): void => {
+  onPageCalls.get(done.call)?.(done.outcome);
+  onPageCalls.delete(done.call);
+};
 
 // One request at a time: the verifier shares one set of curve workers.
 let queue: Promise<void> = Promise.resolve();
 scope.onmessage = (event) => {
-  const request = event.data;
+  if (event.data.kind === 'cairo-done') return finishOnPage(event.data);
+  const request: Request = event.data;
   queue = queue.then(async () => {
     try {
       const scanning = await bound();

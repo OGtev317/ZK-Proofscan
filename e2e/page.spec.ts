@@ -9,7 +9,7 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const fixture = (name: string): string => join(root, 'tests/fixtures', name);
 const validText = readFileSync(fixture('semaphore-v4-valid.json'), 'utf8');
 const dir = mkdtempSync(join(tmpdir(), 'zk-proofscan-e2e-'));
-const temp = (name: string, content: string): string => {
+const temp = (name: string, content: string | Uint8Array): string => {
   const path = join(dir, name);
   writeFileSync(path, content);
   return path;
@@ -82,9 +82,10 @@ test('says an unsupported file was not checked, and treats its content as text',
 
 test('recovers after a bad input and checks the next proof', async ({ page }) => {
   const problems = await open(page);
-  await page.setInputFiles('#proof-file', temp('binary.json', Buffer.from([0xff, 0xfe, 0x00]) as never));
-  await expect(outcome(page)).toHaveAttribute('data-outcome', 'error');
-  await expect(page.locator('#download')).toBeHidden();
+  // A file that is not text is read as a binary proof, as the command line reads it.
+  await page.setInputFiles('#proof-file', temp('binary.json', Buffer.from([0xff, 0xfe, 0x00])));
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'unsupported');
+  await expect(page.locator('#sections')).toContainText('this is a binary proof, which needs its own public inputs file and verification key file');
   await page.setInputFiles('#proof-file', fixture('semaphore-v4-valid-depth10.json'));
   await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
   await expect(page.locator('#sections')).toContainText('tree depth: 10');
@@ -224,7 +225,74 @@ test('runs each example, and an example leaves earlier files out', async ({ page
   expect(await page.locator('#proof-text').inputValue()).toBe(readFileSync(fixture('risc-zero/nethermind-test-receipt.txt'), 'utf8'));
 
   await expect(page.locator('footer a')).toHaveAttribute('href', 'https://github.com/OGtev317/ZK-Proofscan');
-  await expect(page.locator('#proof-file')).toHaveAttribute('accept', /\.txt/);
+  // Noir's files have no extension, so the pickers do not filter by one.
+  await expect(page.locator('#proof-file')).not.toHaveAttribute('accept');
+
+  await page.click('#example-noir');
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  await expect(page.locator('#sections')).toContainText('PASSED using @aztec/bb.js 5.2.1');
+  await expect(page.locator('#proof-text')).toHaveAttribute('placeholder', /Binary proof file chosen \(4544 bytes\)/);
+
+  await page.click('#example-cairo');
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  await expect(page.locator('#sections')).toContainText('PASSED using swiftness 1.0.0 (Cairo STARK proof, layout dynamic, Stone 6 format).');
+  expect(problems).toEqual([]);
+});
+
+test('checks a Noir proof from its three binary files, the same as the command line', async ({ page }, info) => {
+  const problems = await open(page);
+  const part = (kind: string): string => fixture(`noir/multiplier-noir-recursive.${kind}`);
+  await page.setInputFiles('#public-file', part('public_inputs'));
+  await page.setInputFiles('#key-file', part('vk'));
+  await page.setInputFiles('#proof-file', part('proof'));
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  const text = await page.locator('#sections').innerText();
+  for (const expected of ['PASSED using @aztec/bb.js 5.2.1, against the verification key supplied with the proof (UltraHonk on BN254, variant noir-recursive).', 'This tool does not know what that circuit checks.', 'NOT REVIEWED.']) expect(text).toContain(expected);
+  const [saved] = await Promise.all([page.waitForEvent('download'), page.click('#download')]);
+  const fromPage = join(dir, `page-noir-${info.project.name}.json`);
+  await saved.saveAs(fromPage);
+  const fromCli = join(dir, `cli-noir-${info.project.name}.json`);
+  expect(cli('check', part('proof'), '--public', part('public_inputs'), '--key', part('vk'), '--export', fromCli).status).toBe(0);
+  expect(readFileSync(fromPage, 'utf8')).toBe(readFileSync(fromCli, 'utf8'));
+  await page.setInputFiles('#export-file', fromCli);
+  await expect(page.locator('#rerun-result')).toContainText('REPRODUCED');
+
+  // The same proof with one public input changed is rejected, not left unchecked.
+  const altered = readFileSync(part('public_inputs'));
+  altered[31] = altered[31]! ^ 1;
+  await page.setInputFiles('#public-file', temp('altered.public_inputs', altered));
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'invalid');
+
+  // A proof from Barretenberg 0.87.0 is left to the command line, and says so.
+  const legacy = (kind: string): string => fixture(`noir-legacy/multiplier-keccak.${kind}`);
+  await page.setInputFiles('#public-file', legacy('public_inputs'));
+  await page.setInputFiles('#key-file', legacy('vk'));
+  await page.setInputFiles('#proof-file', legacy('proof'));
+  await expect(page.locator('#sections')).toContainText('this proof was written by Barretenberg 0.87.0, which this build cannot check; use the command line');
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'unsupported');
+
+  // Typing replaces a binary proof that was chosen.
+  await page.fill('#proof-text', '{}');
+  await page.click('#check');
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'unsupported');
+  expect(problems).toEqual([]);
+});
+
+test('checks a Cairo proof, the same as the command line, and refuses a weak one', async ({ page }, info) => {
+  const problems = await open(page);
+  await page.setInputFiles('#proof-file', fixture('cairo/dynamic-stone6-96-bits.json'));
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid', { timeout: 120_000 });
+  await expect(page.locator('#sections')).toContainText('PASSED using swiftness 1.0.0');
+  const [saved] = await Promise.all([page.waitForEvent('download'), page.click('#download')]);
+  const fromPage = join(dir, `page-cairo-${info.project.name}.json`);
+  await saved.saveAs(fromPage);
+  const fromCli = join(dir, `cli-cairo-${info.project.name}.json`);
+  expect(cli('check', fixture('cairo/dynamic-stone6-96-bits.json'), '--export', fromCli).status).toBe(0);
+  expect(readFileSync(fromPage, 'utf8')).toBe(readFileSync(fromCli, 'utf8'));
+
+  await page.setInputFiles('#proof-file', fixture('cairo/starknet-stone5-70-bits.json'));
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'unsupported');
+  await expect(page.locator('#sections')).toContainText('below the 80 this tool requires');
   expect(problems).toEqual([]);
 });
 

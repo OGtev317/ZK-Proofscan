@@ -65,7 +65,7 @@ export async function scan(inputs: ProofInputs, scanning: Scanning): Promise<Rep
     if (scanning.ultraHonk === undefined) return unsupported(proof, 'this is a binary proof, which this build cannot check; use the command line');
     // The key says which version of Barretenberg wrote it, and each version's verifier reads only its own.
     if (looksLikeLegacyKey(partBytes(verificationKey))) {
-      if (scanning.ultraHonkLegacy === undefined) return unsupported(proof, 'this is a binary proof, which this build cannot check; use the command line');
+      if (scanning.ultraHonkLegacy === undefined) return unsupported(proof, 'this proof was written by Barretenberg 0.87.0, which this build cannot check; use the command line');
       result = await verifyLegacyUltraHonk({ proof, publicInputs, verificationKey }, scanning.ultraHonkLegacy);
     } else result = await verifyUltraHonk({ proof, publicInputs, verificationKey }, scanning.ultraHonk);
   } else {
