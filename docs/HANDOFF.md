@@ -6,7 +6,7 @@ Build steps 1 to 3 are written: strict import and verification, explanation
 binding, and the readable report with export and rerun, on the command line
 and in a browser page. Read
 [the prototype notes](VERIFICATION_PROTOTYPE.md) for what exists, what was
-measured and what is untested. 187 unit tests and 32 browser tests pass.
+measured and what is untested. 191 unit tests and 32 browser tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
 for the first version. The main checkout holds the core, command line and
@@ -97,8 +97,8 @@ a registry entry, an adapter and fixtures, not new code.
 - 2026-10-14: read-only requests to a public Stellar RPC, testnet first, to
   look a proof up by Stellar transaction. No wallet, signing or
   transactions. Built the same day: `lookup --chain stellar-testnet` reads
-  calls to Nethermind's UltraHonk verifier contract, and two real testnet
-  proofs passed. Read [the lookup notes](LOOKUP.md).
+  calls to Nethermind's UltraHonk verifier contract and to Stellar Private
+  Payments pools; two real testnet proofs of each passed. Read [the lookup notes](LOOKUP.md).
 - 2026-10-11: verifier libraries so that the first test release covers four
   kinds of proof: snarkjs, Groth16, Noir and Starknet. Noir is built with
   `@aztec/bb.js` 5.2.1, and Cairo proofs (the proof system Starknet uses)
@@ -134,8 +134,8 @@ mistake. The lost part was restored from `01d2144` in the next change.
   then every explanation says NOT REVIEWED.
 - Choose which Noir circuits, Cairo programs or RISC Zero programs, if any,
   should get an explanation. Today those formats verify and are not
-  explained. For Stellar Private Payments an explanation also needs a real
-  proof to test with, which the project does not publish.
+  explained. Stellar Private Payments now has real testnet proofs to test
+  an explanation with (see the lookup notes).
 - Decide whether Barretenberg 0.87.0 stays. It is there for one Stellar
   verifier, and it is the verifier in this tool with the most faults found.
 - Decide whether to send the request to ZK Email's maintainers drafted in

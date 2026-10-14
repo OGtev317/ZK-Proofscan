@@ -29,9 +29,10 @@ as using a known key. This tool has no explanation for any of the circuits.
 
 - That any key was built from the circuit source the registry names. No
   circuit was compiled here.
-- No valid proof was available: the repository holds no test proof, and
-  making one needs the project's prover and a pool's state. The tests show
-  that each key is read, named, and rejects a proof made for another
-  circuit. They do not show a proof passing under any of these keys.
-- No Stellar network was contacted. Whether these keys are the ones the
-  deployed testnet contracts hold was not checked.
+- Proofs: the repository holds no test proof. On 2026-10-14 two real proofs taken from testnet transactions pass under the `policy_tx_2_2_B` key (see the lookup notes).
+  The tests show each key is read, named, and rejects a proof made for
+  another circuit; no proof has passed under the other fifteen keys.
+- Deployed contracts: on 2026-10-14 every point of `policy_tx_2_2_B` was
+  found in the code of the verifier contract the deployed blocklist pool
+  names, `CA66PGQD3OUO5R64CMOWL3FIRAQTWORLX36ZERALPPYOJ4ORETGFO3P5`. The other
+  keys were not looked for in deployed code.

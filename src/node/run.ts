@@ -7,7 +7,7 @@ import { MAX_EXPORT_CHARACTERS, rerunExport, writeExport, type RerunResult } fro
 import { MAX_PROOF_PART_CHARACTERS, MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, partFromBytes, type ProofInputs } from '../inputs.js';
 import { renderReport, unreadReport, type Report } from '../report.js';
 import { scan } from '../scan.js';
-import { bundledScanning, recordedKeyText } from './bundled.js';
+import { bundledScanning, recordedKeyText, stellarPrivatePaymentsKeys } from './bundled.js';
 
 export const message = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
@@ -97,7 +97,7 @@ export async function lookupAndCheck(chainName: string, transaction: string, env
   let found;
   try {
     const rpc = httpRpc(address);
-    found = chain === undefined ? await lookupStellarTransaction({ network: stellar!, transaction, rpc }) : await lookupTransaction({ chain, transaction, rpc, keyText: recordedKeyText });
+    found = chain === undefined ? await lookupStellarTransaction({ network: stellar!, transaction, rpc, recordedKeys: stellarPrivatePaymentsKeys }) : await lookupTransaction({ chain, transaction, rpc, keyText: recordedKeyText });
   } catch (error) {
     return { kind: 'not-checked', reason: message(error) };
   }

@@ -241,7 +241,7 @@ or 0.87.0, `swiftness` 1.0.0 or this code.
 
 ## Tested
 
-187 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
+191 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
 registry, Proof of Twitter, lookup, Noir, Cairo, RISC Zero and the Stellar
 keys are described in
 [the formats](FORMATS.md) and [the lookup notes](LOOKUP.md). The rest:

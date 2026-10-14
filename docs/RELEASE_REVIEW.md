@@ -65,7 +65,7 @@ the blockers below were cleared; the page says it is an unaudited prototype.
 13. **RISC Zero receipts and Stellar keys (added after this review).** One
     real receipt was available; the statement layout is written here and
     has had no review. The Stellar Private Payments keys have no trusted
-    setup and no valid proof was available to test with.
+    setup; two real testnet proofs pass under one of them.
 
 ## Owner decisions still open
 

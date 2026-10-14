@@ -115,20 +115,31 @@ The list of transactions came from the provider and may be incomplete.
 
 ## Stellar
 
-Built 2026-10-14. `lookup --chain stellar-testnet` reads one call: a
-Soroban transaction that calls `verify_proof(public_inputs, proof)` on
-Nethermind's UltraHonk verifier contract (`rs-soroban-ultrahonk`). That
-contract checks Barretenberg 0.87.0 Keccak proofs, so this tool checks the
-proof with its own copy of that version.
+Built 2026-10-14. `lookup --chain stellar-testnet` reads two kinds of call:
+
+- `verify_proof(public_inputs, proof)` on Nethermind's UltraHonk verifier
+  contract (`rs-soroban-ultrahonk`). That contract checks Barretenberg
+  0.87.0 Keccak proofs, so this tool checks the proof with its own copy of
+  that version. The contract keeps its key in its storage under `vk`.
+- `transact(proof, ext_data, sender)` on a pool of Nethermind's Stellar
+  Private Payments. The proof is Groth16 on BN254, checked with snarkjs.
+  The pool's storage names its verifier contract and its policy; the
+  verifier has its key compiled into its code. This tool uses the one
+  recorded Stellar Private Payments key every point of which appears in
+  that code, and puts the public inputs in the order the pool's code
+  passes them (read at commit `0471e6b`): the tree root, the amount, the
+  external data hash, the nullifiers, the two output commitments, then the
+  membership and non-membership roots once per nullifier when the pool's
+  policy requires them.
 
 ```sh
 node dist/cli.js lookup 10dd8ab5bcfbc8395030144cdfc5cb200ce61d38e7fad533e18e3aee89bbb3b2 --chain stellar-testnet
 ```
 
-It makes three read requests: `getNetwork`, to confirm the provider serves
-the test network; `getTransaction`; and `getLedgerEntries`, for the called
-contract's storage. The verification key is not in the transaction: the
-contract was given it when deployed and keeps it under `vk`. The provider
+It makes read requests only: `getNetwork`, to confirm the provider serves
+the test network; `getTransaction`; and `getLedgerEntries` for the
+contracts' storage, and for a pool, its verifier's code. The verification
+key is never in the transaction. The provider
 is the Stellar Development Foundation's public testnet RPC unless the
 operator sets `STELLAR_RPC_URL`. No key or account is needed, and nothing
 is signed or sent to the network. Stellar's transaction format is read
@@ -141,7 +152,8 @@ listed in the third-party notices.
 | The proof is valid, and what it establishes | This tool's own check, as for any proof |
 | The transaction is the one asked for | This tool: the hash is computed here from the transaction the provider sent |
 | The transaction was in that ledger, and the network accepted or failed it | The provider's word |
-| The key is the one the contract held when the transaction ran | The provider's word for the contract's storage and when it last changed. If it last changed before the transaction's ledger, the report says the key is the one the contract held; otherwise it says it may not be |
+| The key is the one used when the transaction ran | The provider's word for the contracts' storage and when it last changed. If it last changed before the transaction's ledger, the report says so; otherwise it says the key may not be the one used |
+| For a pool: the verifier uses the key found in its code | Not checked. Every point of the key appears in the code, which the provider cannot alter (code is stored under its own hash, checked here), but that the code uses those points as its key was not checked |
 
 A public Stellar RPC keeps only about the last week of transactions. An
 older one is reported as not found, which says nothing about a proof.
@@ -158,12 +170,22 @@ network had accepted the transaction, the key had last changed at ledger
 the contract and this tool agree on those two real proofs. The answers for
 the first are kept as a test fixture, so the tests need no network.
 
+Also on 2026-10-14, the two `transact` transactions the public RPC held
+for Nethermind's blocklist pool `CA73PEBS…` (`cd1d09c9…` and `0460a0f6…`,
+ledgers 5190131 and 5191591) were looked up. In each, every point of the
+recorded key `policy_tx_2_2_B` was in the code of the pool's verifier
+`CA66PGQD…`, the pool and verifier had last changed at ledger 5190087,
+before the transaction, and the proof passed here with nine public
+inputs. These are the first real proofs this tool has checked under any
+Stellar Private Payments key. The answers for the first are a test fixture.
+
 ### Not done on Stellar
 
 - Stellar's main network. Only the test network is approved.
-- Stellar Private Payments transactions, whose pool contracts take Groth16
-  proofs in their own call shapes; the RISC Zero verifier, which has no
-  deployment on record in its repository; and the two example contracts
-  in the UltraHonk repository (`identity`, `tornado_classic`).
+- The Stellar Private Payments pool with an authority view key (`gvk`),
+  whose call carries more fields; it had no transactions to test with.
+  The RISC Zero verifier, which has no deployment on record in its
+  repository; and the two example contracts in the UltraHonk repository
+  (`identity`, `tornado_classic`).
 - Checking the provider's answers against the network itself.
 

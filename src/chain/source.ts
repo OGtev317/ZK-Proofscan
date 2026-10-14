@@ -38,7 +38,13 @@ export interface StellarSource {
   status: 'succeeded' | 'failed';
   /** Which known call the proof was read from. */
   call: string;
-  /** The ledger at which the contract's storage, which holds the verification key, last changed. */
+  /** Whether the key was read from a contract's storage, or found compiled into its code. */
+  keyFrom: 'storage' | 'code';
+  /** The contract that holds the key: the one called, or the verifier it names. */
+  keyContract: string;
+  /** SHA-256 of that contract's code. */
+  keyContractCode: string;
+  /** The last ledger at which anything that decides the key changed: the storage of the contracts involved. */
   keyLastChanged: number;
 }
 
@@ -58,8 +64,9 @@ export function readChainSource(value: unknown): ChainSource | undefined {
   const exactly = (names: string[]): boolean => Object.keys(raw).length === names.length && names.every((name) => Object.hasOwn(raw, name));
   const text = (entry: unknown, pattern: RegExp): entry is string => typeof entry === 'string' && pattern.test(entry);
   if (raw.kind === 'stellar-transaction') {
-    if (!exactly(['kind', 'provider', 'network', 'transaction', 'ledger', 'contract', 'contractCode', 'status', 'call', 'keyLastChanged'])) return undefined;
+    if (!exactly(['kind', 'provider', 'network', 'transaction', 'ledger', 'contract', 'contractCode', 'status', 'call', 'keyFrom', 'keyContract', 'keyContractCode', 'keyLastChanged'])) return undefined;
     if (!text(raw.provider, NAME) || !text(raw.network, NAME) || !text(raw.call, NAME) || !text(raw.transaction, BARE_HASH) || !text(raw.contract, CONTRACT) || !text(raw.contractCode, BARE_HASH)) return undefined;
+    if ((raw.keyFrom !== 'storage' && raw.keyFrom !== 'code') || !text(raw.keyContract, CONTRACT) || !text(raw.keyContractCode, BARE_HASH)) return undefined;
     if (!whole(raw.ledger) || !whole(raw.keyLastChanged) || (raw.status !== 'succeeded' && raw.status !== 'failed')) return undefined;
     return raw as unknown as StellarSource;
   }
@@ -83,8 +90,11 @@ export function renderChainSource(source: ChainSource, recorded = false): string
       `  - Ledger ${source.ledger}`,
       `  - Called contract ${source.contract}, whose code has SHA-256 ${source.contractCode}. This tool has no record of Stellar deployments.`,
       `  - Proof and public inputs read from a call to ${source.call}`,
-      `  - Verification key read from the contract's storage, which last changed at ledger ${source.keyLastChanged}: ${
-        source.keyLastChanged < source.ledger ? 'before the transaction, so it is the key the contract held when it ran' : 'NOT before the transaction, so it may not be the key the contract held when it ran'
+      source.keyFrom === 'storage'
+        ? `  - Verification key read from the storage of contract ${source.keyContract}`
+        : `  - Verification key: a key recorded in this tool, every point of which appears in the code of ${source.keyContract} (code SHA-256 ${source.keyContractCode}), the verifier the called contract names. This tool did not check that the code uses those points`,
+      `  - What decides that key last changed at ledger ${source.keyLastChanged}: ${
+        source.keyLastChanged < source.ledger ? 'before the transaction, so it is the key used when the transaction ran' : 'NOT before the transaction, so it may not be the key used when the transaction ran'
       }`,
       `  - The network ${source.status === 'succeeded' ? 'accepted' : 'FAILED'} the transaction. That is the contract's decision, with its own rules, and is separate from the check below.`,
       closing,

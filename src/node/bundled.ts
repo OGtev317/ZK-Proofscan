@@ -33,6 +33,22 @@ export async function recordedKeyText(artifactId: string): Promise<string> {
   return new TextDecoder('utf-8', { fatal: true }).decode(await file(path));
 }
 
+/**
+ * The recorded keys of Stellar Private Payments, by registry artifact, as
+ * their files are kept here. A Stellar lookup looks for them in a verifier
+ * contract's code.
+ */
+export async function stellarPrivatePaymentsKeys(): Promise<{ artifactId: string; text: string }[]> {
+  const registry = JSON.parse(new TextDecoder().decode(await file('registry/keys.json'))) as { artifacts: { id: string; provenance: { file: string } }[] };
+  const entries = registry.artifacts.filter((artifact) => artifact.id.startsWith('stellar-private-payments-testnet-'));
+  return Promise.all(
+    entries.map(async (artifact) => ({
+      artifactId: artifact.id,
+      text: new TextDecoder('utf-8', { fatal: true }).decode(await file(`artifacts/stellar-private-payments/${artifact.provenance.file.split('/').pop()!}`)),
+    })),
+  );
+}
+
 /** Adapters for circuits whose key the user supplies and the registry records. */
 export const RECORDED_ADAPTERS = ['zk-email-proof-of-twitter'] as const;
 

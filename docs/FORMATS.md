@@ -255,7 +255,7 @@ lookup notes).
 
 | Candidate | New library | What is built | What is not |
 | --- | --- | --- | --- |
-| Nethermind Stellar Private Payments (circom, Groth16) | None: snarkjs reads its keys | Its 16 testnet keys are recognised | No explanation; no valid proof was available to test with |
+| Nethermind Stellar Private Payments (circom, Groth16) | None: snarkjs reads its keys | Its 16 testnet keys are recognised; two real testnet proofs pass | No explanation |
 | Nethermind Stellar RISC Zero verifier | None: the seal is a Groth16 proof | Receipts are verified, with a new basis | Nothing says what a program does |
 | Soroban UltraHonk verifier (Noir) | `@aztec/bb.js` 0.87.0, beside 5.2.1 | Proofs of the version that verifier is built for are checked | The Stellar verifier itself is Rust and is not run here |
 
@@ -275,10 +275,14 @@ one is reported as using a known key.
   testnet only. Its keys were replaced three times in six weeks; a proof
   for an earlier or later key is reported as an unrecognised key.
 - No explanation is applied. An adapter would need the meaning of each
-  public input, a real proof to test with, and a qualified review.
-- **No valid proof was available.** The repository holds none, and making
-  one needs the project's prover and a pool's state. Tests show each key is
-  read, named, and rejects a proof made for another circuit.
+  public input and a qualified review.
+- **Real proofs, since 2026-10-14.** The repository holds no test proof,
+  but `lookup --chain stellar-testnet` reads the deployed pools' `transact`
+  calls, and the two found on testnet that day pass under `policy_tx_2_2_B`.
+  The public inputs are put in the order the pool's code passes them,
+  read at commit `0471e6b`; a later change to that order would make real
+  proofs fail here without being wrong. No proof has passed under the
+  other fifteen keys.
 - Found on the way: the keys were refused at first, because they leave out
   `vk_alphabeta_12`. The verifier does not read that value and only snarkjs
   writes it, so a Groth16 key may now come with or without it.
