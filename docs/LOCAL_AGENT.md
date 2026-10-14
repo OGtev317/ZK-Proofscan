@@ -19,7 +19,9 @@ No provider is approved for real proofs.
 ## Before activation: who sees the data
 
 Checking a proof uses no network; only `lookup_transaction` does, and it
-sends a transaction hash to the configured chain data provider. The agent
+sends a transaction hash to the configured chain data provider, or for
+`stellar-testnet` to the Stellar RPC in `STELLAR_RPC_URL` or, without one,
+the Stellar Development Foundation's public testnet RPC. The agent
 calling the server usually uses a network for everything it reads: a
 cloud-hosted model receives every tool result, including the public inputs,
 the message and scope, the report and the file paths. Connecting the server

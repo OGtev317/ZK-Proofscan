@@ -10,7 +10,7 @@ the blockers below were cleared; the page says it is an unaudited prototype.
 | Item | Result |
 | --- | --- |
 | Licence | GPL-3.0-or-later, decided by the owner. `LICENSE` holds the text. |
-| Dependency licences | 48 production packages: MIT, GPL-3.0, Apache-2.0, ISC, 0BSD and "MIT AND Zlib", as each declares; `swiftness` declares only "see LICENSE", and its licence file is Apache-2.0. Listed in `THIRD_PARTY_NOTICES.md`; CI fails if the list is out of date. |
+| Dependency licences | 86 production packages (38 of them came with the Stellar library on 2026-10-14): MIT, GPL-3.0, Apache-2.0, ISC, BSD-3-Clause, 0BSD, "MIT AND Zlib" and "MIT AND BSD-3-Clause", as each declares; `swiftness` declares only "see LICENSE", and its licence file is Apache-2.0. Listed in `THIRD_PARTY_NOTICES.md`; CI fails if the list is out of date. |
 | Known vulnerabilities | `npm audit --omit=dev` reports none; CI runs it on every push. |
 | Verifier version | snarkjs 0.7.6, pinned exactly. Compared with 0.7.5 on aliased public inputs: no difference found for Groth16. |
 | Keys and proving keys | All 32 bundled verification keys equal those inside Semaphore's published proving keys. See `artifacts/semaphore-v4/README.md`. |
@@ -50,7 +50,9 @@ the blockers below were cleared; the page says it is an unaudited prototype.
 10. **Transaction lookup (added after this review)** has been run
     against one real contract only, on Sepolia, on 2026-10-12. Three of
     the seven Alchemy network names are unconfirmed, and no rejected or
-    reverted case has been met on a real chain.
+    reverted case has been met on a real chain. The Stellar lookup reads
+    one contract's call on the test network only, and trusts the provider
+    for the contract's stored key.
 11. **The browser page does not check Noir proofs from Barretenberg
     0.87.0** (5.2.1 Noir proofs and Cairo proofs are checked there since
     2026-10-14). It has also not been tried on real Safari, Firefox or a

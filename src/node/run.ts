@@ -2,6 +2,7 @@ import { readFile, stat, writeFile } from 'node:fs/promises';
 import { lookupTransaction } from '../chain/lookup.js';
 import { CHAINS, httpRpc, rpcUrlFromEnvironment } from '../chain/rpc.js';
 import { renderChainSource, type ChainSource } from '../chain/source.js';
+import { lookupStellarTransaction, STELLAR_NETWORKS } from '../chain/stellar.js';
 import { MAX_EXPORT_CHARACTERS, rerunExport, writeExport, type RerunResult } from '../export.js';
 import { MAX_PROOF_PART_CHARACTERS, MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, partFromBytes, type ProofInputs } from '../inputs.js';
 import { renderReport, unreadReport, type Report } from '../report.js';
@@ -79,14 +80,24 @@ export type LookedUp =
  * Finds a proof in a transaction and checks it here. Read-only, and only
  * when the operator has configured a provider in the environment.
  */
+/** Every name `lookup` accepts. */
+export const LOOKUP_CHAINS: readonly string[] = [...CHAINS.map((known) => known.name), ...STELLAR_NETWORKS.map((known) => known.name)];
+
+/**
+ * Finds a proof in a transaction and checks it here. Read-only. An Ethereum
+ * chain needs a provider configured in the environment; Stellar's test
+ * network uses `STELLAR_RPC_URL` if set, and otherwise its public RPC.
+ */
 export async function lookupAndCheck(chainName: string, transaction: string, env: Record<string, string | undefined>): Promise<LookedUp> {
   const chain = CHAINS.find((known) => known.name === chainName);
-  if (chain === undefined) return { kind: 'not-checked', reason: `the chain must be one of ${CHAINS.map((known) => known.name).join(', ')}` };
-  const address = rpcUrlFromEnvironment(chain, env);
+  const stellar = STELLAR_NETWORKS.find((known) => known.name === chainName);
+  if (chain === undefined && stellar === undefined) return { kind: 'not-checked', reason: `the chain must be one of ${LOOKUP_CHAINS.join(', ')}` };
+  const address = chain === undefined ? env.STELLAR_RPC_URL || stellar!.defaultRpc : rpcUrlFromEnvironment(chain, env);
   if (address === undefined) return { kind: 'not-checked', reason: 'no chain data provider is configured; set ALCHEMY_API_KEY or ZK_PROOFSCAN_RPC_URL in the environment' };
   let found;
   try {
-    found = await lookupTransaction({ chain, transaction, rpc: httpRpc(address), keyText: recordedKeyText });
+    const rpc = httpRpc(address);
+    found = chain === undefined ? await lookupStellarTransaction({ network: stellar!, transaction, rpc }) : await lookupTransaction({ chain, transaction, rpc, keyText: recordedKeyText });
   } catch (error) {
     return { kind: 'not-checked', reason: message(error) };
   }

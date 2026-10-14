@@ -1,8 +1,10 @@
 # Looking up a proof by transaction
 
 Written 2026-10-11. The owner approved read-only chain lookups through
-Alchemy, on any chain, on that date. Nothing else on a chain is approved:
-no wallet, no signing, no transactions, no deployment.
+Alchemy, on any chain, on that date, and read-only requests to a public
+Stellar RPC, test network first, on 2026-10-14 (see "Stellar" below).
+Nothing else on a chain is approved: no wallet, no signing, no
+transactions, no deployment.
 
 **Run against a real chain once, on 2026-10-12** (see "Run on a real
 chain" below). The automated tests still use a stand-in provider on this
@@ -107,5 +109,61 @@ The list of transactions came from the provider and may be incomplete.
   used. Each is specific to one application's contract.
 - Checking the provider's answers against the chain itself, which would
   need a block header trusted from elsewhere.
-- The browser page has no lookup: it would have to hold the key.
+- The browser page has no lookup: for an Ethereum chain it would have to
+  hold the key.
 - Searching for transactions. This looks up one transaction by its hash.
+
+## Stellar
+
+Built 2026-10-14. `lookup --chain stellar-testnet` reads one call: a
+Soroban transaction that calls `verify_proof(public_inputs, proof)` on
+Nethermind's UltraHonk verifier contract (`rs-soroban-ultrahonk`). That
+contract checks Barretenberg 0.87.0 Keccak proofs, so this tool checks the
+proof with its own copy of that version.
+
+```sh
+node dist/cli.js lookup 10dd8ab5bcfbc8395030144cdfc5cb200ce61d38e7fad533e18e3aee89bbb3b2 --chain stellar-testnet
+```
+
+It makes three read requests: `getNetwork`, to confirm the provider serves
+the test network; `getTransaction`; and `getLedgerEntries`, for the called
+contract's storage. The verification key is not in the transaction: the
+contract was given it when deployed and keeps it under `vk`. The provider
+is the Stellar Development Foundation's public testnet RPC unless the
+operator sets `STELLAR_RPC_URL`. No key or account is needed, and nothing
+is signed or sent to the network. Stellar's transaction format is read
+with `@stellar/stellar-base` 15.0.0, the Foundation's own library
+(Apache-2.0); it brought 38 further packages, all permissively licensed,
+listed in the third-party notices.
+
+| Statement | Rests on |
+| --- | --- |
+| The proof is valid, and what it establishes | This tool's own check, as for any proof |
+| The transaction is the one asked for | This tool: the hash is computed here from the transaction the provider sent |
+| The transaction was in that ledger, and the network accepted or failed it | The provider's word |
+| The key is the one the contract held when the transaction ran | The provider's word for the contract's storage and when it last changed. If it last changed before the transaction's ledger, the report says the key is the one the contract held; otherwise it says it may not be |
+
+A public Stellar RPC keeps only about the last week of transactions. An
+older one is reported as not found, which says nothing about a proof.
+This tool has no record of Stellar deployments: the report names the
+contract and the SHA-256 of its code, and says it is not on record.
+
+### Run on the test network
+
+On 2026-10-14 the two `verify_proof` transactions of that night's test run
+in Nethermind's repository (`10dd8ab5…` and `50d4bc8d…`, ledgers 5184196
+and 5184198) were looked up through the public testnet RPC. In each, the
+network had accepted the transaction, the key had last changed at ledger
+5184194, before it, and the proof passed here under Barretenberg 0.87.0. So
+the contract and this tool agree on those two real proofs. The answers for
+the first are kept as a test fixture, so the tests need no network.
+
+### Not done on Stellar
+
+- Stellar's main network. Only the test network is approved.
+- Stellar Private Payments transactions, whose pool contracts take Groth16
+  proofs in their own call shapes; the RISC Zero verifier, which has no
+  deployment on record in its repository; and the two example contracts
+  in the UltraHonk repository (`identity`, `tornado_classic`).
+- Checking the provider's answers against the network itself.
+

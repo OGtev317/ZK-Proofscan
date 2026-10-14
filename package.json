@@ -23,6 +23,7 @@
   "dependencies": {
     "@aztec/bb.js": "5.2.1",
     "@noble/hashes": "2.4.0",
+    "@stellar/stellar-base": "15.0.0",
     "aztec-bb-js-0-87-0": "npm:@aztec/bb.js@0.87.0",
     "snarkjs": "0.7.6",
     "swiftness": "1.0.0"

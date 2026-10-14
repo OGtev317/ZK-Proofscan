@@ -115,10 +115,10 @@ describe('reading a proof out of a transaction', () => {
 
   it('says a contract is on record only for the recorded address on the recorded chain', async () => {
     const elsewhere = await find({ transaction: transactionWith({ to: `0x${'33'.repeat(20)}` }) });
-    expect(elsewhere.found && elsewhere.source.contractOnRecord).toBe(false);
+    expect(elsewhere.found && elsewhere.source.kind === 'evm-transaction' && elsewhere.source.contractOnRecord).toBe(false);
     expect(elsewhere.found && renderChainSource(elsewhere.source)).toContain('which is not a deployment this tool has on record');
     const mainnet = await lookupTransaction({ chain: CHAINS[0]!, transaction: HASH, rpc: fake({ chainId: '0x1' }), keyText: recordedKeyText });
-    expect(mainnet.found && mainnet.source.contractOnRecord).toBe(false);
+    expect(mainnet.found && mainnet.source.kind === 'evm-transaction' && mainnet.source.contractOnRecord).toBe(false);
   });
 
   it('declines, without calling anything invalid, when there is no proof to read', async () => {

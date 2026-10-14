@@ -248,8 +248,10 @@ Not tested or not done:
 
 The owner forwarded three candidates for proofs used on Stellar and asked
 for the libraries to be added. Each was read at a pinned commit. Two needed
-no new library. **No Stellar network was contacted, and nothing here reads
-a Stellar transaction or contract.**
+no new library. Since 2026-10-14 the tool also reads proofs from Stellar's
+test network: `lookup --chain stellar-testnet` reads a call to the
+UltraHonk verifier contract and the key that contract stores (see the
+lookup notes).
 
 | Candidate | New library | What is built | What is not |
 | --- | --- | --- | --- |
@@ -355,7 +357,8 @@ What this does not give:
   fixture without hiding was also accepted by Nethermind's verifier, run
   locally from its source at commit `9aae958` on 2026-10-12, so the two
   agree on that one real proof. The fixture with hiding is a kind that
-  verifier does not check.
+  verifier does not check. Two real proofs that the deployed contract
+  accepted on Stellar's test network on 2026-10-14 also pass here.
 - The guard against keys with a point at infinity is a judgement from one
   real key. A real circuit whose key holds such a point would be reported
   as not checked, not as invalid.

@@ -2,9 +2,8 @@ import { isAbsolute } from 'node:path';
 import { presentCheck, presentRerun } from '../agent/presentation.js';
 import { MAX_EXPORT_CHARACTERS } from '../export.js';
 import { MAX_PROOF_PART_CHARACTERS, type ProofInputs } from '../inputs.js';
-import { CHAINS } from '../chain/rpc.js';
 import { renderChainSource } from '../chain/source.js';
-import { checkFile, checkText, lookupAndCheck, message, renderRerun, rerunFile, rerunText, saveExport } from '../node/run.js';
+import { checkFile, checkText, LOOKUP_CHAINS, lookupAndCheck, message, renderRerun, rerunFile, rerunText, saveExport } from '../node/run.js';
 import type { Report } from '../report.js';
 
 export interface ToolResult {
@@ -181,12 +180,12 @@ const lookup: Tool = {
   name: 'lookup_transaction',
   title: 'Find and check a proof in a transaction',
   description:
-    `Asks the chain data provider the operator configured for one transaction, reads a zero-knowledge proof out of it if it is a call this tool knows, and checks that proof on this machine. Read-only: it sends the transaction hash to the provider and nothing to the chain. Chains: ${CHAINS.map((chain) => chain.name).join(', ')}. The provider is trusted only for where the proof was found; the proof itself is verified here.`,
+    `Asks the chain data provider the operator configured for one transaction, reads a zero-knowledge proof out of it if it is a call this tool knows, and checks that proof on this machine. Read-only: it sends the transaction hash to the provider and nothing to the chain. Chains: ${LOOKUP_CHAINS.join(', ')}. On stellar-testnet it reads a call to Nethermind's UltraHonk verifier contract and the verification key that contract stores. The provider is trusted only for where the proof was found; the proof itself is verified here.`,
   inputSchema: {
     type: 'object',
     properties: {
-      chain: { type: 'string', description: `One of: ${CHAINS.map((chain) => chain.name).join(', ')}.` },
-      transaction: { type: 'string', description: 'The transaction hash: 0x followed by 64 hex digits.' },
+      chain: { type: 'string', description: `One of: ${LOOKUP_CHAINS.join(', ')}.` },
+      transaction: { type: 'string', description: 'The transaction hash: 0x followed by 64 hex digits, or 64 hex digits on Stellar.' },
     },
     additionalProperties: false,
   },

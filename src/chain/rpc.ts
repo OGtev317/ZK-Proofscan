@@ -2,7 +2,8 @@
 export interface RpcClient {
   /** Host name only, for reports. */
   provider: string;
-  call(method: string, params: unknown[]): Promise<unknown>;
+  /** Ethereum providers take a list of parameters; Stellar RPC takes an object. */
+  call(method: string, params: unknown[] | Record<string, unknown>): Promise<unknown>;
 }
 
 export class RpcError extends Error {}

@@ -22,9 +22,11 @@ files; version 5.2.1, or 0.87.0 with the Keccak transcript). Unless the key is o
 it cannot say what the circuit checks.
 
 lookup asks a chain data provider for a transaction, reads a proof out of it
-and checks that proof here. It only reads. It needs ALCHEMY_API_KEY or
-ZK_PROOFSCAN_RPC_URL in the environment, and sends the transaction hash to
-that provider.`;
+and checks that proof here. It only reads, and sends the transaction hash to
+that provider. Chains: ethereum, sepolia, base, base-sepolia, optimism,
+arbitrum and polygon, which need ALCHEMY_API_KEY or ZK_PROOFSCAN_RPC_URL in
+the environment; and stellar-testnet, which uses STELLAR_RPC_URL if set and
+otherwise the Stellar Development Foundation's public testnet RPC.`;
 
 // Exit codes keep "the proof is wrong" apart from "the check did not happen".
 const EXIT: Record<Report['outcome'], number> = { valid: 0, invalid: 1, unsupported: 2, error: 3 };

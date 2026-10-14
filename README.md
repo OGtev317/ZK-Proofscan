@@ -34,8 +34,9 @@ and does not say.
 Every check runs on the user's machine and can be exported as evidence
 another person reruns. One command uses a network: a proof can be looked up
 by transaction hash through a chain data provider and then checked locally.
-It has been run against one real contract, on the Sepolia test network
-([lookup notes](docs/LOOKUP.md)).
+It has been run against one real contract on the Sepolia test network,
+and on Stellar's test network against Nethermind's UltraHonk verifier
+contract ([lookup notes](docs/LOOKUP.md)).
 
 Read [the charter](docs/PROJECT_CHARTER.md), [the handoff](docs/HANDOFF.md)
 and [the prototype notes](docs/VERIFICATION_PROTOTYPE.md). What blocks a
