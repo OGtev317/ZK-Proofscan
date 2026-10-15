@@ -428,7 +428,9 @@ test('switches to Stellar from a pasted link and checks a private payment', asyn
   await expect(page.locator('#source')).toContainText('the verifier the called contract names');
   await expect(page.locator('#fact-settlement')).toHaveText('Final');
   await expect(page.locator('#proof-detail')).toContainText('On the network: verifier contract CA66PGQD3OUO5R64CMOWL3FIRAQTWORLX36ZERALPPYOJ4ORETGFO3P5');
-  expect(asked.filter((entry) => entry.endsWith('getLedgerEntries'))).toHaveLength(3);
+  // Three ledger reads find the proof and its key; the rest read the pool's interface.
+  expect(asked.filter((entry) => entry.endsWith('getLedgerEntries')).length).toBeGreaterThanOrEqual(3);
+  expect(asked.every((entry) => /(getNetwork|getTransaction|getLedgerEntries)$/.test(entry))).toBe(true);
   expect(problems).toEqual([]);
 });
 
@@ -491,6 +493,11 @@ test('replays a saved example without contacting any network, and says so', asyn
   // What else the transaction did, from its events: the deposit into the pool.
   await expect(page.locator('#plain')).toContainText('The transaction also moved 0.1 XLM from GD27GUIFNQR74WL2GSFMDHABOTKZ66SD434U7PTGGLV6DQ6AYUSQJNBE to CA73PEBSX2GXZSMMVL46PTCXY424AIMPXKI7WWUMYJXV22AVY2DXC6DQ');
   await expect(page.locator('#facts')).toContainText('Fee charged');
+  // The call's arguments and the pool's events, named by the pool's own interface, from the recording alone.
+  await expect(page.locator('#facts')).toContainText('a call to transact(proof: {asp_membership_root: 0');
+  await expect(page.locator('#facts')).toContainText('event NewCommitmentEvent(commitment:');
+  await expect(page.locator('#facts')).toContainText('names no source repository (SEP-55), so its build cannot be traced to source.');
+  await expect(page.locator('#explorer-links a').first()).toHaveAttribute('href', 'https://lab.stellar.org/r/testnet/tx/cd1d09c950ff598c329ea4a55578fea38ad674a749bd9808d8316c823cdfb6fc');
 
   // The Stellar Noir proof, checked with Barretenberg 0.87.0 in the page.
   await page.click('#saved-stellar-noir');

@@ -93,3 +93,18 @@ export const PAGE_RPCS: Record<string, string> = {
   'stellar-testnet': 'https://soroban-testnet.stellar.org',
   'stellar-mainnet': 'https://mainnet.sorobanrpc.com',
 };
+
+/** Where a reader can inspect a transaction on public explorers, to compare with this tool's account of it. */
+export function explorerLinks(network: string, hash: string): { label: string; url: string }[] {
+  const stellar: Record<string, [string, string]> = { 'stellar-testnet': ['testnet', 'testnet'], 'stellar-mainnet': ['public', 'mainnet'] };
+  if (network in stellar) {
+    const [expert, lab] = stellar[network]!;
+    return [
+      { label: 'Stellar Lab', url: `https://lab.stellar.org/r/${lab}/tx/${hash}` },
+      { label: 'stellar.expert', url: `https://stellar.expert/explorer/${expert}/tx/${hash}` },
+    ];
+  }
+  const host = Object.entries(ETHEREUM_EXPLORERS).find(([, name]) => name === network)?.[0];
+  return host === undefined ? [] : [{ label: host, url: `https://${host}/tx/${hash}` }];
+}
+

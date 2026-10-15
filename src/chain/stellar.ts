@@ -7,6 +7,8 @@ import type { StellarSource } from './source.js';
 import type { StellarAssetInfo } from './stellar-assets.js';
 import type { TransactionFacts } from './facts.js';
 import { describeMovement, readStellarActivity } from './stellar-activity.js';
+import { describeBuild, describeContractEvent, describeInvocation, readContractSpec, STANDARD_TOKEN_SPEC, type ContractSpec } from './soroban-spec.js';
+import type { CheckBuild } from './sep55.js';
 
 /** A Stellar network this tool reads. Reading only: the owner approved the test network, then the main network, on 2026-10-14 and 2026-10-15. */
 export interface StellarNetwork {
@@ -280,7 +282,7 @@ async function readPoolCall(rpc: RpcClient, contract: xdr.ScAddress, args: xdr.S
  * contracts hold. Read-only: a handful of requests, no signing, nothing sent
  * to the network. Nothing returned here is verified; the caller checks the proof.
  */
-export async function lookupStellarTransaction(parts: { network: StellarNetwork; transaction: string; rpc: RpcClient; recordedKeys: () => Promise<RecordedKey[]>; assetInfo?: StellarAssetInfo }): Promise<Lookup> {
+export async function lookupStellarTransaction(parts: { network: StellarNetwork; transaction: string; rpc: RpcClient; recordedKeys: () => Promise<RecordedKey[]>; assetInfo?: StellarAssetInfo; checkBuild?: CheckBuild }): Promise<Lookup> {
   const { network, rpc } = parts;
   const no = (reason: string): Lookup => ({ found: false, reason });
   const hash = typeof parts.transaction === 'string' ? parts.transaction.toLowerCase() : '';
@@ -316,9 +318,35 @@ export async function lookupStellarTransaction(parts: { network: StellarNetwork;
   // Read but holding no proof this tool reads: say what the transaction was.
   // What the transaction did, from its result and the events its successful execution emitted.
   const activity = readStellarActivity({ envelope, resultXdr: transaction.resultXdr, events: transaction.events, succeeded: transaction.status === 'SUCCESS' });
+  // Interfaces of the contracts involved, read once each: the called one and those that emitted other events.
+  const specs = new Map<string, Promise<ContractSpec | undefined>>();
+  const specFor = (contract: string): Promise<ContractSpec | undefined> => {
+    if (!specs.has(contract)) specs.set(contract, specs.size < MAX_SPECS ? contractSpecOf(rpc, contract) : Promise.resolve(undefined));
+    return specs.get(contract)!;
+  };
   const facts = async (withAssetNote: boolean): Promise<TransactionFacts> => {
     const { asset, ...described } = describeOperations(ops);
-    const action = asset === undefined ? described.action : `${described.action} issued by ${asset.issuer}${withAssetNote ? await assetNote(rpc, asset, parts.assetInfo) : ''}`;
+    let action = asset === undefined ? described.action : `${described.action} issued by ${asset.issuer}${withAssetNote ? await assetNote(rpc, asset, parts.assetInfo) : ''}`;
+    let build: string | undefined;
+    // A contract call's arguments, named by the contract's interface where it declares one.
+    const call = singleInvocation(ops);
+    if (call !== undefined) {
+      const spec = await specFor(call.contract);
+      action = `a call to ${describeInvocation(call.name, call.args, spec)} on contract ${call.contract}${spec === undefined ? ', its arguments not named: no interface for the contract could be read' : `, named by its ${spec.origin}`}`;
+      // How the called contract's code says it was built, and, when a checker is given, what GitHub's record adds.
+      if (spec !== undefined) {
+        const repository = spec.meta.source_repo;
+        const attestation = repository !== undefined && spec.codeHash !== undefined && parts.checkBuild !== undefined ? await parts.checkBuild(repository, spec.codeHash).catch(() => undefined) : undefined;
+        build = describeBuild(spec, attestation);
+      }
+    }
+    const events: string[] = [];
+    for (const event of activity.others) {
+      const contractId = event.contractId();
+      const spec = contractId === null || contractId === undefined ? undefined : await specFor(StrKey.encodeContract(contractId as unknown as Buffer));
+      const line = describeContractEvent(event, spec);
+      if (line !== undefined) events.push(line);
+    }
     return {
       family: 'stellar',
       provider: rpc.provider,
@@ -334,6 +362,8 @@ export async function lookupStellarTransaction(parts: { network: StellarNetwork;
       ...(activity.outcomes.length === 0 ? {} : { outcomes: activity.outcomes }),
       ...(activity.movements.length === 0 ? {} : { tokens: activity.movements.map(describeMovement) }),
       ...(activity.more ? { moreTokens: true } : {}),
+      ...(events.length === 0 ? {} : { events }),
+      ...(build === undefined ? {} : { build }),
     };
   };
   const notRead = async (reason: string): Promise<Lookup> => ({ found: false, reason, facts: await facts(true) });
@@ -454,5 +484,41 @@ async function assetNote(rpc: RpcClient, asset: { code: string; issuer: string }
   return found.confirmed
     ? `${claimed}; that domain's stellar.toml lists this asset and issuer${found.name === undefined ? '' : `, naming it "${found.name}"`}`
     : `${claimed}; that domain's stellar.toml does not list this asset and issuer, so the link is not confirmed`;
+}
+
+const MAX_SPECS = 3;
+
+/** The one contract call a transaction makes, if it makes exactly one. */
+function singleInvocation(ops: xdr.Operation[]): { contract: string; name: string; args: xdr.ScVal[] } | undefined {
+  try {
+    if (ops.length !== 1 || ops[0]!.body().switch().name !== 'invokeHostFunction') return undefined;
+    const host = ops[0]!.body().invokeHostFunctionOp().hostFunction();
+    if (host.switch().name !== 'hostFunctionTypeInvokeContract') return undefined;
+    const invoked = host.invokeContract();
+    return { contract: Address.fromScAddress(invoked.contractAddress()).toString(), name: invoked.functionName().toString(), args: invoked.args() };
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * A contract's interface: the standard token interface for a Stellar Asset
+ * Contract, which is built in and has no code; otherwise what its code
+ * declares. Read through the same provider; any failure is no interface.
+ */
+export async function contractSpecOf(rpc: RpcClient, contract: string): Promise<ContractSpec | undefined> {
+  try {
+    const address = Address.fromString(contract).toScAddress();
+    const key = xdr.LedgerKey.contractData(new xdr.LedgerKeyContractData({ contract: address, key: xdr.ScVal.scvLedgerKeyContractInstance(), durability: xdr.ContractDataDurability.persistent() })).toXDR('base64');
+    const entry = await oneEntry(rpc, key);
+    if (entry === undefined) return undefined;
+    const executable = xdr.LedgerEntryData.fromXDR(entry.xdr, 'base64').contractData().val().instance().executable();
+    if (executable.switch().name === 'contractExecutableStellarAsset') return STANDARD_TOKEN_SPEC;
+    if (executable.switch().name !== 'contractExecutableWasm') return undefined;
+    const spec = readContractSpec(await readCode(rpc, executable.wasmHash()));
+    return spec === undefined ? undefined : { ...spec, codeHash: hex(new Uint8Array(executable.wasmHash())) };
+  } catch {
+    return undefined;
+  }
 }
 

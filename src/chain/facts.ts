@@ -27,6 +27,10 @@ export interface TransactionFacts {
   memo?: string;
   /** Each operation's outcome, when the network reports them separately. */
   outcomes?: string[];
+  /** Other events the transaction emitted, their fields named by the emitting contract's interface where it has one. */
+  events?: string[];
+  /** How the called contract's code says it was built, and whether that was traced to source. */
+  build?: string;
 }
 
 const NETWORK_NAMES: Record<string, string> = {
@@ -68,6 +72,8 @@ export function factLines(facts: TransactionFacts): [string, string][] {
     ...(facts.memo === undefined ? [] : ([['Memo', facts.memo]] as [string, string][])),
     ...(facts.outcomes ?? []).map((line): [string, string] => ['Outcome', line]),
     ...(facts.tokens ?? []).map((line): [string, string] => ['Token activity', `It ${line}`]),
+    ...(facts.events ?? []).map((line): [string, string] => ['Contract event', line]),
+    ...(facts.build === undefined ? [] : ([['Contract build', facts.build]] as [string, string][])),
     ...(facts.moreTokens === true ? ([['Token activity', 'More token events were recorded than are listed here.']] as [string, string][]) : []),
   ];
 }

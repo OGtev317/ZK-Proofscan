@@ -54,7 +54,9 @@ describe('reading a proof out of a Stellar transaction', () => {
     const found = await lookupStellarTransaction({ network: testnet, transaction: HASH.toUpperCase(), rpc: fake({}, asked), recordedKeys: stellarPrivatePaymentsKeys });
     if (!found.found) throw new Error(found.reason);
     // Three reads and nothing else.
-    expect(asked).toEqual(['getNetwork', 'getTransaction', 'getLedgerEntries']);
+    // Three reads find the proof; the rest read the called contract's interface, and are only ever ledger reads.
+    expect(asked.slice(0, 3)).toEqual(['getNetwork', 'getTransaction', 'getLedgerEntries']);
+    expect(asked.slice(3).every((method) => method === 'getLedgerEntries')).toBe(true);
     expect(binaryBytes(found.inputs.proof)?.length).toBe(14592);
     expect(binaryBytes(found.inputs.verificationKey!)?.length).toBe(1760);
     expect(binaryBytes(found.inputs.publicInputs!)).toEqual(Uint8Array.from({ length: 32 }, (_, i) => (i === 31 ? 2 : 0)));
@@ -126,7 +128,8 @@ describe('reading a Stellar Private Payments pool transaction', () => {
     const found = await lookUp({}, stellarPrivatePaymentsKeys, asked);
     if (!found.found) throw new Error(found.reason);
     // The pool's storage, its verifier's storage, and the verifier's code.
-    expect(asked).toEqual(['getNetwork', 'getTransaction', 'getLedgerEntries', 'getLedgerEntries', 'getLedgerEntries']);
+    expect(asked.slice(0, 5)).toEqual(['getNetwork', 'getTransaction', 'getLedgerEntries', 'getLedgerEntries', 'getLedgerEntries']);
+    expect(asked.slice(5).every((method) => method === 'getLedgerEntries')).toBe(true);
     expect(found.source).toMatchObject({ call: 'stellar-private-payments.transact', keyFrom: 'code', keyContract: VERIFIER, keyContractCode: 'ac1c1a38199f5bfdbd4a56109ebdc99977d11343198b0ee511d3eca24ef15ace', keyLastChanged: 5190087, ledger: 5190131, status: 'succeeded' });
     // Nine public inputs, in the pool's order, for its blocklist policy: the non-membership root twice at the end.
     expect(JSON.parse(found.inputs.publicInputs!)).toHaveLength(9);
@@ -146,7 +149,8 @@ describe('reading a Stellar Private Payments pool transaction', () => {
     const found = await lookUp({}, others);
     expect(found).toMatchObject({ found: false, reason: 'no recorded Stellar Private Payments key, with this many public inputs, is in the code of the pool\'s verifier contract' });
     // What the transaction was is still said.
-    expect(found).toMatchObject({ facts: { family: 'stellar', network: 'stellar-testnet', status: 'succeeded', action: 'a call to transact on contract CA73PEBSX2GXZSMMVL46PTCXY424AIMPXKI7WWUMYJXV22AVY2DXC6DQ' } });
+    expect(found).toMatchObject({ facts: { family: 'stellar', network: 'stellar-testnet', status: 'succeeded' } });
+    expect(!found.found && found.facts?.action).toMatch(/^a call to transact\(proof: \{.*\) on contract CA73PEBSX2GXZSMMVL46PTCXY424AIMPXKI7WWUMYJXV22AVY2DXC6DQ, named by its contract interface$/);
   });
 
   it('refuses verifier code that does not match its hash', async () => {
@@ -221,7 +225,8 @@ describe('looking up on Stellar from the command line', () => {
     expect(done.status).toBe(0);
     expect(done.stdout).toMatch(/^Source, as reported by 127\.0\.0\.1 and not checked by this tool:/);
     expect(done.stdout).toContain('PASSED using @aztec/bb.js 0.87.0');
-    expect(asked).toEqual(['getNetwork', 'getTransaction', 'getLedgerEntries']);
+    expect(asked.slice(0, 3)).toEqual(['getNetwork', 'getTransaction', 'getLedgerEntries']);
+    expect(asked.slice(3).every((method) => method === 'getLedgerEntries')).toBe(true);
     const rerun = await run('rerun', exported);
     expect(rerun.status).toBe(0);
     expect(rerun.stdout).toContain('Source recorded in the export');
@@ -333,7 +338,132 @@ describe('what a Stellar transaction did', async () => {
     expect(deposit.facts?.fee).toBe('5.1966795 XLM');
     const envelope = xdr.TransactionEnvelope.fromXDR(pool.getTransaction!.envelopeXdr as string, 'base64');
     expect(readStellarActivity({ envelope, events: pool.getTransaction!.events, succeeded: false }).movements).toEqual([]);
+    // A real transfer event, presented as a diagnostic event, is not a completed movement: only committed execution events are read.
+    const transfer = ((payment.getTransaction!.events as { contractEventsXdr: string[][] }).contractEventsXdr[0]![0])!;
+    const paymentEnvelope = xdr.TransactionEnvelope.fromXDR(payment.getTransaction!.envelopeXdr as string, 'base64');
+    expect(readStellarActivity({ envelope: paymentEnvelope, events: { contractEventsXdr: [[transfer]] }, succeeded: true }).movements).toHaveLength(1);
+    for (const events of [{ diagnosticEventsXdr: [transfer] }, { diagnosticEventsXdr: [transfer], contractEventsXdr: [] }, { transactionEventsXdr: [transfer] }]) {
+      expect(readStellarActivity({ envelope: paymentEnvelope, events, succeeded: true }).movements, JSON.stringify(Object.keys(events))).toEqual([]);
+    }
+    // Nor is one from a transaction that failed.
+    expect(readStellarActivity({ envelope: paymentEnvelope, events: { contractEventsXdr: [[transfer]] }, succeeded: false }).movements).toEqual([]);
     // An answer recorded without its result or events gives less, never something wrong.
-    expect(readStellarActivity({ envelope, succeeded: true })).toEqual({ outcomes: [], movements: [], more: false });
+    expect(readStellarActivity({ envelope, succeeded: true })).toEqual({ outcomes: [], movements: [], more: false, others: [] });
   });
 });
+
+describe('typed Soroban calls and events', async () => {
+  const { readContractSpec, describeInvocation, describeContractEvent, STANDARD_TOKEN_SPEC } = await import('../src/chain/soroban-spec.js');
+  const { contractSpecOf } = await import('../src/chain/stellar.js');
+  const { describeMovement } = await import('../src/chain/stellar-activity.js');
+  const { xdr, Address, nativeToScVal, StrKey } = await import('@stellar/stellar-base');
+  const poolAnswers = JSON.parse(readFileSync(join(root, 'tests/fixtures/stellar-testnet/private-payments/answers.json'), 'utf8')) as { getLedgerEntries: Record<string, { entries: { xdr: string }[] }> };
+  // The pool's code, as recorded: the one ledger entry that is contract code and declares a transact function.
+  const codes = Object.values(poolAnswers.getLedgerEntries).flatMap((answer) => answer.entries).map((entry) => xdr.LedgerEntryData.fromXDR(entry.xdr, 'base64')).filter((data) => data.switch().name === 'contractCode').map((data) => new Uint8Array(data.contractCode().code()));
+  const poolSpec = codes.map(readContractSpec).find((spec) => spec?.functions.has('transact'));
+  const POOL = 'CA73PEBSX2GXZSMMVL46PTCXY424AIMPXKI7WWUMYJXV22AVY2DXC6DQ';
+  const ALICE = 'GD27GUIFNQR74WL2GSFMDHABOTKZ66SD434U7PTGGLV6DQ6AYUSQJNBE';
+
+  it('reads a contract\'s functions and events from the interface its code declares', () => {
+    expect(poolSpec?.origin).toBe('contract interface');
+    expect(poolSpec?.functions.get('transact')).toEqual(['proof', 'ext_data', 'sender']);
+    expect(poolSpec?.events.find((event) => event.name === 'NewCommitmentEvent')).toMatchObject({ prefix: ['new_commitment_event'], topics: ['commitment'], data: ['index', 'encrypted_output'], format: 'map' });
+    expect(readContractSpec(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]))).toBeUndefined();
+    expect(readContractSpec(new Uint8Array([1, 2, 3]))).toBeUndefined();
+  });
+
+  it('names a call\'s arguments where the interface matches, and numbers them where it does not', () => {
+    const args = [nativeToScVal(Address.fromString(ALICE)), nativeToScVal(Address.fromString(POOL)), nativeToScVal(10n, { type: 'i128' })];
+    expect(describeInvocation('transfer', args, STANDARD_TOKEN_SPEC)).toBe(`transfer(from: ${ALICE}, to: ${POOL}, amount: 10)`);
+    expect(describeInvocation('transfer', args, undefined)).toBe(`transfer(argument 1: ${ALICE}, argument 2: ${POOL}, argument 3: 10)`);
+    expect(describeInvocation('transfer', args.slice(0, 2), STANDARD_TOKEN_SPEC)).toContain('argument 1:');
+    expect(describeInvocation('<b>', args, STANDARD_TOKEN_SPEC)).toBe('a call to a function with an unusual name');
+  });
+
+  it('names an event\'s fields from its contract\'s interface, and shows an unmatched one as it is', () => {
+    const contractId = StrKey.decodeContract(POOL);
+    const event = new xdr.ContractEvent({
+      ext: new xdr.ExtensionPoint(0),
+      contractId: contractId as never,
+      type: xdr.ContractEventType.contract(),
+      body: new xdr.ContractEventBody(0, new xdr.ContractEventV0({
+        topics: [xdr.ScVal.scvSymbol('new_nullifier_event'), nativeToScVal(7n, { type: 'u256' })],
+        data: xdr.ScVal.scvMap([]),
+      })),
+    });
+    expect(describeContractEvent(event, poolSpec)).toBe(`event NewNullifierEvent(nullifier: 7) from contract ${POOL}`);
+    expect(describeContractEvent(event, undefined)).toBe(`event "new_nullifier_event" from contract ${POOL}, not named by an interface: topics [new_nullifier_event, 7], data {}`);
+  });
+
+  it('gives a Stellar Asset Contract the standard token interface, since it has no code', async () => {
+    const contract = Address.fromString(POOL).toScAddress();
+    const key = xdr.LedgerKey.contractData(new xdr.LedgerKeyContractData({ contract, key: xdr.ScVal.scvLedgerKeyContractInstance(), durability: xdr.ContractDataDurability.persistent() })).toXDR('base64');
+    const entry = xdr.LedgerEntryData.contractData(new xdr.ContractDataEntry({
+      ext: new xdr.ExtensionPoint(0),
+      contract,
+      key: xdr.ScVal.scvLedgerKeyContractInstance(),
+      durability: xdr.ContractDataDurability.persistent(),
+      val: xdr.ScVal.scvContractInstance(new xdr.ScContractInstance({ executable: xdr.ContractExecutable.contractExecutableStellarAsset(), storage: null })),
+    })).toXDR('base64');
+    const rpc = { provider: 'p', call: async (_method: string, params: unknown) => ((params as { keys: string[] }).keys[0] === key ? { entries: [{ key, xdr: entry, lastModifiedLedgerSeq: 1 }] } : { entries: [] }) };
+    expect(await contractSpecOf(rpc, POOL)).toBe(STANDARD_TOKEN_SPEC);
+    expect(await contractSpecOf({ provider: 'p', call: async () => ({ entries: [] }) }, POOL)).toBeUndefined();
+    expect(await contractSpecOf({ provider: 'p', call: async () => Promise.reject(new Error('down')) }, POOL)).toBeUndefined();
+  });
+
+  it('flags an unlimited allowance on a Stellar token', () => {
+    const unlimited = describeMovement({ kind: 'approve', asset: { kind: 'issued', code: 'USDC', issuer: 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN' }, from: ALICE, to: POOL, amount: (1n << 127n) - 1n, until: 600000 });
+    expect(unlimited).toBe(`allowed ${POOL} to spend an UNLIMITED amount of USDC (issued by GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN) belonging to ${ALICE}, until ledger 600000, which lets it move all of it until then`);
+    expect(describeMovement({ kind: 'approve', asset: { kind: 'native' }, from: ALICE, to: POOL, amount: 50_000_000n, until: 9 })).toBe(`allowed ${POOL} to spend up to 5 XLM belonging to ${ALICE}, until ledger 9`);
+  });
+});
+
+describe('how a contract was built (SEP-55), and where else to look', async () => {
+  const { githubAttestations } = await import('../src/chain/sep55.js');
+  const { describeBuild } = await import('../src/chain/soroban-spec.js');
+  const { explorerLinks } = await import('../src/chain/reference.js');
+  const recordedAttestation = readFileSync(join(root, 'tests/fixtures/sep55/reflector-dao-attestation.json'), 'utf8');
+  const CODE = 'f60d33ec57eecee04b52d048c1c079983ff1b3834c8195fea811b025fb889361';
+
+  it('reads GitHub\'s attestation for a contract\'s code, and refuses a mismatch', async () => {
+    const real = globalThis.fetch;
+    const asked: string[] = [];
+    const serve = (body: string, status = 200) => (async (url: string | URL | Request) => (asked.push(String(url)), new Response(body, { status }))) as typeof fetch;
+    try {
+      globalThis.fetch = serve(recordedAttestation);
+      const check = githubAttestations();
+      expect(await check('github:reflector-network/reflector-dao-contract', CODE)).toEqual({ found: true, matches: true, commit: 'ac9740f12a50a81c1b96d1e8d929a6066d2d00a8' });
+      expect(asked).toEqual([`https://api.github.com/repos/reflector-network/reflector-dao-contract/attestations/sha256:${CODE}`]);
+      // The same record does not vouch for another repository or other code.
+      expect(await check('github:someone/else', CODE)).toMatchObject({ found: true, matches: false });
+      expect(await check('github:reflector-network/reflector-dao-contract', '0'.repeat(64))).toMatchObject({ found: true, matches: false });
+      globalThis.fetch = serve('{"message":"Not Found"}', 404);
+      expect(await check('github:reflector-network/reflector-dao-contract', CODE)).toEqual({ found: false });
+      asked.length = 0;
+      for (const [repository, code] of [['gitlab:a/b', CODE], ['github:a/b/c', CODE], ['github:a/b', 'xyz']]) expect(await check(repository!, code!)).toBeUndefined();
+      expect(asked).toEqual([]);
+    } finally {
+      globalThis.fetch = real;
+    }
+  });
+
+  it('says what a contract\'s code claims about its build, and how far that was checked', () => {
+    const spec = (meta: Record<string, string>) => ({ functions: new Map(), events: [], origin: 'contract interface' as const, meta });
+    const tools = { rsver: '1.97.1', rssdkver: '28.0.0#48d5067', cliver: '28.1.0#c0f4d0d' };
+    expect(describeBuild(spec(tools))).toBe('Its code says it was built with Rust 1.97.1, soroban-sdk 28.0.0, stellar-cli 28.1.0, and names no source repository (SEP-55), so its build cannot be traced to source.');
+    const claimed = spec({ ...tools, source_repo: 'github:reflector-network/reflector-dao-contract' });
+    expect(describeBuild(claimed)).toContain("that was not checked against GitHub's build attestations");
+    expect(describeBuild(claimed, { found: false })).toContain('GitHub has no build attestation for this exact code');
+    expect(describeBuild(claimed, { found: true, matches: false })).toContain('names a different repository, so the claim does not hold');
+    expect(describeBuild(claimed, { found: true, matches: true, commit: 'ac9740f12a50a81c1b96d1e8d929a6066d2d00a8' })).toContain("GitHub's attestation for this exact code names that repository at commit ac9740f12a50a81c1b96d1e8d929a6066d2d00a8. The attestation's signature was not checked here");
+    expect(describeBuild({ ...claimed, meta: { source_repo: 'javascript:alert(1)' } })).toContain('names no source repository');
+  });
+
+  it('links to the explorers that show the same transaction', () => {
+    expect(explorerLinks('stellar-testnet', HASH)).toEqual([{ label: 'Stellar Lab', url: `https://lab.stellar.org/r/testnet/tx/${HASH}` }, { label: 'stellar.expert', url: `https://stellar.expert/explorer/testnet/tx/${HASH}` }]);
+    expect(explorerLinks('stellar-mainnet', HASH)[1]?.url).toBe(`https://stellar.expert/explorer/public/tx/${HASH}`);
+    expect(explorerLinks('base-sepolia', `0x${HASH}`)).toEqual([{ label: 'sepolia.basescan.org', url: `https://sepolia.basescan.org/tx/0x${HASH}` }]);
+    expect(explorerLinks('nowhere', HASH)).toEqual([]);
+  });
+});
+

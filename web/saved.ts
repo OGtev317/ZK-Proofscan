@@ -4,7 +4,7 @@
 // same lookup as a live one; nothing is fetched from the network.
 import noProofUrl from '../tests/fixtures/stellar-testnet/not-a-proof/answers.json?url';
 import poolUrl from '../tests/fixtures/stellar-testnet/private-payments/answers.json?url';
-import ultraHonkUrl from '../tests/fixtures/stellar-testnet/answers.json?url';
+import ultraHonkUrl from '../tests/fixtures/stellar-testnet/ultrahonk/answers.json?url';
 
 export interface SavedExample {
   id: string;

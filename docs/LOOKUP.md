@@ -395,3 +395,39 @@ example, shows the 0.1 XLM it moved into the pool. Tested on a real
 mainnet USDC payment and the private-payment transaction; the saved
 examples were recorded again with these fields on 2026-10-15.
 
+## Typed Soroban calls and events, and how a contract was built
+
+Added 2026-10-15. A Soroban contract's code declares its interface
+(SEP-48, the `contractspecv0` section): its functions' parameter names and
+its events' fields. The lookup reads the called contract's code through
+the same RPC and names the call's arguments, and names the fields of
+other events the transaction emitted (at most three contracts' interfaces
+per lookup). A Stellar Asset Contract is built into the network and has no
+code, so it is given the standard token interface (SEP-41). With no
+interface, values are shown as they are, numbered. An interface names
+things; it does not establish what the contract does or that it does it
+correctly. Standard token allowances (`approve`) are read like the other
+token events, with an unlimited one flagged.
+
+A contract's code may also carry metadata (`contractmetav0`): the toolchain
+it was built with and, under SEP-55, its source repository. The report
+gives both as the code's claim. On the command line, when a repository is
+named, the tool asks GitHub's API for the build attestation of that exact
+code hash and checks it names the same code and repository, reporting the
+commit; `ZK_PROOFSCAN_SEP55=off` asks GitHub nothing. The attestation's
+signature (a Sigstore bundle) is not verified here, so that answer rests
+on GitHub's API, and an attestation shows how code was built, not that the
+source is correct or safe. Neither testnet contract here names a source
+repository; the attestation reader was tested on a real Reflector release.
+
+Each looked-up result also links to Stellar Lab and stellar.expert, or to
+the chain's Etherscan-family explorer, for comparison.
+
+Tests pin that only a successful transaction's committed events are read
+as movements: a real transfer event given as a diagnostic event, or from
+a failed transaction, is not. `humanizeEvents` from the Stellar library
+was considered and not used, since it drops whether the enclosing call
+succeeded. A local network (Quickstart) for generating test transactions
+was set aside: it means deploying contracts and signing transactions,
+which needs the owner's approval even locally.
+

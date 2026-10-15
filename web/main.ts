@@ -6,7 +6,7 @@ import noirProofUrl from '../tests/fixtures/noir/multiplier-evm.proof?url';
 import noirPublicUrl from '../tests/fixtures/noir/multiplier-evm.public_inputs?url';
 import noirKeyUrl from '../tests/fixtures/noir/multiplier-evm.vk?url';
 import { resolveTransaction } from '../src/chain/find.js';
-import { familyOf, NETWORKS, PAGE_RPCS, readTransactionReference, type ChainFamily } from '../src/chain/reference.js';
+import { explorerLinks, familyOf, NETWORKS, PAGE_RPCS, readTransactionReference, type ChainFamily } from '../src/chain/reference.js';
 import { renderChainSource, type ChainSource } from '../src/chain/source.js';
 import { MAX_EXPORT_CHARACTERS, writeExport } from '../src/export.js';
 import { factLines, type TransactionFacts } from '../src/chain/facts.js';
@@ -57,6 +57,7 @@ const unknownBlock = $<HTMLDivElement>('unknown-block');
 const unknownList = $<HTMLUListElement>('unknown');
 const factsBox = $<HTMLDivElement>('facts');
 const recordedNote = $<HTMLParagraphElement>('recorded-note');
+const explorers = $<HTMLParagraphElement>('explorer-links');
 const savedExamples = $<HTMLDivElement>('saved-examples');
 const sourceBox = $<HTMLDivElement>('source');
 const share = $<HTMLButtonElement>('share');
@@ -221,6 +222,7 @@ function show(report: Report, source?: ChainSource, recordedSource = false, fact
 
 function notChecked(message: string): void {
   current = undefined;
+  explorers.hidden = true;
   rerunResult.hidden = true;
   download.hidden = true;
   share.hidden = true;
@@ -277,6 +279,7 @@ async function checkInputs(inputs: ProofInputs): Promise<void> {
   if (response.kind !== 'check') throw new Error('unexpected answer from the verification worker');
   current = { inputs, report: response.report };
   rerunResult.hidden = true;
+  explorers.hidden = true;
   show(response.report);
   download.hidden = false;
   share.hidden = true;
@@ -373,8 +376,30 @@ async function lookUp(): Promise<void> {
   presentLookup(response, `?network=${encodeURIComponent(resolved.network)}&tx=${encodeURIComponent(resolved.hash)}`);
 }
 
+/** Links to inspect the transaction elsewhere; opening one leaves this page. */
+function showExplorers(network: string, hash: string): void {
+  const links = explorerLinks(network, hash);
+  explorers.replaceChildren(
+    'Inspect it elsewhere: ',
+    ...links.flatMap((link, index) => {
+      const anchor = document.createElement('a');
+      anchor.href = link.url;
+      anchor.textContent = link.label;
+      anchor.rel = 'noopener noreferrer';
+      anchor.target = '_blank';
+      return index === 0 ? [anchor] : [', ', anchor];
+    }),
+  );
+  explorers.hidden = links.length === 0;
+}
+
 /** Shows a lookup's answer, live or saved; `address` is the page address that repeats it. */
 function presentLookup(response: Extract<Response, { kind: 'lookup' }>, address: string): void {
+  const query = new URLSearchParams(address);
+  const saved = SAVED_EXAMPLES.find((example) => example.id === query.get('example'));
+  const network = saved?.network ?? query.get('network');
+  const hash = saved?.hash ?? query.get('tx');
+  if (network !== null && hash !== null) showExplorers(network, hash);
   recordedNote.hidden = response.recorded === undefined;
   recordedNote.textContent =
     response.recorded === undefined

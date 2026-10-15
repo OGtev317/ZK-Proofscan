@@ -9,6 +9,8 @@ import { Address, scValToNative, StrKey, xdr } from '@stellar/stellar-base';
  * provider's word; none is checked here.
  */
 export interface StellarActivity {
+  /** Events that are not standard token movements, for naming by their contract's interface. */
+  others: xdr.ContractEvent[];
   /** The fee charged, in XLM. */
   fee?: string;
   memo?: string;
@@ -20,7 +22,9 @@ export interface StellarActivity {
 }
 
 export interface Movement {
-  kind: 'transfer' | 'mint' | 'burn' | 'clawback';
+  kind: 'transfer' | 'mint' | 'burn' | 'clawback' | 'approve';
+  /** For an allowance: the last ledger it holds for. */
+  until?: number;
   /** The asset: XLM, an issued asset (code and issuer), or a token contract with no asset of its own. */
   asset: { kind: 'native' } | { kind: 'issued'; code: string; issuer: string } | { kind: 'contract'; contract: string };
   from?: string;
@@ -29,6 +33,8 @@ export interface Movement {
 }
 
 const MAX_MOVEMENTS = 20;
+const MAX_OTHER_EVENTS = 10;
+const I128_MAX = (1n << 127n) - 1n;
 const STROOPS = 10_000_000n;
 const words = (name: string): string => name.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
 
@@ -54,6 +60,10 @@ export function describeMovement(movement: Movement): string {
       return `destroyed ${amount} held by ${movement.from}`;
     case 'clawback':
       return `clawed back ${amount} from ${movement.from}`;
+    case 'approve':
+      return movement.amount >= I128_MAX >> 1n
+        ? `allowed ${movement.to} to spend an UNLIMITED amount of ${amount.replace(/^\S+ /, '')} belonging to ${movement.from}, until ledger ${movement.until}, which lets it move all of it until then`
+        : `allowed ${movement.to} to spend up to ${amount} belonging to ${movement.from}, until ledger ${movement.until}`;
   }
 }
 
@@ -97,7 +107,7 @@ function readMovement(event: xdr.ContractEvent): Movement | undefined {
   const body = event.body().v0();
   const topics = body.topics();
   const name = topics[0] === undefined ? undefined : native(topics[0]);
-  const amount = amountOf(body.data());
+  const amount = amountOf(body.data()) ?? (name === 'approve' ? 0n : undefined);
   if (amount === undefined || typeof name !== 'string') return undefined;
   // The asset topic is last when present; a token contract without one is named by its address.
   const withAsset = (count: number): Movement['asset'] => assetTopic(topics.length === count + 1 ? topics[count] : undefined) ?? { kind: 'contract', contract };
@@ -110,6 +120,13 @@ function readMovement(event: xdr.ContractEvent): Movement | undefined {
     const hasAsset = assetTopic(topics[topics.length - 1]) !== undefined;
     const to = account(topics[hasAsset ? topics.length - 2 : topics.length - 1]!);
     return to === undefined ? undefined : { kind: 'mint', asset: hasAsset ? assetTopic(topics[topics.length - 1])! : { kind: 'contract', contract }, to, amount };
+  }
+  // approve(from, spender, [asset]) with data [amount, live_until_ledger] (SEP-41).
+  if (name === 'approve' && (topics.length === 3 || topics.length === 4)) {
+    const [from, to] = [account(topics[1]!), account(topics[2]!)];
+    const data = native(body.data());
+    if (from === undefined || to === undefined || !Array.isArray(data) || typeof data[0] !== 'bigint' || typeof data[1] !== 'number') return undefined;
+    return { kind: 'approve', asset: withAsset(3), from, to, amount: data[0], until: data[1] };
   }
   if ((name === 'burn' || name === 'clawback') && topics.length >= 2 && topics.length <= 4) {
     const hasAsset = assetTopic(topics[topics.length - 1]) !== undefined;
@@ -161,7 +178,7 @@ function readOutcomes(result: xdr.TransactionResult): string[] {
  * never something wrong.
  */
 export function readStellarActivity(answer: { envelope: xdr.TransactionEnvelope; resultXdr?: unknown; events?: unknown; succeeded: boolean }): StellarActivity {
-  const activity: StellarActivity = { outcomes: [], movements: [], more: false };
+  const activity: StellarActivity = { outcomes: [], movements: [], more: false, others: [] };
   try {
     const tx = answer.envelope.switch().name === 'envelopeTypeTxFeeBump' ? answer.envelope.feeBump().tx().innerTx().v1().tx() : answer.envelope.v1().tx();
     const memo = readMemo(tx.memo());
@@ -185,13 +202,17 @@ export function readStellarActivity(answer: { envelope: xdr.TransactionEnvelope;
       if (!Array.isArray(list)) continue;
       for (const encoded of list) {
         if (typeof encoded !== 'string') continue;
-        let movement: Movement | undefined;
+        let event: xdr.ContractEvent;
         try {
-          movement = readMovement(xdr.ContractEvent.fromXDR(encoded, 'base64'));
+          event = xdr.ContractEvent.fromXDR(encoded, 'base64');
         } catch {
-          movement = undefined;
+          continue;
         }
-        if (movement === undefined) continue;
+        const movement = readMovement(event);
+        if (movement === undefined) {
+          if (activity.others.length < MAX_OTHER_EVENTS) activity.others.push(event);
+          continue;
+        }
         if (activity.movements.length === MAX_MOVEMENTS) {
           activity.more = true;
           break;
