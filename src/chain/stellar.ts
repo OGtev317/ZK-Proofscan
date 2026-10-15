@@ -4,6 +4,7 @@ import { sha256Hex } from '../sha256.js';
 import type { Lookup } from './lookup.js';
 import { RpcError, type RpcClient } from './rpc.js';
 import type { StellarSource } from './source.js';
+import type { StellarAssetInfo } from './stellar-assets.js';
 
 /** A Stellar network this tool reads. Reading only: the owner approved the test network, then the main network, on 2026-10-14 and 2026-10-15. */
 export interface StellarNetwork {
@@ -277,7 +278,7 @@ async function readPoolCall(rpc: RpcClient, contract: xdr.ScAddress, args: xdr.S
  * contracts hold. Read-only: a handful of requests, no signing, nothing sent
  * to the network. Nothing returned here is verified; the caller checks the proof.
  */
-export async function lookupStellarTransaction(parts: { network: StellarNetwork; transaction: string; rpc: RpcClient; recordedKeys: () => Promise<RecordedKey[]> }): Promise<Lookup> {
+export async function lookupStellarTransaction(parts: { network: StellarNetwork; transaction: string; rpc: RpcClient; recordedKeys: () => Promise<RecordedKey[]>; assetInfo?: StellarAssetInfo }): Promise<Lookup> {
   const { network, rpc } = parts;
   const no = (reason: string): Lookup => ({ found: false, reason });
   const hash = typeof parts.transaction === 'string' ? parts.transaction.toLowerCase() : '';
@@ -311,20 +312,25 @@ export async function lookupStellarTransaction(parts: { network: StellarNetwork;
 
   const ops = operations(envelope) ?? [];
   // Read but holding no proof this tool reads: say what the transaction was.
-  const notRead = (reason: string): Lookup => ({
-    found: false,
-    reason,
-    facts: {
-      family: 'stellar',
-      provider: rpc.provider,
-      network: network.name,
-      transaction: hash,
-      position: ledger,
-      status: transaction.status === 'SUCCESS' ? 'succeeded' : 'failed',
-      from: sender,
-      ...describeOperations(ops),
-    },
-  });
+  const notRead = async (reason: string): Promise<Lookup> => {
+    const { asset, ...described } = describeOperations(ops);
+    const action = asset === undefined ? described.action : `${described.action} issued by ${asset.issuer}${await assetNote(rpc, asset, parts.assetInfo)}`;
+    return {
+      found: false,
+      reason,
+      facts: {
+        family: 'stellar',
+        provider: rpc.provider,
+        network: network.name,
+        transaction: hash,
+        position: ledger,
+        status: transaction.status === 'SUCCESS' ? 'succeeded' : 'failed',
+        from: sender,
+        ...described,
+        action,
+      },
+    };
+  };
   if (ops.length !== 1 || ops[0]!.body().switch().name !== 'invokeHostFunction') return notRead('the transaction is not a call this tool reads a proof from');
   const host = ops[0]!.body().invokeHostFunctionOp().hostFunction();
   if (host.switch().name !== 'hostFunctionTypeInvokeContract') return notRead('the transaction is not a call this tool reads a proof from');
@@ -381,7 +387,7 @@ const OPERATIONS: Record<string, string> = {
 const words = (name: string): string => OPERATIONS[name] ?? name.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
 
 /** What a Stellar transaction's operations did, and the one contract or account involved when there is one. */
-function describeOperations(ops: xdr.Operation[]): { action: string; to?: string } {
+function describeOperations(ops: xdr.Operation[]): { action: string; to?: string; asset?: { code: string; issuer: string } } {
   if (ops.length === 1) {
     const body = ops[0]!.body();
     const kind = body.switch().name;
@@ -400,10 +406,13 @@ function describeOperations(ops: xdr.Operation[]): { action: string; to?: string
         const payment = body.paymentOp();
         const kind = payment.asset().switch().name;
         const code = (bytes: Uint8Array): string => new TextDecoder().decode(bytes).replace(/\0+$/, '');
-        const asset = kind === 'assetTypeNative' ? 'XLM' : kind === 'assetTypeCreditAlphanum4' ? code(payment.asset().alphaNum4().assetCode()) : kind === 'assetTypeCreditAlphanum12' ? code(payment.asset().alphaNum12().assetCode()) : 'an asset';
         const amount = (Number(payment.amount().toBigInt()) / 1e7).toString();
         const to = StrKey.encodeEd25519PublicKey(payment.destination().switch().name === 'keyTypeEd25519' ? payment.destination().ed25519() : payment.destination().med25519().ed25519());
-        return { action: `a payment of ${amount} ${asset}`, to };
+        if (kind === 'assetTypeNative') return { action: `a payment of ${amount} XLM`, to };
+        // An issued asset is its code and its issuer together: the code alone is not unique.
+        const credit = kind === 'assetTypeCreditAlphanum4' ? payment.asset().alphaNum4() : payment.asset().alphaNum12();
+        const asset = { code: code(credit.assetCode()), issuer: StrKey.encodeEd25519PublicKey(credit.issuer().ed25519()) };
+        return { action: `a payment of ${amount} ${asset.code}`, to, asset };
       }
     } catch {
       // Described by its kind alone below.
@@ -413,3 +422,30 @@ function describeOperations(ops: xdr.Operation[]): { action: string; to?: string
   const kinds = [...new Set(ops.map((op) => words(op.body().switch().name)))];
   return { action: `${ops.length} operations: ${kinds.join('; ')}` };
 }
+
+/**
+ * What can be said about who issued an asset: the home domain the issuer's
+ * account declares, read from the ledger, and, when a checker is given,
+ * whether that domain's stellar.toml lists this asset and issuer. Any
+ * failure leaves the note shorter, never wrong.
+ */
+async function assetNote(rpc: RpcClient, asset: { code: string; issuer: string }, check: StellarAssetInfo | undefined): Promise<string> {
+  let domain: string | undefined;
+  try {
+    const key = xdr.LedgerKey.account(new xdr.LedgerKeyAccount({ accountId: xdr.PublicKey.publicKeyTypeEd25519(StrKey.decodeEd25519PublicKey(asset.issuer)) })).toXDR('base64');
+    const entry = await oneEntry(rpc, key);
+    const declared = entry === undefined ? '' : xdr.LedgerEntryData.fromXDR(entry.xdr, 'base64').account().homeDomain().toString();
+    domain = /^[a-z0-9.-]{1,253}$/i.test(declared) ? declared.toLowerCase() : undefined;
+  } catch {
+    domain = undefined;
+  }
+  if (domain === undefined) return ', whose account names no home domain';
+  const claimed = `, whose account names ${domain} as its home domain`;
+  const found = check === undefined ? undefined : await check(domain, asset.code, asset.issuer).catch(() => undefined);
+  if (found === undefined) return `${claimed} (not checked against that domain's stellar.toml)`;
+  if (found.missing === true) return `${claimed}; that domain publishes no stellar.toml, so the link is not confirmed`;
+  return found.confirmed
+    ? `${claimed}; that domain's stellar.toml lists this asset and issuer${found.name === undefined ? '' : `, naming it "${found.name}"`}`
+    : `${claimed}; that domain's stellar.toml does not list this asset and issuer, so the link is not confirmed`;
+}
+

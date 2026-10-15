@@ -247,3 +247,59 @@ describe('looking up on Stellar from the command line', () => {
     expect(result.kind === 'not-checked' && result.reason).toContain('stellar-testnet');
   });
 });
+
+describe('an issued Stellar asset', async () => {
+  const { recordedRpc } = await import('../src/chain/recorded.js');
+  const { stellarTomlCheck } = await import('../src/chain/stellar-assets.js');
+  const payment = JSON.parse(readFileSync(join(root, 'tests/fixtures/stellar-mainnet/usdc-payment.json'), 'utf8')) as Record<string, unknown>;
+  const mainnet = STELLAR_NETWORKS.find((network) => network.name === 'stellar-mainnet')!;
+  const PAYMENT = '2316f304739d2304c481296efd03012b5f8e8b375afdafcfe00363ffcf50ba25';
+  const ISSUER = 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN';
+  const describe_ = async (assetInfo?: Parameters<typeof lookupStellarTransaction>[0]['assetInfo']) => {
+    const found = await lookupStellarTransaction({ network: mainnet, transaction: PAYMENT, rpc: recordedRpc(payment, 'mainnet.sorobanrpc.com'), recordedKeys: stellarPrivatePaymentsKeys, ...(assetInfo === undefined ? {} : { assetInfo }) });
+    if (found.found || found.facts === undefined) throw new Error('expected facts');
+    return found.facts.action;
+  };
+
+  it('names the issuer and the home domain its account declares, and checks it only when asked', async () => {
+    expect(await describe_()).toBe(`a payment of 10 USDC issued by ${ISSUER}, whose account names circle.com as its home domain (not checked against that domain's stellar.toml)`);
+    expect(await describe_(async () => ({ confirmed: true, name: 'USD Coin' }))).toBe(`a payment of 10 USDC issued by ${ISSUER}, whose account names circle.com as its home domain; that domain's stellar.toml lists this asset and issuer, naming it "USD Coin"`);
+    expect(await describe_(async () => ({ confirmed: false }))).toContain('does not list this asset and issuer, so the link is not confirmed');
+    expect(await describe_(async () => ({ confirmed: false, missing: true }))).toContain('that domain publishes no stellar.toml, so the link is not confirmed');
+    // A checker that fails leaves the claim unchecked rather than the lookup broken.
+    expect(await describe_(async () => Promise.reject(new Error('down')))).toContain('(not checked against');
+  });
+
+  it('confirms an asset only when the file lists that code with that issuer, and reads no other domain', async () => {
+    const real = globalThis.fetch;
+    const asked: string[] = [];
+    const serve = (body: string, status = 200, url = 'https://example.org/.well-known/stellar.toml') => (async (address: string | URL | Request) => {
+      asked.push(String(address));
+      const response = new Response(body, { status });
+      Object.defineProperty(response, 'url', { value: url });
+      return response;
+    }) as typeof fetch;
+    const file = `[[CURRENCIES]]\ncode = "USDC"\nissuer = "${ISSUER}"\nname = "USD Coin"\n\n[[CURRENCIES]]\ncode = "EURC"\nissuer = "GOTHER"\nname = "<script>"\n`;
+    try {
+      globalThis.fetch = serve(file);
+      const check = stellarTomlCheck();
+      expect(await check('example.org', 'USDC', ISSUER)).toEqual({ confirmed: true, name: 'USD Coin' });
+      expect(asked).toEqual(['https://example.org/.well-known/stellar.toml']);
+      expect(await check('example.org', 'USDC', 'GSOMEONEELSE')).toEqual({ confirmed: false });
+      // A listed name that is not plain text is not repeated.
+      expect(await check('example.org', 'EURC', 'GOTHER')).toEqual({ confirmed: true });
+      globalThis.fetch = serve('', 404, 'https://www.example.org/.well-known/stellar.toml');
+      expect(await check('example.org', 'USDC', ISSUER)).toEqual({ confirmed: false, missing: true });
+      // A redirect to another domain is not that domain's file.
+      globalThis.fetch = serve(file, 200, 'https://elsewhere.example/.well-known/stellar.toml');
+      expect(await check('example.org', 'USDC', ISSUER)).toBeUndefined();
+      globalThis.fetch = serve('not = [ toml');
+      expect(await check('example.org', 'USDC', ISSUER)).toBeUndefined();
+      asked.length = 0;
+      for (const domain of ['localhost', '127.0.0.1', 'a b.com', 'x'.repeat(300)]) expect(await check(domain, 'USDC', ISSUER)).toBeUndefined();
+      expect(asked).toEqual([]);
+    } finally {
+      globalThis.fetch = real;
+    }
+  });
+});

@@ -1,4 +1,5 @@
 import type { ContractAbi } from './abi.js';
+import type { StellarAssetInfo } from './stellar-assets.js';
 import { lookupTransaction, type Lookup } from './lookup.js';
 import { readTransactionReference } from './reference.js';
 import { CHAINS, type RpcClient } from './rpc.js';
@@ -12,6 +13,8 @@ export interface RecordedFiles {
   stellarPrivatePaymentsKeys(): Promise<RecordedKey[]>;
   /** Where to find a contract's interface, to name an ordinary call; absent to ask no one. */
   contractAbi?: ContractAbi;
+  /** How to check an issued Stellar asset against its issuer's stellar.toml; absent to fetch no such file. */
+  stellarAssetInfo?: StellarAssetInfo;
 }
 
 /**
@@ -40,5 +43,5 @@ export async function findProof(network: string, hash: string, rpc: RpcClient, f
   const { lookupStellarTransaction, STELLAR_NETWORKS } = await import('./stellar.js');
   const stellar = STELLAR_NETWORKS.find((known) => known.name === network);
   if (stellar === undefined) return { found: false, reason: `the network must be one of ${[...CHAINS.map((known) => known.name), ...STELLAR_NETWORKS.map((known) => known.name)].join(', ')}` };
-  return lookupStellarTransaction({ network: stellar, transaction: hash, rpc, recordedKeys: () => files.stellarPrivatePaymentsKeys() });
+  return lookupStellarTransaction({ network: stellar, transaction: hash, rpc, recordedKeys: () => files.stellarPrivatePaymentsKeys(), ...(files.stellarAssetInfo === undefined ? {} : { assetInfo: files.stellarAssetInfo }) });
 }

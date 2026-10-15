@@ -1,6 +1,7 @@
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import type { TransactionFacts } from '../chain/facts.js';
 import { sourcifyAbi } from '../chain/abi.js';
+import { stellarTomlCheck } from '../chain/stellar-assets.js';
 import { findProof, resolveTransaction } from '../chain/find.js';
 import { CHAINS, httpRpc, rpcUrlFromEnvironment } from '../chain/rpc.js';
 import { renderChainSource, type ChainSource } from '../chain/source.js';
@@ -106,7 +107,9 @@ export async function lookupAndCheck(chainName: string | undefined, pasted: stri
   try {
     // Sourcify names an ordinary call's function; ZK_PROOFSCAN_SOURCIFY=off asks it nothing.
     const contractAbi = env.ZK_PROOFSCAN_SOURCIFY === 'off' ? {} : { contractAbi: sourcifyAbi() };
-    found = await findProof(resolved.network, resolved.hash, httpRpc(address), { keyText: recordedKeyText, stellarPrivatePaymentsKeys, ...contractAbi });
+    // An issued Stellar asset is checked against its issuer's stellar.toml; ZK_PROOFSCAN_STELLAR_TOML=off fetches none.
+    const stellarAssetInfo = env.ZK_PROOFSCAN_STELLAR_TOML === 'off' ? {} : { stellarAssetInfo: stellarTomlCheck() };
+    found = await findProof(resolved.network, resolved.hash, httpRpc(address), { keyText: recordedKeyText, stellarPrivatePaymentsKeys, ...contractAbi, ...stellarAssetInfo });
   } catch (error) {
     return { kind: 'not-checked', reason: message(error) };
   }

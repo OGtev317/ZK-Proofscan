@@ -123,6 +123,7 @@ each declares; arkworks' own licence files are beside it.
 | safe-buffer | 5.2.1 | MIT |
 | set-function-length | 1.2.2 | MIT |
 | sha.js | 2.4.12 | (MIT AND BSD-3-Clause) |
+| smol-toml | 1.9.0 | BSD-3-Clause |
 | snarkjs | 0.7.6 | GPL-3.0 |
 | swiftness | 1.0.0 | SEE LICENSE IN LICENSE |
 | to-buffer | 1.2.2 | MIT |

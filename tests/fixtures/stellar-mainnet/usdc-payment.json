@@ -1,0 +1,26 @@
+{
+  "recorded": "2026-10-15",
+  "provider": "https://mainnet.sorobanrpc.com",
+  "getNetwork": {
+    "passphrase": "Public Global Stellar Network ; September 2015"
+  },
+  "getTransaction": {
+    "status": "SUCCESS",
+    "txHash": "2316f304739d2304c481296efd03012b5f8e8b375afdafcfe00363ffcf50ba25",
+    "ledger": 64949152,
+    "createdAt": "1792031542",
+    "envelopeXdr": "AAAAAgAAAAAY0GoebPMqBWwl1zRfDok+66UhYQyL/np1xgUgHxCU3gAAGPECvqj5AATidgAAAAEAAAAADZphGAAAAABq0GVfAAAAAQAAAAo0MTY3NjUwMjI1AAAAAAABAAAAAAAAAAEAAAAA5qvjL3V3T6di6Ye4OdOCgUhu4IybpBsJyfUwiyDKgC0AAAABVVNEQwAAAAA7mRE4Dv6Yi6CokA6xz+RPNm99vpRr7QdyQPf2JN8VxQAAAAAF9eEAAAAAAAAAAAEfEJTeAAAAQHWPLyR3Rg8m/vnJhbJ49sok5fCIMdARbiyUQq3KyFUGCFPZLFOAAO81+V/P8ywUnv1Lueolk0FLkhF/oyqvXQc="
+  },
+  "getLedgerEntries": {
+    "AAAAAAAAAAA7mRE4Dv6Yi6CokA6xz+RPNm99vpRr7QdyQPf2JN8VxQ==": {
+      "entries": [
+        {
+          "key": "AAAAAAAAAAA7mRE4Dv6Yi6CokA6xz+RPNm99vpRr7QdyQPf2JN8VxQ==",
+          "xdr": "AAAAAAAAAAA7mRE4Dv6Yi6CokA6xz+RPNm99vpRr7QdyQPf2JN8VxQAAADz09GKGAgDqmAAAAA0AAAAGAAAAAAAAAAIAAAAKY2lyY2xlLmNvbQAAAAICAgAAAAQAAAAAKKK7TUYIV3/7UnKlvk/DYeZ9DXkAiCEiQf5CVfpUqwsAAAABAAAAAC5Yu4w/iyCljSCrlPo7zcDUfEUTKt59A2xgM6EbT083AAAAAQAAAAB/vD2X7Hvv7NvpzgvijYy5HkMkocUZ7dQDJH02jPKnxgAAAAEAAAAAvAafI2CeqnehpBCVI3V2CMJMv888e8Iia5sLvJeBxVQAAAABAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAA7bTkAAAAABp753d",
+          "lastModifiedLedgerSeq": 64934978
+        }
+      ],
+      "latestLedger": 64949202
+    }
+  }
+}

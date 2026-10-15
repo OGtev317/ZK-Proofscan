@@ -327,3 +327,24 @@ Sourcify in the note beside the button; the command line skips it with
 `ZK_PROOFSCAN_SOURCIFY=off`. Tested on a real mainnet WETH withdrawal.
 Production dependencies are now 120 packages.
 
+## Issued Stellar assets
+
+Added 2026-10-15 at the owner's request. A payment in an issued asset
+(anything but XLM) now names its issuer, since an asset code alone is not
+unique, and the home domain the issuer's account declares, read from the
+ledger through the same RPC. That domain is only the issuer's claim. On
+the command line the tool then fetches that domain's
+`/.well-known/stellar.toml` (SEP-1), with smol-toml 1.9.0 (BSD-3-Clause)
+to read it, and says whether the file lists this asset code with this
+issuer, which is what makes the link two-way; a redirect is followed only
+to the same domain or its `www.` form. `ZK_PROOFSCAN_STELLAR_TOML=off`
+fetches no such file. The page does not fetch it: that would mean
+contacting whatever domain an issuer names, so it reports the claim as
+not checked.
+
+Tested 2026-10-15 on a real mainnet payment of 10 USDC: Circle's issuer
+account names circle.com, which publishes no stellar.toml (its address
+redirects to www.circle.com, which answers 404), so the link is reported
+as not confirmed. The AQUA token's issuer is confirmed by aqua.network's
+file.
+
