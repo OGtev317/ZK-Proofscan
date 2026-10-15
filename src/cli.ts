@@ -65,7 +65,9 @@ async function lookup(transaction: string, chain: string | undefined, json: bool
     console.log(json ? JSON.stringify({ lookup: 'not-checked', reason: found.reason }, null, 2) : `Not checked: ${found.reason}.\nThis says nothing about whether a proof is valid.`);
     return EXIT.error;
   }
-  console.log(json ? JSON.stringify({ source: found.source, report: found.report }, null, 2) : renderLookup(found.source, found.report));
+  // What else the transaction did, as the provider reported it, follows the report.
+  const activity = found.facts === undefined || json ? '' : `\n\n${renderFacts(found.facts).replace(/^No supported proof found\. /, '')}`;
+  console.log(json ? JSON.stringify({ source: found.source, report: found.report, ...(found.facts === undefined ? {} : { facts: found.facts }) }, null, 2) : `${renderLookup(found.source, found.report)}${activity}`);
   if (exportPath !== undefined) {
     try {
       await saveExport(exportPath, found.inputs, found.report, found.source);

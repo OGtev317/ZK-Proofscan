@@ -303,3 +303,37 @@ describe('an issued Stellar asset', async () => {
     }
   });
 });
+
+describe('what a Stellar transaction did', async () => {
+  const { recordedRpc } = await import('../src/chain/recorded.js');
+  const { readStellarActivity } = await import('../src/chain/stellar-activity.js');
+  const { xdr } = await import('@stellar/stellar-base');
+  const read = (path: string) => JSON.parse(readFileSync(join(root, path), 'utf8')) as Record<string, Record<string, unknown>>;
+  const payment = read('tests/fixtures/stellar-mainnet/usdc-payment.json');
+  const pool = read('tests/fixtures/stellar-testnet/private-payments/answers.json');
+
+  it('reads the fee, the memo, each operation\'s outcome and the token movements from the network data', async () => {
+    const mainnet = STELLAR_NETWORKS.find((network) => network.name === 'stellar-mainnet')!;
+    const found = await lookupStellarTransaction({ network: mainnet, transaction: '2316f304739d2304c481296efd03012b5f8e8b375afdafcfe00363ffcf50ba25', rpc: recordedRpc(payment, 'mainnet.sorobanrpc.com'), recordedKeys: stellarPrivatePaymentsKeys });
+    if (found.found || found.facts === undefined) throw new Error('expected facts');
+    expect(found.facts).toMatchObject({
+      fee: '0.00001 XLM',
+      memo: '"4167650225"',
+      outcomes: ['operation 1 (payment): succeeded'],
+      tokens: ['moved 10 USDC (issued by GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN) from GAMNA2Q6NTZSUBLMEXLTIXYORE7OXJJBMEGIX7T2OXDAKIA7CCKN4RJV to GDTKXYZPOV3U7J3C5GD3QOOTQKAUQ3XARSN2IGYJZH2TBCZAZKAC3LFE'],
+    });
+  });
+
+  it('gives a proof transaction its facts too, and reads no movement from a failed one', async () => {
+    const found = await find({}, HASH);
+    expect(found.found).toBe(true);
+    const deposit = await lookupStellarTransaction({ network: testnet, transaction: 'cd1d09c950ff598c329ea4a55578fea38ad674a749bd9808d8316c823cdfb6fc', rpc: recordedRpc(pool, 'soroban-testnet.stellar.org'), recordedKeys: stellarPrivatePaymentsKeys });
+    if (!deposit.found) throw new Error(deposit.reason);
+    expect(deposit.facts?.tokens).toEqual(['moved 0.1 XLM from GD27GUIFNQR74WL2GSFMDHABOTKZ66SD434U7PTGGLV6DQ6AYUSQJNBE to CA73PEBSX2GXZSMMVL46PTCXY424AIMPXKI7WWUMYJXV22AVY2DXC6DQ']);
+    expect(deposit.facts?.fee).toBe('5.1966795 XLM');
+    const envelope = xdr.TransactionEnvelope.fromXDR(pool.getTransaction!.envelopeXdr as string, 'base64');
+    expect(readStellarActivity({ envelope, events: pool.getTransaction!.events, succeeded: false }).movements).toEqual([]);
+    // An answer recorded without its result or events gives less, never something wrong.
+    expect(readStellarActivity({ envelope, succeeded: true })).toEqual({ outcomes: [], movements: [], more: false });
+  });
+});

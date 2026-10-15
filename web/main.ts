@@ -144,6 +144,15 @@ function present(explained: Explained): void {
 /** A transaction that was read but holds no proof this tool reads: its facts, and nothing to check. */
 function showFacts(facts: TransactionFacts): void {
   present(explain({ facts }));
+  fillFacts(facts);
+  sourceBox.hidden = true;
+  sections.replaceChildren();
+  reportBox.hidden = false;
+  reportBox.dataset.outcome = 'no-proof';
+}
+
+/** The provider's account of the transaction, in the technical details. */
+function fillFacts(facts: TransactionFacts): void {
   const title = document.createElement('h3');
   title.textContent = 'What the provider reported about the transaction';
   const list = document.createElement('dl');
@@ -157,15 +166,12 @@ function showFacts(facts: TransactionFacts): void {
   }
   factsBox.replaceChildren(title, list);
   factsBox.hidden = false;
-  sourceBox.hidden = true;
-  sections.replaceChildren();
-  reportBox.hidden = false;
-  reportBox.dataset.outcome = 'no-proof';
 }
 
-function show(report: Report, source?: ChainSource, recordedSource = false): void {
-  present(explain(source === undefined ? { report } : { report, source }));
-  factsBox.hidden = true;
+function show(report: Report, source?: ChainSource, recordedSource = false, facts?: TransactionFacts): void {
+  present(explain(source === undefined ? { report } : { report, source, ...(facts === undefined ? {} : { facts }) }));
+  if (facts === undefined) factsBox.hidden = true;
+  else fillFacts(facts);
   if (source === undefined) {
     sourceBox.hidden = true;
     sourceBox.replaceChildren();
@@ -387,7 +393,7 @@ function presentLookup(response: Extract<Response, { kind: 'lookup' }>, address:
   if (!response.found) throw new Error(response.reason);
   current = { inputs: response.inputs, report: response.report, source: response.source, address };
   rerunResult.hidden = true;
-  show(response.report, response.source);
+  show(response.report, response.source, false, response.facts);
   download.hidden = false;
   share.hidden = false;
   // The address now names this result, so it can be shared or reloaded.

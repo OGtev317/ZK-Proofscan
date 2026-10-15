@@ -11,7 +11,7 @@ export type Response =
   | { id: number; ok: true; kind: 'check'; report: Report }
   | { id: number; ok: true; kind: 'rerun'; result: RerunResult }
   | { id: number; ok: true; kind: 'lookup'; found: false; reason: string; facts?: TransactionFacts; recorded?: string }
-  | { id: number; ok: true; kind: 'lookup'; found: true; source: ChainSource; inputs: ProofInputs; report: Report; recorded?: string }
+  | { id: number; ok: true; kind: 'lookup'; found: true; source: ChainSource; inputs: ProofInputs; report: Report; facts?: TransactionFacts; recorded?: string }
   | { id: number; ok: false; message: string };
 
 /** The worker asks the page to run one Cairo verifier build on the page's own thread. */

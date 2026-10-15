@@ -205,7 +205,7 @@ const lookup: Tool = {
     const sourceText = renderChainSource(found.source);
     return {
       content: [{ type: 'text', text: `${sourceText}\n\n${result.content[0]!.text}` }],
-      structuredContent: { ...result.structuredContent, source: found.source, sourceText },
+      structuredContent: { ...result.structuredContent, source: found.source, sourceText, ...(found.facts === undefined ? {} : { facts: found.facts }) },
     };
   },
 };

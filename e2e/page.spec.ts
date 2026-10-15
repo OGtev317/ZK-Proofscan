@@ -484,10 +484,13 @@ test('replays a saved example without contacting any network, and says so', asyn
   // `open` fails the test if anything outside the page's own address is requested.
   await page.click('#saved-stellar-private-payment');
   await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
-  await expect(page.locator('#recorded-note')).toContainText('Saved example. The provider\'s answers were recorded on 2026-10-14 and replayed here; nothing was fetched now.');
+  await expect(page.locator('#recorded-note')).toContainText('Saved example. The provider\'s answers were recorded on 2026-10-15 and replayed here; nothing was fetched now.');
   await expect(page.locator('#fact-proof')).toHaveText('Passed: two independent verifiers agree');
   await expect(page.locator('#unknown li').first()).toContainText('About the key:');
   expect(new URL(page.url()).search).toBe('?example=stellar-private-payment');
+  // What else the transaction did, from its events: the deposit into the pool.
+  await expect(page.locator('#plain')).toContainText('The transaction also moved 0.1 XLM from GD27GUIFNQR74WL2GSFMDHABOTKZ66SD434U7PTGGLV6DQ6AYUSQJNBE to CA73PEBSX2GXZSMMVL46PTCXY424AIMPXKI7WWUMYJXV22AVY2DXC6DQ');
+  await expect(page.locator('#facts')).toContainText('Fee charged');
 
   // The Stellar Noir proof, checked with Barretenberg 0.87.0 in the page.
   await page.click('#saved-stellar-noir');

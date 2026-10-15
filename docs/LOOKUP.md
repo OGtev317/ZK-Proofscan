@@ -378,3 +378,20 @@ checked from files for verifier parameters version 3.0.0 only.
 The page shows these as separate answers (network data, proof check,
 settlement) for that reason.
 
+## What a Stellar transaction did
+
+Added 2026-10-15. Every Stellar lookup, with or without a proof, now
+reports from the provider's answer: the fee charged, the memo, each
+operation's outcome (and why one failed), and the token movements the
+transaction's successful execution emitted as standard events (transfer,
+mint, burn, clawback; CAP-67 and SEP-41), which cover classic payments and
+path payments as well as Soroban tokens. A movement names its asset as XLM,
+as an issued asset with its issuer, or, for a token contract without an
+asset of its own, by the contract's address in its smallest units. A failed
+transaction emits only its fee, so no movement is read from one, and
+diagnostic events are not read at all. For a proof transaction these
+facts sit beside the proof result: a Stellar Private Payments deposit, for
+example, shows the 0.1 XLM it moved into the pool. Tested on a real
+mainnet USDC payment and the private-payment transaction; the saved
+examples were recorded again with these fields on 2026-10-15.
+

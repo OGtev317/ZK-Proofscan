@@ -1,7 +1,7 @@
 # A Stellar Private Payments pool transaction, as a provider described it
 
 `answers.json` holds what the Stellar Development Foundation's public
-testnet RPC answered on 2026-10-14 to each read request a lookup of
+testnet RPC answered on 2026-10-14, recorded again on 2026-10-15 with the result and the events its execution emitted, to each read request a lookup of
 transaction `cd1d09c950ff598c329ea4a55578fea38ad674a749bd9808d8316c823cdfb6fc`
 makes: `getNetwork`, `getTransaction`, and `getLedgerEntries` for the pool's
 storage, its verifier's storage and the verifier's code, recorded by the

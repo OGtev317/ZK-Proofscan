@@ -75,7 +75,7 @@ export const saveExport = (path: string, inputs: ProofInputs, report: Report, so
   writeFile(path, writeExport(inputs, report, source), { flag: 'wx' });
 
 export type LookedUp =
-  | { kind: 'checked'; source: ChainSource; inputs: ProofInputs; report: Report }
+  | { kind: 'checked'; source: ChainSource; inputs: ProofInputs; report: Report; facts?: TransactionFacts }
   /** Nothing was checked, and the reason is not a fault in any proof. */
   | { kind: 'not-checked'; reason: string; facts?: TransactionFacts };
 
@@ -114,7 +114,7 @@ export async function lookupAndCheck(chainName: string | undefined, pasted: stri
     return { kind: 'not-checked', reason: message(error) };
   }
   if (!found.found) return { kind: 'not-checked', reason: found.reason, ...(found.facts === undefined ? {} : { facts: found.facts }) };
-  return { kind: 'checked', source: found.source, inputs: found.inputs, report: await checkText(found.inputs) };
+  return { kind: 'checked', source: found.source, inputs: found.inputs, report: await checkText(found.inputs), ...(found.facts === undefined ? {} : { facts: found.facts }) };
 }
 
 export const renderLookup = (source: ChainSource, report: Report): string => `${renderChainSource(source)}\n\n${renderReport(report)}`;

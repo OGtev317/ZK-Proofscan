@@ -1,4 +1,4 @@
-import { plainFacts, type TransactionFacts } from './chain/facts.js';
+import { plainActivity, plainFacts, type TransactionFacts } from './chain/facts.js';
 import type { ChainSource } from './chain/source.js';
 import { plainWords } from './plain.js';
 import type { Report } from './report.js';
@@ -36,8 +36,8 @@ const settlementOf = (family: 'ethereum' | 'stellar' | undefined, position: stri
       ? { text: 'Not checked', detail: `Included in ${position}. Whether that block is finalized, and for a rollup whether its batch was settled on Ethereum, was not checked.` }
       : { text: 'Not applicable', detail: 'A proof checked from files has no transaction to settle.' };
 
-export function explain(result: { report: Report; source?: ChainSource } | { facts: TransactionFacts }): Explained {
-  if ('facts' in result) {
+export function explain(result: { report: Report; source?: ChainSource; facts?: TransactionFacts } | { facts: TransactionFacts }): Explained {
+  if (!('report' in result)) {
     const { facts } = result;
     const position = `${facts.family === 'stellar' ? 'ledger' : 'block'} ${facts.position}`;
     return {
@@ -60,7 +60,8 @@ export function explain(result: { report: Report; source?: ChainSource } | { fac
       : source.kind === 'stellar-transaction'
         ? ` On the network: verifier contract ${source.keyContract} (code SHA-256 ${source.keyContractCode.slice(0, 16)}…).`
         : ` On the network: contract ${source.to}, ${source.contractOnRecord ? 'a deployment this tool has on record' : 'not a deployment this tool has on record'}.`;
-  const base = { happened: plainWords(report, source), ...(status === undefined ? {} : { status }), settlement };
+  const activity = result.facts === undefined ? undefined : plainActivity(result.facts);
+  const base = { happened: activity === undefined ? plainWords(report, source) : `${plainWords(report, source)} ${activity}`, ...(status === undefined ? {} : { status }), settlement };
   if (report.outcome === 'unsupported' || report.outcome === 'error') {
     return { ...base, proofCheck: { text: 'Not checked', tone: 'caution', detail: `No verifier gave an answer.${onChain}` }, proves: ['Nothing was checked.'], unknown: ['Whether the proof is valid.'] };
   }

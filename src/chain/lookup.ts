@@ -11,7 +11,7 @@ import type { ChainSource } from './source.js';
  * read but holds no proof this tool reads, `facts` says what it was.
  */
 export type Lookup =
-  | { found: true; source: ChainSource; inputs: ProofInputs }
+  | { found: true; source: ChainSource; inputs: ProofInputs; facts?: TransactionFacts }
   | { found: false; reason: string; facts?: TransactionFacts };
 
 const HASH = /^0x[0-9a-f]{64}$/;

@@ -5,6 +5,8 @@ import type { Lookup } from './lookup.js';
 import { RpcError, type RpcClient } from './rpc.js';
 import type { StellarSource } from './source.js';
 import type { StellarAssetInfo } from './stellar-assets.js';
+import type { TransactionFacts } from './facts.js';
+import { describeMovement, readStellarActivity } from './stellar-activity.js';
 
 /** A Stellar network this tool reads. Reading only: the owner approved the test network, then the main network, on 2026-10-14 and 2026-10-15. */
 export interface StellarNetwork {
@@ -312,25 +314,29 @@ export async function lookupStellarTransaction(parts: { network: StellarNetwork;
 
   const ops = operations(envelope) ?? [];
   // Read but holding no proof this tool reads: say what the transaction was.
-  const notRead = async (reason: string): Promise<Lookup> => {
+  // What the transaction did, from its result and the events its successful execution emitted.
+  const activity = readStellarActivity({ envelope, resultXdr: transaction.resultXdr, events: transaction.events, succeeded: transaction.status === 'SUCCESS' });
+  const facts = async (withAssetNote: boolean): Promise<TransactionFacts> => {
     const { asset, ...described } = describeOperations(ops);
-    const action = asset === undefined ? described.action : `${described.action} issued by ${asset.issuer}${await assetNote(rpc, asset, parts.assetInfo)}`;
+    const action = asset === undefined ? described.action : `${described.action} issued by ${asset.issuer}${withAssetNote ? await assetNote(rpc, asset, parts.assetInfo) : ''}`;
     return {
-      found: false,
-      reason,
-      facts: {
-        family: 'stellar',
-        provider: rpc.provider,
-        network: network.name,
-        transaction: hash,
-        position: ledger,
-        status: transaction.status === 'SUCCESS' ? 'succeeded' : 'failed',
-        from: sender,
-        ...described,
-        action,
-      },
+      family: 'stellar',
+      provider: rpc.provider,
+      network: network.name,
+      transaction: hash,
+      position: ledger,
+      status: transaction.status === 'SUCCESS' ? 'succeeded' : 'failed',
+      from: sender,
+      ...described,
+      action,
+      ...(activity.fee === undefined ? {} : { fee: activity.fee }),
+      ...(activity.memo === undefined ? {} : { memo: activity.memo }),
+      ...(activity.outcomes.length === 0 ? {} : { outcomes: activity.outcomes }),
+      ...(activity.movements.length === 0 ? {} : { tokens: activity.movements.map(describeMovement) }),
+      ...(activity.more ? { moreTokens: true } : {}),
     };
   };
+  const notRead = async (reason: string): Promise<Lookup> => ({ found: false, reason, facts: await facts(true) });
   if (ops.length !== 1 || ops[0]!.body().switch().name !== 'invokeHostFunction') return notRead('the transaction is not a call this tool reads a proof from');
   const host = ops[0]!.body().invokeHostFunctionOp().hostFunction();
   if (host.switch().name !== 'hostFunctionTypeInvokeContract') return notRead('the transaction is not a call this tool reads a proof from');
@@ -351,6 +357,7 @@ export async function lookupStellarTransaction(parts: { network: StellarNetwork;
 
   return {
     found: true,
+    facts: await facts(false),
     inputs: read.inputs,
     source: {
       kind: 'stellar-transaction',

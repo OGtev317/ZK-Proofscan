@@ -1,7 +1,7 @@
 # A Stellar testnet transaction, as a provider described it
 
 `answers.json` holds what the Stellar Development Foundation's public
-testnet RPC (`https://soroban-testnet.stellar.org`) answered on 2026-10-14
+testnet RPC (`https://soroban-testnet.stellar.org`) answered on 2026-10-14, recorded again on 2026-10-15 with the result and the events its execution emitted,
 to the three read requests a lookup makes, for transaction
 `10dd8ab5bcfbc8395030144cdfc5cb200ce61d38e7fad533e18e3aee89bbb3b2`:
 `getNetwork`, `getTransaction` and `getLedgerEntries`. Only the fields this

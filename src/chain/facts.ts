@@ -22,6 +22,11 @@ export interface TransactionFacts {
   tokens?: string[];
   /** More token events were recorded than are listed. */
   moreTokens?: boolean;
+  /** The fee charged, in the network's own coin. */
+  fee?: string;
+  memo?: string;
+  /** Each operation's outcome, when the network reports them separately. */
+  outcomes?: string[];
 }
 
 const NETWORK_NAMES: Record<string, string> = {
@@ -59,9 +64,19 @@ export function factLines(facts: TransactionFacts): [string, string][] {
     ['Sent by', facts.from],
     ['What it did', facts.action],
     ...(facts.to === undefined ? [] : ([[facts.family === 'stellar' ? 'Contract or account' : 'To', facts.to]] as [string, string][])),
+    ...(facts.fee === undefined ? [] : ([['Fee charged', facts.fee]] as [string, string][])),
+    ...(facts.memo === undefined ? [] : ([['Memo', facts.memo]] as [string, string][])),
+    ...(facts.outcomes ?? []).map((line): [string, string] => ['Outcome', line]),
     ...(facts.tokens ?? []).map((line): [string, string] => ['Token activity', `It ${line}`]),
     ...(facts.moreTokens === true ? ([['Token activity', 'More token events were recorded than are listed here.']] as [string, string][]) : []),
   ];
+}
+
+/** The token activity alone, for a transaction whose proof is reported separately. */
+export function plainActivity(facts: TransactionFacts): string | undefined {
+  const tokens = facts.tokens ?? [];
+  if (tokens.length === 0) return undefined;
+  return `The transaction also ${tokens.slice(0, 3).join('; it ')}${tokens.length > 3 || facts.moreTokens === true ? '; and more, listed in the technical details' : ''}, according to ${facts.provider}.`;
 }
 
 export const renderFacts = (facts: TransactionFacts): string =>

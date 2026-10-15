@@ -112,7 +112,7 @@ scope.onmessage = (event) => {
         const contractAbi = request.saved === undefined ? { contractAbi: sourcifyAbi() } : {};
         const found = await findProof(request.network, request.hash, rpc, { ...recordedFiles(scanning), ...contractAbi });
         if (!found.found) scope.postMessage({ id: request.id, ok: true, kind: 'lookup', found: false, reason: found.reason, ...(found.facts === undefined ? {} : { facts: found.facts }), ...recorded });
-        else scope.postMessage({ id: request.id, ok: true, kind: 'lookup', found: true, source: found.source, inputs: found.inputs, report: await scan(found.inputs, scanning), ...recorded });
+        else scope.postMessage({ id: request.id, ok: true, kind: 'lookup', found: true, source: found.source, inputs: found.inputs, report: await scan(found.inputs, scanning), ...(found.facts === undefined ? {} : { facts: found.facts }), ...recorded });
       } else if (request.kind === 'check') {
         scope.postMessage({ id: request.id, ok: true, kind: 'check', report: await scan(request.inputs, scanning) });
       } else {
