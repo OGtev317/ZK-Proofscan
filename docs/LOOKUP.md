@@ -348,3 +348,33 @@ redirects to www.circle.com, which answers 404), so the link is reported
 as not confirmed. The AQUA token's issuer is confirmed by aqua.network's
 file.
 
+## Coverage and trust boundary, stated precisely
+
+Written 2026-10-15 after an outside review of how the tool was described.
+
+**Coverage.** Two Stellar test-network integrations are supported: calls to
+Nethermind's UltraHonk verifier contract (`rs-soroban-ultrahonk`, proofs
+from Barretenberg 0.87.0 with the Keccak transcript) and `transact` calls to
+Stellar Private Payments pools without an authority view key (pool code
+read at commit `0471e6b`, keys from commit `ef42a47`). Four real
+transactions, two of each, demonstrate those implementations at those
+versions, not Stellar's ZK activity as a whole. RISC Zero receipts are
+checked from files for verifier parameters version 3.0.0 only.
+
+**What the provider is trusted for, and what it is not.**
+
+- The transaction hash is computed here from the envelope the provider
+  sent, so a provider cannot substitute a different envelope. That the
+  transaction was included in a ledger, its execution outcome, and every
+  contract's storage are the provider's word, not checked here.
+- For a Stellar Private Payments pool, every point of a recorded key is
+  found in the verifier contract's code. That does not prove the code uses
+  those points as its key.
+- Whether the key was the one in force when the transaction ran rests on
+  the provider's report of when the contracts' storage last changed.
+- The proof itself is verified here, and that check does not depend on the
+  provider.
+
+The page shows these as separate answers (network data, proof check,
+settlement) for that reason.
+

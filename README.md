@@ -1,6 +1,9 @@
 # ZK-Proofscan
 
-Turns a supported zero-knowledge proof into a readable, checkable evidence
+An open-source Stellar proof-verification tool that turns supported
+transactions into readable reports, separating what the network data says,
+this tool's own check of the proof, and settlement. It also turns a
+supported zero-knowledge proof file into a readable, checkable evidence
 report. Instead of `0x7a2f…3b1c — Verified`, a report states:
 
 - **Claim:** what the proof establishes, in plain language.
