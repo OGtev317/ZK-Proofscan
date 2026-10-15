@@ -11,6 +11,7 @@ import { renderChainSource, type ChainSource } from '../src/chain/source.js';
 import { MAX_EXPORT_CHARACTERS, writeExport } from '../src/export.js';
 import { factLines, type TransactionFacts } from '../src/chain/facts.js';
 import { explain, type Explained } from '../src/explain.js';
+import { SAVED_EXAMPLES, type SavedExample } from './saved.js';
 import { binaryBytes, isBinaryPart, MAX_PROOF_PART_CHARACTERS, MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, partFromBytes, type ProofInputs } from '../src/inputs.js';
 import { reportSections, unreadReport, type Report } from '../src/report.js';
 import type { Request, Response, ToPage } from './protocol.js';
@@ -52,13 +53,15 @@ const provesList = $<HTMLUListElement>('proves');
 const unknownBlock = $<HTMLDivElement>('unknown-block');
 const unknownList = $<HTMLUListElement>('unknown');
 const factsBox = $<HTMLDivElement>('facts');
+const recordedNote = $<HTMLParagraphElement>('recorded-note');
+const savedExamples = $<HTMLDivElement>('saved-examples');
 const sourceBox = $<HTMLDivElement>('source');
 const share = $<HTMLButtonElement>('share');
 const examples = [$<HTMLButtonElement>('example-semaphore'), $<HTMLButtonElement>('example-tampered'), $<HTMLButtonElement>('example-risc-zero'), $<HTMLButtonElement>('example-noir'), $<HTMLButtonElement>('example-cairo')] as const;
 
 /** Longer than any supported proof takes on a phone; a check that runs past it is stopped and reported as not checked. */
 const TIME_LIMIT_MS = 300_000;
-type Sendable = { kind: 'check'; inputs: ProofInputs } | { kind: 'rerun'; export: string } | { kind: 'lookup'; network: string; hash: string };
+type Sendable = { kind: 'check'; inputs: ProofInputs } | { kind: 'rerun'; export: string } | { kind: 'lookup'; network: string; hash: string; saved?: string };
 /**
  * Each check runs in a new worker that is discarded afterwards, so no
  * verifier instance, and nothing a malformed file did to one, outlasts the
@@ -106,7 +109,7 @@ proofText.addEventListener('input', () => {
   proofText.placeholder = '';
 });
 
-let current: { inputs: ProofInputs; report: Report; source?: ChainSource; shared?: { network: string; hash: string } } | undefined;
+let current: { inputs: ProofInputs; report: Report; source?: ChainSource; address?: string } | undefined;
 
 /** Everything shown comes through textContent: no file content is ever parsed as markup. */
 /** The reader's view: what happened, the two verdicts, what the proof shows and what it does not. */
@@ -214,7 +217,7 @@ function notChecked(message: string): void {
 }
 
 async function busy(label: string, work: () => Promise<void>): Promise<void> {
-  const controls = [checkButton, proofFile, publicFile, keyFile, exportFile, lookupButton, exampleLookup, ...examples];
+  const controls = [checkButton, proofFile, publicFile, keyFile, exportFile, lookupButton, exampleLookup, ...examples, ...savedExamples.querySelectorAll('button')];
   for (const control of controls) control.disabled = true;
   status.textContent = label;
   try {
@@ -355,6 +358,16 @@ async function lookUp(): Promise<void> {
   if (!response.ok) throw new Error(response.message);
   if (response.kind !== 'lookup') throw new Error('unexpected answer from the verification worker');
   if (tried.length > 1) chooseFamily('stellar', resolved.network);
+  presentLookup(response, `?network=${encodeURIComponent(resolved.network)}&tx=${encodeURIComponent(resolved.hash)}`);
+}
+
+/** Shows a lookup's answer, live or saved; `address` is the page address that repeats it. */
+function presentLookup(response: Extract<Response, { kind: 'lookup' }>, address: string): void {
+  recordedNote.hidden = response.recorded === undefined;
+  recordedNote.textContent =
+    response.recorded === undefined
+      ? ''
+      : `Saved example. The provider's answers were recorded on ${response.recorded} and replayed here; nothing was fetched now. Any proof was checked again on this device. Whether the transaction can still be fetched from the network was not checked.`;
   if (!response.found && response.facts !== undefined) {
     // Read, but holding no proof this tool reads: show what it was rather than an error.
     current = undefined;
@@ -362,17 +375,40 @@ async function lookUp(): Promise<void> {
     download.hidden = true;
     share.hidden = true;
     showFacts(response.facts);
-    history.replaceState(null, '', `?network=${encodeURIComponent(resolved.network)}&tx=${encodeURIComponent(resolved.hash)}`);
+    history.replaceState(null, '', address);
     return;
   }
   if (!response.found) throw new Error(response.reason);
-  current = { inputs: response.inputs, report: response.report, source: response.source, shared: resolved };
+  current = { inputs: response.inputs, report: response.report, source: response.source, address };
   rerunResult.hidden = true;
   show(response.report, response.source);
   download.hidden = false;
   share.hidden = false;
   // The address now names this result, so it can be shared or reloaded.
-  history.replaceState(null, '', `?network=${encodeURIComponent(resolved.network)}&tx=${encodeURIComponent(resolved.hash)}`);
+  history.replaceState(null, '', address);
+}
+
+/** A saved example: the recorded answers, replayed through the same lookup. Nothing is sent anywhere. */
+async function runSaved(example: SavedExample): Promise<void> {
+  reportBox.hidden = true;
+  const mine = ++latest;
+  lookupText.value = example.hash;
+  chosenByHand = true;
+  chooseFamily('stellar', example.network);
+  const response = await ask({ kind: 'lookup', network: example.network, hash: example.hash, saved: example.id });
+  if (mine !== latest) return;
+  if (!response.ok) throw new Error(response.message);
+  if (response.kind !== 'lookup') throw new Error('unexpected answer from the verification worker');
+  presentLookup(response, `?example=${encodeURIComponent(example.id)}`);
+}
+for (const example of SAVED_EXAMPLES) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'quiet';
+  button.id = `saved-${example.id}`;
+  button.textContent = example.label;
+  button.addEventListener('click', () => void busy('Replaying the saved example and checking any proof on this device…', () => runSaved(example)));
+  savedExamples.append(button);
 }
 // Enter or the button: the form is never submitted anywhere.
 lookupForm.addEventListener('submit', (event) => {
@@ -386,8 +422,8 @@ exampleLookup.addEventListener('click', () => {
   void busy('Looking up the transaction, then checking its proof on this device…', lookUp);
 });
 share.addEventListener('click', () => {
-  if (current?.shared === undefined) return;
-  const link = `${location.origin}${location.pathname}?network=${encodeURIComponent(current.shared.network)}&tx=${encodeURIComponent(current.shared.hash)}`;
+  if (current?.address === undefined) return;
+  const link = `${location.origin}${location.pathname}${current.address}`;
   void navigator.clipboard.writeText(link).then(
     () => (status.textContent = 'Link copied. Opening it looks the transaction up again and checks its proof.'),
     () => (status.textContent = `Copy this link: ${link}`),
@@ -397,6 +433,8 @@ share.addEventListener('click', () => {
 // A shared link: look the transaction up as soon as the page opens.
 {
   const params = new URLSearchParams(location.search);
+  const saved = SAVED_EXAMPLES.find((example) => example.id === params.get('example'));
+  if (saved !== undefined) void busy('Replaying the saved example and checking any proof on this device…', () => runSaved(saved));
   const network = params.get('network');
   const hash = params.get('tx');
   const family = network === null ? undefined : familyOf(network);

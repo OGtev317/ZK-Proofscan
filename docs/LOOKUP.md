@@ -254,3 +254,16 @@ unknown, which for a recorded key opens with what is known about how the
 key was made. Addresses, verifier versions and the full report are under
 technical details; file checks and export reruns under advanced tools.
 
+## Saved examples
+
+Added 2026-10-15. A public Stellar RPC keeps about a week of transactions,
+so a live example stops working; the proof does not become invalid. The
+page therefore offers saved examples: the public testnet RPC's real
+answers for a Stellar Private Payments transaction, a Stellar Noir proof
+and a transaction with no proof, recorded on 2026-10-14 and 2026-10-15 and
+kept as test fixtures, are replayed through the same lookup code with no
+network request at all. The result says it is a saved example, gives the
+recording date, and says that whether the transaction can still be fetched
+was not checked. Each has a share link (`?example=…`). The Sepolia example
+stays live: Ethereum providers keep old transactions.
+

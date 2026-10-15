@@ -108,6 +108,10 @@ h3.panel-heading { margin: 1.25rem 0 .4rem; color: var(--muted); font-size: .8re
 .facts-list { margin: .4rem 0 0; display: grid; grid-template-columns: max-content 1fr; gap: .2rem .9rem; }
 .facts-list dt { color: var(--muted); }
 .facts-list dd { margin: 0; overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85rem; }
+.saved { margin: .9rem .35rem 0; }
+.saved .note { margin-bottom: .45rem; }
+.saved .examples button { min-height: 38px; padding: .4rem .8rem; font-size: .9rem; font-weight: 650; }
+.recorded { margin: .5rem 0 0; padding: .6rem .8rem; border: 1px dashed var(--caution); border-radius: 8px; color: var(--muted); font-size: .9rem; }
 @media (max-width: 640px) {
   main { padding-top: 2rem; }
   .search-bar { display: grid; }

@@ -73,3 +73,15 @@ describe('the reader\'s view of a result', () => {
     expect(unchecked).toMatchObject({ proofCheck: { text: 'Not checked' }, proves: ['Nothing was checked.'], unknown: ['Whether the proof is valid.'] });
   });
 });
+
+describe('a saved example\'s recorded answers', () => {
+  it('answers only what was recorded, by method and by ledger key, and refuses the rest', async () => {
+    const { recordedRpc } = await import('../src/chain/recorded.js');
+    const rpc = recordedRpc({ getNetwork: { passphrase: 'p' }, getLedgerEntries: { keyA: { entries: [] } } }, 'soroban-testnet.stellar.org');
+    expect(rpc.provider).toBe('soroban-testnet.stellar.org');
+    expect(await rpc.call('getNetwork', {})).toEqual({ passphrase: 'p' });
+    expect(await rpc.call('getLedgerEntries', { keys: ['keyA'] })).toEqual({ entries: [] });
+    await expect(rpc.call('getLedgerEntries', { keys: ['keyB'] })).rejects.toThrow('the saved example holds no answer for this request');
+    await expect(rpc.call('getTransaction', { hash: 'x' })).rejects.toThrow('the saved example holds no answer for this request');
+  });
+});

@@ -27,7 +27,11 @@
         </form>
         <div class="lookup-meta">
           <p id="lookup-note" class="note"></p>
-          <button id="example-lookup" type="button" class="text-button">Try an example</button>
+          <button id="example-lookup" type="button" class="text-button">Try a live example</button>
+        </div>
+        <div class="saved">
+          <p class="note">Or try a saved example. Each was recorded from the Stellar test network and is replayed here without contacting it, so it keeps working after public servers forget the transaction.</p>
+          <div id="saved-examples" class="examples"></div>
         </div>
         <details id="network-settings" class="settings">
           <summary>Network: <span id="network-summary">Ethereum Sepolia</span></summary>
@@ -45,6 +49,7 @@
       <section id="report" class="report" aria-labelledby="report-heading" hidden>
         <p class="eyebrow">Plain-English translation</p>
         <h2 id="report-heading">Your transaction, explained</h2>
+        <p id="recorded-note" class="recorded" hidden></p>
         <p id="rerun-result" hidden></p>
         <h3 class="panel-heading">What happened</h3>
         <p id="plain" class="plain" hidden></p>

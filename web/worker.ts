@@ -20,7 +20,9 @@ import { snarkjsEngine, snarkjsSuppliedKeyEngine } from '../src/snarkjs-engine.j
 import twitterKeyUrl from '../artifacts/zk-email-proof-of-twitter/verification-key.json?url';
 import { findProof } from '../src/chain/find.js';
 import { PAGE_RPCS } from '../src/chain/reference.js';
-import { httpRpc } from '../src/chain/rpc.js';
+import { recordedRpc } from '../src/chain/recorded.js';
+import { httpRpc, type RpcClient } from '../src/chain/rpc.js';
+import { SAVED_EXAMPLES } from './saved.js';
 import { bytes, cairoEngine, ultraHonkEngine } from './engines.js';
 import type { CairoDone, Request, ToPage, ToWorker } from './protocol.js';
 import type { SwiftnessOutcome } from './swiftness.js';
@@ -90,12 +92,24 @@ scope.onmessage = (event) => {
     try {
       const scanning = await bound();
       if (request.kind === 'lookup') {
-        // The only request that leaves this device: the transaction hash, to the page's named RPC for that network.
-        const address = PAGE_RPCS[request.network];
-        if (address === undefined) throw new Error('this page does not look up transactions on that network');
-        const found = await findProof(request.network, request.hash, httpRpc(address), recordedFiles(scanning));
-        if (!found.found) scope.postMessage({ id: request.id, ok: true, kind: 'lookup', found: false, reason: found.reason, ...(found.facts === undefined ? {} : { facts: found.facts }) });
-        else scope.postMessage({ id: request.id, ok: true, kind: 'lookup', found: true, source: found.source, inputs: found.inputs, report: await scan(found.inputs, scanning) });
+        let rpc: RpcClient;
+        let recorded: { recorded?: string } = {};
+        const saved = request.saved === undefined ? undefined : SAVED_EXAMPLES.find((example) => example.id === request.saved);
+        if (request.saved !== undefined) {
+          // A saved example: the provider's recorded answers, read from this page's own files. Nothing leaves this device.
+          if (saved === undefined || saved.network !== request.network || saved.hash !== request.hash) throw new Error('there is no such saved example');
+          const answers = JSON.parse(await text(saved.url)) as { recorded: string; provider: string } & Record<string, unknown>;
+          rpc = recordedRpc(answers, new URL(answers.provider).hostname);
+          recorded = { recorded: answers.recorded };
+        } else {
+          // The only request that leaves this device: the transaction hash, to the page's named RPC for that network.
+          const address = PAGE_RPCS[request.network];
+          if (address === undefined) throw new Error('this page does not look up transactions on that network');
+          rpc = httpRpc(address);
+        }
+        const found = await findProof(request.network, request.hash, rpc, recordedFiles(scanning));
+        if (!found.found) scope.postMessage({ id: request.id, ok: true, kind: 'lookup', found: false, reason: found.reason, ...(found.facts === undefined ? {} : { facts: found.facts }), ...recorded });
+        else scope.postMessage({ id: request.id, ok: true, kind: 'lookup', found: true, source: found.source, inputs: found.inputs, report: await scan(found.inputs, scanning), ...recorded });
       } else if (request.kind === 'check') {
         scope.postMessage({ id: request.id, ok: true, kind: 'check', report: await scan(request.inputs, scanning) });
       } else {

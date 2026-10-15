@@ -446,3 +446,34 @@ test('tries a bare Stellar hash on testnet, then mainnet, and says so first', as
   expect(asked).toEqual(['soroban-testnet.stellar.org getNetwork', 'soroban-testnet.stellar.org getTransaction', 'mainnet.sorobanrpc.com getNetwork', 'mainnet.sorobanrpc.com getTransaction']);
   expect(problems).toEqual([]);
 });
+
+test('replays a saved example without contacting any network, and says so', async ({ page }) => {
+  const problems = await open(page);
+  // `open` fails the test if anything outside the page's own address is requested.
+  await page.click('#saved-stellar-private-payment');
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  await expect(page.locator('#recorded-note')).toContainText('Saved example. The provider\'s answers were recorded on 2026-10-14 and replayed here; nothing was fetched now.');
+  await expect(page.locator('#fact-proof')).toHaveText('Passed: two independent verifiers agree');
+  await expect(page.locator('#unknown li').first()).toContainText('About the key:');
+  expect(new URL(page.url()).search).toBe('?example=stellar-private-payment');
+
+  await page.click('#saved-stellar-no-proof');
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'no-proof');
+  await expect(page.locator('#plain')).toContainText('creating a smart contract');
+
+  // A live lookup afterwards carries no saved-example banner.
+  await page.click('#saved-stellar-private-payment');
+  await expect(page.locator('#recorded-note')).toBeVisible();
+  expect(problems).toEqual([]);
+});
+
+test('opens a shared link to a saved example', async ({ page }) => {
+  const problems: string[] = [];
+  page.on('request', (request) => {
+    if (!request.url().startsWith('http://127.0.0.1:4317/') && !request.url().startsWith('blob:')) problems.push(`request to ${request.url()}`);
+  });
+  await page.goto('/?example=stellar-private-payment');
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  await expect(page.locator('#recorded-note')).toBeVisible();
+  expect(problems).toEqual([]);
+});
