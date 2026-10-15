@@ -23,6 +23,8 @@ jobs:
       - run: npm test
       - run: npm audit --omit=dev
       - run: node scripts/notices.mjs --check
+      # What npm would publish, installed fresh and used (type check and tests ran above).
+      - run: npm run release:check -- --quick
   browser:
     runs-on: ubuntu-24.04
     timeout-minutes: 15

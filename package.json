@@ -1,8 +1,7 @@
 {
   "name": "zk-proofscan",
   "version": "0.1.0",
-  "description": "Checks zero-knowledge proofs, alone or found in Ethereum and Stellar transactions, with established verifiers, and reports what each establishes, what it does not, and what rests on network data.",
-  "private": true,
+  "description": "Experimental, unaudited. Checks zero-knowledge proofs, alone or found in Ethereum and Stellar transactions, with established verifiers, and reports what each establishes, what it does not, and what rests on network data.",
   "type": "module",
   "license": "GPL-3.0-or-later",
   "repository": {
@@ -60,7 +59,8 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "fixtures": "node scripts/make-fixture.mjs"
+    "fixtures": "node scripts/make-fixture.mjs",
+    "release:check": "node scripts/release-check.mjs"
   },
   "dependencies": {
     "@aztec/bb.js": "5.2.1",

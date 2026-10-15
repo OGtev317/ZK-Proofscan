@@ -22,7 +22,9 @@ proves and what remains unknown, with a link to share the result. A
 transaction with no proof the tool can read is described instead (who sent
 it, what it did, whether it succeeded, and on Ethereum chains the tokens it
 moved and any allowance it granted, flagging unlimited ones). The code is
-unaudited and there is no versioned release.
+unaudited. Version 0.1.0 is an **experimental release** for developers to
+try: its reports and interfaces may change, and no result from it should
+be relied on for a decision with real value at stake.
 
 Every Groth16 proof is checked by two independent verifiers, snarkjs and
 arkworks, and a result stands only when they agree.

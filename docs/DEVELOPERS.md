@@ -1,7 +1,9 @@
 # Using ZK-Proofscan as a developer
 
-Version 0.1.0. Node 22 or later. Unaudited prototype: read the README's
-status and the release review before relying on a result.
+Version 0.1.0, an experimental release. Node 22 or later. Unaudited:
+reports and interfaces may change, and no result should be relied on for
+a decision with real value at stake. Read the README's status and the
+release review first.
 
 ZK-Proofscan checks a zero-knowledge proof on your machine with
 established verifiers (snarkjs and arkworks for Groth16, Barretenberg for

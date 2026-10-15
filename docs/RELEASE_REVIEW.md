@@ -1,7 +1,10 @@
 # Release review (build step 4)
 
 Written 2026-10-11. This records what was checked before any release and what
-still blocks one. **Nothing has been released or published to npm.** The repository was made
+still blocks one. On 2026-10-15 the owner decided to publish version 0.1.0 to
+npm as a clearly marked **experimental release** with the blockers below
+still open, rather than wait for an outside review; they block a release
+that asks to be relied on, not an experimental one. The repository was made
 public and the page was published with GitHub Pages on 2026-10-12, both before
 the blockers below were cleared; the page says it is an unaudited prototype.
 
@@ -17,6 +20,8 @@ the blockers below were cleared; the page says it is an unaudited prototype.
 | Claim mapping, mechanical part | The claim appears only for an accepted proof; adapter, lock, verifier version and keys are bound by hash; forged exports are detected. Covered by tests. |
 | Browsers | Chromium and WebKit through Playwright, on macOS and in CI on Linux. |
 | Continuous integration | Unit tests on Node 22 and 24, browser tests, audit and notices check. |
+| Package release check | `npm run release:check` (added 2026-10-15) builds from clean, runs the type check and tests, checks the versions agree and the notices are current, checks what `npm pack` would publish (no tests, sources, scripts, environment files, keys, large reference strings or local paths), then installs the packed tarball into an empty folder and checks a Semaphore and two Noir proofs through the library and all three commands. CI runs it on every push. |
+| Local regression transactions | Six transactions on a local Stellar network, recorded and replayed in tests; see [the lookup notes](LOOKUP.md). They found one fault (an allowance parameter's name), now fixed. |
 | Review of earlier commits | Two findings on `231c545` (escaped duplicate field, limits missing from JSON) fixed with regression tests. |
 
 ## Blocks a release
@@ -73,7 +78,10 @@ the blockers below were cleared; the page says it is an unaudited prototype.
 ## Owner decisions still open
 
 - Who reviews the adapter, and what evidence a review must leave behind.
-- Whether the package is published to npm. Version 0.1.0 is prepared (library entry, Stellar CLI plugin binary, developer guide) and still marked private.
+- Decided 2026-10-15: version 0.1.0 is published to npm as an experimental
+  release. A review of the Stellar Private Payments explanation has been
+  prepared for its authors ([the review packet](review/stellar-private-payments.md))
+  and is not yet sent.
 - Whether exports should bundle the key file and adapter so a rerun does not
   depend on having the same version of the tool.
 - Which further circuits or programs get an explanation. Each one needs its
