@@ -110,8 +110,6 @@ The list of transactions came from the provider and may be incomplete.
   used. Each is specific to one application's contract.
 - Checking the provider's answers against the chain itself, which would
   need a block header trusted from elsewhere.
-- The browser page has no lookup: for an Ethereum chain it would have to
-  hold the key.
 - Searching for transactions. This looks up one transaction by its hash.
 
 ## Stellar
@@ -207,4 +205,31 @@ keys, and a report says so.
   repository; and the two example contracts in the UltraHonk repository
   (`identity`, `tornado_classic`).
 - Checking the provider's answers against the network itself.
+
+## On the page, and from a pasted link
+
+Added 2026-10-15 at the owner's request. The browser page looks
+transactions up too, with the same code as the command line, on every
+network listed here. It cannot hold an operator's key, so it asks keyless
+public RPCs, each named beside the button: dRPC for Sepolia, Ethereum,
+Base, Base Sepolia, Optimism and Arbitrum; PublicNode for Polygon; the
+Stellar Development Foundation for Stellar testnet; sorobanrpc.com for
+Stellar mainnet. Each sees the hash of a transaction a visitor looks up.
+
+Measured choosing them, on 2026-10-15: PublicNode's Sepolia endpoint
+returned the 2024 Proof of Twitter transaction without its receipt, and
+the lookup correctly refused to say whether the chain accepted it; dRPC
+returned both. dRPC's Polygon endpoint could not be reached from the
+machine this was built on, so Polygon uses PublicNode and has not been
+tried from the page. Every one allows a browser to ask it.
+
+The command line and the agent tool also take a pasted explorer link:
+`lookup https://stellar.expert/explorer/testnet/tx/…` needs no `--chain`,
+and a link that names a different network from `--chain` is refused. A
+bare hash still needs the network named.
+
+Not done: a Stellar Noir proof from Barretenberg 0.87.0, the kind
+Nethermind's UltraHonk verifier contract checks, is found by a lookup on
+the page but not checked there; the page says so and points to the
+command line.
 

@@ -17,6 +17,10 @@ import { scan, type Scanning } from '../src/scan.js';
 import arkUrl from '../artifacts/ark-groth16/ark-groth16.wasm?url';
 import { arkGroth16, crossCheckedGroth16, crossCheckedSupplied } from '../src/ark-groth16.js';
 import { snarkjsEngine, snarkjsSuppliedKeyEngine } from '../src/snarkjs-engine.js';
+import twitterKeyUrl from '../artifacts/zk-email-proof-of-twitter/verification-key.json?url';
+import { findProof } from '../src/chain/find.js';
+import { PAGE_RPCS } from '../src/chain/reference.js';
+import { httpRpc } from '../src/chain/rpc.js';
 import { bytes, cairoEngine, ultraHonkEngine } from './engines.js';
 import type { CairoDone, Request, ToPage, ToWorker } from './protocol.js';
 import type { SwiftnessOutcome } from './swiftness.js';
@@ -39,6 +43,26 @@ const bound = (): Promise<Scanning> =>
     ];
     return { semaphoreV4: bindSemaphoreV4({ adapterBytes, lock, keyBytes, engine: groth16Engine }), suppliedKey: suppliedKeyEngine, registry, recorded, riscZero: { parameters: loadRiscZeroParameters(riscZeroBytes), engine: groth16Engine }, ultraHonk: ultraHonkEngine, cairo: cairoEngine(onPage) };
   })());
+
+// The recorded key files a lookup may use, fetched only when it does.
+const stellarKeyUrls = import.meta.glob<string>('../artifacts/stellar-private-payments/*_vk.json', { query: '?url', import: 'default' });
+const text = async (url: string): Promise<string> => new TextDecoder('utf-8', { fatal: true }).decode(await bytes(url));
+const recordedFiles = (scanning: Scanning) => ({
+  keyText: async (artifactId: string): Promise<string> => {
+    if (artifactId !== 'zk-email-proof-of-twitter-verification-key') throw new Error('no recorded key file for that call');
+    return text(twitterKeyUrl);
+  },
+  stellarPrivatePaymentsKeys: () =>
+    Promise.all(
+      scanning.registry.artifacts
+        .filter((artifact) => artifact.id.startsWith('stellar-private-payments-testnet-'))
+        .map(async (artifact) => {
+          const load = stellarKeyUrls[`../artifacts/stellar-private-payments/${artifact.provenance.file.split('/').pop()!}`];
+          if (load === undefined) throw new Error('a recorded key file is missing from this build');
+          return { artifactId: artifact.id, text: await text(await load()) };
+        }),
+    ),
+});
 
 const scope = self as unknown as { onmessage: ((event: MessageEvent<ToWorker>) => void) | null; postMessage(message: ToPage): void };
 
@@ -65,7 +89,14 @@ scope.onmessage = (event) => {
   queue = queue.then(async () => {
     try {
       const scanning = await bound();
-      if (request.kind === 'check') {
+      if (request.kind === 'lookup') {
+        // The only request that leaves this device: the transaction hash, to the page's named RPC for that network.
+        const address = PAGE_RPCS[request.network];
+        if (address === undefined) throw new Error('this page does not look up transactions on that network');
+        const found = await findProof(request.network, request.hash, httpRpc(address), recordedFiles(scanning));
+        if (!found.found) scope.postMessage({ id: request.id, ok: true, kind: 'lookup', found: false, reason: found.reason });
+        else scope.postMessage({ id: request.id, ok: true, kind: 'lookup', found: true, source: found.source, inputs: found.inputs, report: await scan(found.inputs, scanning) });
+      } else if (request.kind === 'check') {
         scope.postMessage({ id: request.id, ok: true, kind: 'check', report: await scan(request.inputs, scanning) });
       } else {
         scope.postMessage({ id: request.id, ok: true, kind: 'rerun', result: await rerunExport(request.export, (inputs) => scan(inputs, scanning)) });

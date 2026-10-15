@@ -88,6 +88,8 @@ class NotRead extends Error {}
 /** A contract's instance: its code's hash, its storage, and the ledger at which either last changed. */
 interface Instance {
   code: Uint8Array;
+  /** The same hash as the library holds it, to name the code in a further request. */
+  codeKey: ReturnType<xdr.ContractExecutable['wasmHash']>;
   storage: xdr.ScMapEntry[];
   lastChanged: number;
 }
@@ -100,14 +102,17 @@ async function readInstance(rpc: RpcClient, contract: xdr.ScAddress): Promise<In
     if (!data.contract().toXDR().equals(contract.toXDR()) || data.key().switch().name !== 'scvLedgerKeyContractInstance') throw new Error('other entry');
     const instance = data.val().instance();
     if (instance.executable().switch().name !== 'contractExecutableWasm') throw new NotRead('the contract that was called is not one this tool reads a key from');
-    return { code: new Uint8Array(instance.executable().wasmHash()), storage: instance.storage() ?? [], lastChanged: entry.lastChanged };
+    const codeKey = instance.executable().wasmHash();
+    return { code: new Uint8Array(codeKey), codeKey, storage: instance.storage() ?? [], lastChanged: entry.lastChanged };
   } catch (error) {
     if (error instanceof NotRead) throw error;
     throw new RpcError('the provider sent contract storage that cannot be read');
   }
 }
-async function readCode(rpc: RpcClient, codeHash: Uint8Array): Promise<Uint8Array> {
-  const key = xdr.LedgerKey.contractCode(new xdr.LedgerKeyContractCode({ hash: Buffer.from(codeHash) })).toXDR('base64');
+// The library's own byte type is passed back to it: a browser has no global Buffer.
+async function readCode(rpc: RpcClient, codeKey: Instance['codeKey']): Promise<Uint8Array> {
+  const codeHash = new Uint8Array(codeKey);
+  const key = xdr.LedgerKey.contractCode(new xdr.LedgerKeyContractCode({ hash: codeKey })).toXDR('base64');
   const entry = await oneEntry(rpc, key);
   if (entry === undefined) throw new NotRead('the provider holds no code for the verifier contract');
   let code: Uint8Array;
@@ -238,7 +243,7 @@ async function readPoolCall(rpc: RpcClient, contract: xdr.ScAddress, args: xdr.S
   const flags = flagsValue.u32();
   const verifier = await readInstance(rpc, verifierValue.address());
   if (verifier === undefined) throw new NotRead('the provider holds no storage for the pool\'s verifier contract');
-  const code = await readCode(rpc, verifier.code);
+  const code = await readCode(rpc, verifier.codeKey);
 
   // The pool's order: root, amount, external data hash, nullifiers, the two
   // output commitments, then the membership and non-membership roots once

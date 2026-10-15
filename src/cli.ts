@@ -7,7 +7,7 @@ const USAGE = `Usage:
   zk-proofscan check <proof.json> [--json] [--export <file>]
   zk-proofscan check <proof> --public <public inputs> --key <verification key> [--json] [--export <file>]
   zk-proofscan rerun <export.json>
-  zk-proofscan lookup <transaction hash> --chain <name> [--json] [--export <file>]
+  zk-proofscan lookup <transaction hash or explorer link> [--chain <name>] [--json] [--export <file>]
 
 The first form checks a Semaphore v4 proof against keys bundled with this
 tool; a Cairo STARK proof in the Stone prover's JSON layout, which needs no
@@ -23,7 +23,9 @@ it cannot say what the circuit checks.
 
 lookup asks a chain data provider for a transaction, reads a proof out of it
 and checks that proof here. It only reads, and sends the transaction hash to
-that provider. Chains: ethereum, sepolia, base, base-sepolia, optimism,
+that provider. Give the hash, or the transaction's page on a block explorer
+(Etherscan and its kin, stellar.expert, Stellar Lab, stellarchain.io), whose
+address names the network; a bare hash needs --chain. Chains: ethereum, sepolia, base, base-sepolia, optimism,
 arbitrum and polygon, which need ALCHEMY_API_KEY or ZK_PROOFSCAN_RPC_URL in
 the environment; stellar-testnet, which uses STELLAR_RPC_URL if set and
 otherwise the Stellar Development Foundation's public testnet RPC; and
@@ -51,7 +53,7 @@ async function check(paths: ProofPaths, json: boolean, exportPath: string | unde
   return EXIT[report.outcome];
 }
 
-async function lookup(transaction: string, chain: string, json: boolean, exportPath: string | undefined): Promise<number> {
+async function lookup(transaction: string, chain: string | undefined, json: boolean, exportPath: string | undefined): Promise<number> {
   const found = await lookupAndCheck(chain, transaction, process.env);
   if (found.kind === 'not-checked') {
     console.log(json ? JSON.stringify({ lookup: 'not-checked', reason: found.reason }, null, 2) : `Not checked: ${found.reason}.\nThis says nothing about whether a proof is valid.`);
@@ -95,7 +97,7 @@ async function main(args: string[]): Promise<number> {
   }
   if (paths.length !== 1) return USAGE_ERROR;
   const extra = { ...(publicInputs === undefined ? {} : { publicInputs }), ...(verificationKey === undefined ? {} : { verificationKey }) };
-  if (command === 'lookup') return chain !== undefined && publicInputs === undefined && verificationKey === undefined ? lookup(paths[0]!, chain, json, exportPath) : USAGE_ERROR;
+  if (command === 'lookup') return publicInputs === undefined && verificationKey === undefined ? lookup(paths[0]!, chain, json, exportPath) : USAGE_ERROR;
   if (chain !== undefined) return USAGE_ERROR;
   if (command === 'check') return check({ proof: paths[0]!, ...extra }, json, exportPath);
   if (command === 'rerun' && !json && exportPath === undefined && publicInputs === undefined && verificationKey === undefined) return rerun(paths[0]!);

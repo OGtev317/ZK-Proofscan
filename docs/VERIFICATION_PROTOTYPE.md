@@ -50,9 +50,26 @@ as the command line, and binds them the same way before checking anything.
 - The page and the command line render the same report sections, and their
   exports are byte-for-byte identical for the same proof. Each can rerun the
   other's export.
-- A content security policy allows scripts, styles and requests from the
-  page's own origin only. The browser tests fail if the page requests
-  anything else. File content is shown as text and never parsed as markup.
+- A content security policy allows scripts and styles from the page's own
+  origin only, and requests to that origin and to the nine public RPCs a
+  lookup may use (below). Checking a file sends nothing anywhere; the
+  browser tests fail if it does. File content is shown as text and never
+  parsed as markup.
+- Since 2026-10-15 the page can look a transaction up. A visitor pastes a
+  transaction hash or an explorer link (Etherscan and its kin, stellar.expert,
+  Stellar Lab, stellarchain.io); a link chooses the network itself,
+  otherwise an Ethereum/Stellar switch and the list of networks do. The
+  page then asks one public RPC, named beside the button, for that
+  transaction, and checks the proof it finds on the visitor's device. That
+  RPC sees the hash and that someone asked about it, and nothing else. The
+  RPCs are dRPC for six Ethereum-family networks, PublicNode for Polygon,
+  the Stellar Development Foundation's for Stellar testnet and
+  sorobanrpc.com for Stellar mainnet; the command line uses whatever its
+  operator configures instead. A successful lookup puts the network and
+  hash in the page's address, so the result can be shared: opening such a
+  link looks the transaction up again, and the footer says so. Every
+  report, looked up or not, now opens with a few sentences in plain words,
+  built only from what the report itself establishes.
 
 The page checks RISC Zero receipts, and since 2026-10-14 Noir proofs from
 Barretenberg 5.2.1 and Cairo proofs. A file that is not text, such as a
@@ -78,7 +95,8 @@ visits, as the page says. The address used to point at a copy
 the owner deployed by hand to another host; it has pointed at this build,
 over HTTPS only, since the same day.
 
-The page offers five examples made from throwaway values or taken from a
+The page offers a lookup example (the Proof of Twitter transaction on
+Sepolia) and five examples made from throwaway values or taken from a
 library's own test proofs, links to this
 repository, and says what it does not check.
 
@@ -251,7 +269,7 @@ the committed file. A build on macOS gives different bytes; see
 
 ## Tested
 
-201 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
+233 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
 registry, Proof of Twitter, lookup, Noir, Cairo, RISC Zero and the Stellar
 keys are described in
 [the formats](FORMATS.md) and [the lookup notes](LOOKUP.md). The rest:
@@ -273,15 +291,20 @@ keys are described in
   refused arguments, exports that the command line reproduces, a forged
   export, malformed and oversized protocol messages.
 
-32 browser tests (sixteen scenarios, each in Chromium and WebKit, run headless
+38 browser tests (nineteen scenarios, each in Chromium and WebKit, run headless
 through Playwright on macOS): a valid proof, a rejected proof, an unsupported
 file containing markup, recovery after a file that is not text, identical
 exports and cross-reruns between page and command line, a forged export, a
 proof with its own key in each of the four supplied-key systems, a RISC
 Zero receipt, a Noir proof from its three binary files (and rejected with
 one public input changed), a Cairo proof and a Cairo proof that declares
-too little security, a Barretenberg 0.87.0 proof declined by name, and the
-five examples.
+too little security, a Barretenberg 0.87.0 proof declined by name, the
+five examples, and three lookups that answer the page's RPC requests with
+recorded answers so no network is contacted: an Etherscan link checked,
+exported with its source and rerun by the command line; a stellar.expert
+link that switches the page to Stellar and checks a private payment; and a
+shared link looked up as the page opens, with unreadable input refused
+before anything is sent.
 
 ## Not tested or not done
 

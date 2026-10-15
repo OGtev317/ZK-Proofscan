@@ -41,3 +41,12 @@ a { color: var(--accent); }
 #rerun-result { font-weight: 700; padding: .5rem .75rem; border-radius: 6px; border: 1px solid var(--line); background: var(--card); }
 #rerun-result.pass { color: var(--pass); }
 #rerun-result.fail { color: var(--fail); }
+.family { display: flex; gap: 1.25rem; margin-top: .5rem; }
+.family label { display: flex; align-items: center; gap: .4rem; margin: 0; font-weight: 600; }
+input[type="text"] { width: 100%; font: inherit; color: inherit; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: .5rem; min-height: 44px; }
+input[type="text"] { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85rem; }
+.note { color: var(--muted); font-size: .9rem; margin: .5rem 0; }
+.plain { font-size: 1.05rem; padding: .75rem 1rem; border-radius: 6px; background: var(--card); border: 1px solid var(--line); margin: .5rem 0; }
+#source pre { margin: .4rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font: .85rem ui-monospace, SFMono-Regular, Menlo, monospace; }
+.networks { display: flex; flex-wrap: wrap; gap: .4rem .9rem; margin: .5rem 0 0; }
+.networks label { display: flex; align-items: center; gap: .35rem; margin: 0; font-weight: 400; min-height: 32px; }

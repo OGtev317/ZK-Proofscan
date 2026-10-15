@@ -314,3 +314,91 @@ test('notices a forged export', async ({ page }) => {
   await expect(page.locator('#sections')).toBeEmpty();
   expect(problems).toEqual([]);
 });
+
+/** Answers the page's RPCs with recorded answers, so these tests contact no network. Any other host is refused. */
+async function providers(page: Page, asked: string[]): Promise<void> {
+  const sepolia = JSON.parse(readFileSync(fixture('sepolia/proof-of-twitter-mint.json'), 'utf8')) as Record<string, unknown>;
+  const pool = JSON.parse(readFileSync(fixture('stellar-testnet/private-payments/answers.json'), 'utf8')) as Record<string, unknown>;
+  const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type', 'access-control-allow-methods': 'POST' };
+  await page.context().route(/^https:\/\//, async (route) => {
+    const request = route.request();
+    const host = new URL(request.url()).host;
+    const answers = host === 'sepolia.drpc.org' ? sepolia : host === 'soroban-testnet.stellar.org' ? pool : undefined;
+    if (answers === undefined) return route.abort();
+    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
+    const { id, method, params } = request.postDataJSON() as { id: number; method: string; params: { keys?: string[] } };
+    asked.push(`${host} ${method}`);
+    const answer = answers[method] as Record<string, unknown> | undefined;
+    const result = method === 'getLedgerEntries' && answer !== undefined && !('entries' in answer) ? answer[params.keys![0]!] : answer;
+    return route.fulfill({ status: 200, headers, contentType: 'application/json', body: JSON.stringify({ jsonrpc: '2.0', id, result }) });
+  });
+}
+/** Like `open`, but the page may also ask the named RPCs. */
+async function openWithProviders(page: Page, asked: string[], path = '/'): Promise<string[]> {
+  const problems: string[] = [];
+  page.on('pageerror', (error) => problems.push(`page error: ${error.message}`));
+  page.on('console', (message) => {
+    if (message.type() === 'error') problems.push(`console error: ${message.text()}`);
+  });
+  await providers(page, asked);
+  await page.goto(path);
+  return problems;
+}
+
+test('looks up a transaction from an explorer link, explains it, and can share it', async ({ page }, info) => {
+  const asked: string[] = [];
+  const problems = await openWithProviders(page, asked);
+  await expect(page.locator('#lookup-note')).toContainText('Looking up sends the transaction hash to sepolia.drpc.org');
+  await page.click('#example-lookup');
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  expect(asked).toEqual(['sepolia.drpc.org eth_chainId', 'sepolia.drpc.org eth_getTransactionByHash', 'sepolia.drpc.org eth_getTransactionReceipt']);
+  await expect(page.locator('#plain')).toContainText('The proof is valid: snarkjs and ark-groth16, two independent verifiers, both accept it. What it shows: Someone had an email');
+  await expect(page.locator('#plain')).toContainText('on Ethereum Sepolia (a test network), according to sepolia.drpc.org; the network accepted that transaction');
+  await expect(page.locator('#source')).toContainText('Transaction 0xca718b1f6cd0eb1d4bc47cd95a73d085bd0077cfc7553de6e61ae5d80669c787 on sepolia');
+  expect(new URL(page.url()).search).toBe('?network=sepolia&tx=0xca718b1f6cd0eb1d4bc47cd95a73d085bd0077cfc7553de6e61ae5d80669c787');
+
+  // The export carries where the proof was found, and the command line reruns it.
+  const [saved] = await Promise.all([page.waitForEvent('download'), page.click('#download')]);
+  const fromPage = join(dir, `page-lookup-${info.project.name}.json`);
+  await saved.saveAs(fromPage);
+  expect(JSON.parse(readFileSync(fromPage, 'utf8')).source).toMatchObject({ kind: 'evm-transaction', chain: 'sepolia', provider: 'sepolia.drpc.org' });
+  const rerun = cli('rerun', fromPage);
+  expect(rerun.stdout).toMatch(/^REPRODUCED/);
+  expect(rerun.stdout).toContain('Source recorded in the export');
+  await expect(page.locator('#share')).toBeVisible();
+  expect(problems).toEqual([]);
+});
+
+test('switches to Stellar from a pasted link and checks a private payment', async ({ page }) => {
+  const asked: string[] = [];
+  const problems = await openWithProviders(page, asked);
+  await page.fill('#lookup-text', 'https://stellar.expert/explorer/testnet/tx/cd1d09c950ff598c329ea4a55578fea38ad674a749bd9808d8316c823cdfb6fc');
+  await expect(page.locator('input[name="family"][value="stellar"]')).toBeChecked();
+  await expect(page.locator('#lookup-network input[value="stellar-testnet"]')).toBeChecked();
+  await expect(page.locator('#lookup-note')).toContainText('soroban-testnet.stellar.org');
+  await page.click('#lookup');
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  await expect(page.locator('#plain')).toContainText('It was made for a circuit this tool has on record: Stellar Private Payments (Nethermind), testnet key.');
+  await expect(page.locator('#source')).toContainText('the verifier the called contract names');
+  expect(asked.filter((entry) => entry.endsWith('getLedgerEntries'))).toHaveLength(3);
+  expect(problems).toEqual([]);
+});
+
+test('looks up a shared link as it opens, and sends nothing for what it cannot read', async ({ page }) => {
+  const asked: string[] = [];
+  const problems = await openWithProviders(page, asked, '/?network=sepolia&tx=0xca718b1f6cd0eb1d4bc47cd95a73d085bd0077cfc7553de6e61ae5d80669c787');
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  await expect(page.locator('#lookup-network input[value="sepolia"]')).toBeChecked();
+  const before = asked.length;
+  for (const pasted of ['not a hash', 'https://example.com/tx/0xca718b1f6cd0eb1d4bc47cd95a73d085bd0077cfc7553de6e61ae5d80669c787']) {
+    await page.fill('#lookup-text', pasted);
+    await page.click('#lookup');
+    await expect(page.locator('#plain')).toContainText('This proof was not checked: that is not a transaction hash or a block explorer link to a transaction.');
+    await expect(page.locator('#share')).toBeHidden();
+  }
+  // A Stellar hash while Ethereum is chosen switches to Stellar rather than asking an Ethereum RPC.
+  await page.fill('#lookup-text', 'cd1d09c950ff598c329ea4a55578fea38ad674a749bd9808d8316c823cdfb6fc');
+  await expect(page.locator('input[name="family"][value="stellar"]')).toBeChecked();
+  expect(asked.length).toBe(before);
+  expect(problems).toEqual([]);
+});

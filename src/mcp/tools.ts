@@ -184,14 +184,14 @@ const lookup: Tool = {
   inputSchema: {
     type: 'object',
     properties: {
-      chain: { type: 'string', description: `One of: ${LOOKUP_CHAINS.join(', ')}.` },
-      transaction: { type: 'string', description: 'The transaction hash: 0x followed by 64 hex digits, or 64 hex digits on Stellar.' },
+      chain: { type: 'string', description: `One of: ${LOOKUP_CHAINS.join(', ')}. May be left out when "transaction" is a block explorer link, which names its network.` },
+      transaction: { type: 'string', description: 'The transaction hash (0x followed by 64 hex digits, or 64 hex digits on Stellar), or the address of the transaction\'s page on a block explorer.' },
     },
     additionalProperties: false,
   },
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
   async call(args) {
-    if (args.chain === undefined || args.transaction === undefined) return refuse('give "chain" and "transaction"');
+    if (args.transaction === undefined) return refuse('give "transaction", and "chain" unless it is an explorer link');
     const found = await lookupAndCheck(args.chain, args.transaction, process.env);
     if (found.kind === 'not-checked') {
       return { content: [{ type: 'text', text: `Not checked: ${found.reason}.\nThis says nothing about whether a proof is valid.` }], structuredContent: { lookup: 'not-checked', reason: found.reason } };

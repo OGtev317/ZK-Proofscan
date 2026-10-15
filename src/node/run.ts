@@ -1,8 +1,8 @@
 import { readFile, stat, writeFile } from 'node:fs/promises';
-import { lookupTransaction } from '../chain/lookup.js';
+import { findProof, resolveTransaction } from '../chain/find.js';
 import { CHAINS, httpRpc, rpcUrlFromEnvironment } from '../chain/rpc.js';
 import { renderChainSource, type ChainSource } from '../chain/source.js';
-import { lookupStellarTransaction, STELLAR_NETWORKS } from '../chain/stellar.js';
+import { STELLAR_NETWORKS } from '../chain/stellar.js';
 import { MAX_EXPORT_CHARACTERS, rerunExport, writeExport, type RerunResult } from '../export.js';
 import { MAX_PROOF_PART_CHARACTERS, MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, partFromBytes, type ProofInputs } from '../inputs.js';
 import { renderReport, unreadReport, type Report } from '../report.js';
@@ -76,23 +76,23 @@ export type LookedUp =
   /** Nothing was checked, and the reason is not a fault in any proof. */
   | { kind: 'not-checked'; reason: string };
 
-/**
- * Finds a proof in a transaction and checks it here. Read-only, and only
- * when the operator has configured a provider in the environment.
- */
 /** Every name `lookup` accepts. */
 export const LOOKUP_CHAINS: readonly string[] = [...CHAINS.map((known) => known.name), ...STELLAR_NETWORKS.map((known) => known.name)];
 
 /**
- * Finds a proof in a transaction and checks it here. Read-only. An Ethereum
- * chain needs a provider configured in the environment. Stellar's test
- * network uses `STELLAR_RPC_URL` if set, and otherwise the Foundation's
- * public RPC; its main network needs `STELLAR_MAINNET_RPC_URL`.
+ * Finds a proof in a transaction and checks it here. Read-only. `pasted` is
+ * a transaction hash or a block explorer link; `chainName` may be left out
+ * when the link names the network. An Ethereum chain needs a provider
+ * configured in the environment. Stellar's test network uses
+ * `STELLAR_RPC_URL` if set, and otherwise the Foundation's public RPC; its
+ * main network needs `STELLAR_MAINNET_RPC_URL`.
  */
-export async function lookupAndCheck(chainName: string, transaction: string, env: Record<string, string | undefined>): Promise<LookedUp> {
-  const chain = CHAINS.find((known) => known.name === chainName);
-  const stellar = STELLAR_NETWORKS.find((known) => known.name === chainName);
-  if (chain === undefined && stellar === undefined) return { kind: 'not-checked', reason: `the chain must be one of ${LOOKUP_CHAINS.join(', ')}` };
+export async function lookupAndCheck(chainName: string | undefined, pasted: string, env: Record<string, string | undefined>): Promise<LookedUp> {
+  if (chainName !== undefined && !LOOKUP_CHAINS.includes(chainName)) return { kind: 'not-checked', reason: `the chain must be one of ${LOOKUP_CHAINS.join(', ')}` };
+  const resolved = resolveTransaction(pasted, chainName);
+  if ('reason' in resolved) return { kind: 'not-checked', reason: resolved.reason };
+  const chain = CHAINS.find((known) => known.name === resolved.network);
+  const stellar = STELLAR_NETWORKS.find((known) => known.name === resolved.network);
   const address = chain === undefined ? env[stellar!.rpcVariable] || stellar!.defaultRpc : rpcUrlFromEnvironment(chain, env);
   if (address === undefined) {
     return {
@@ -102,8 +102,7 @@ export async function lookupAndCheck(chainName: string, transaction: string, env
   }
   let found;
   try {
-    const rpc = httpRpc(address);
-    found = chain === undefined ? await lookupStellarTransaction({ network: stellar!, transaction, rpc, recordedKeys: stellarPrivatePaymentsKeys }) : await lookupTransaction({ chain, transaction, rpc, keyText: recordedKeyText });
+    found = await findProof(resolved.network, resolved.hash, httpRpc(address), { keyText: recordedKeyText, stellarPrivatePaymentsKeys });
   } catch (error) {
     return { kind: 'not-checked', reason: message(error) };
   }

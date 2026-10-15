@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- The page loads nothing from other sites and sends nothing anywhere. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'" />
+    <!-- The page loads nothing from other sites. The only addresses it may contact are the public RPCs used to look up a transaction, and only when asked to. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self'; connect-src 'self' https://sepolia.drpc.org https://eth.drpc.org https://base.drpc.org https://base-sepolia.drpc.org https://optimism.drpc.org https://arbitrum.drpc.org https://polygon-bor.publicnode.com https://soroban-testnet.stellar.org https://mainnet.sorobanrpc.com; base-uri 'none'; form-action 'none'" />
     <meta name="referrer" content="no-referrer" />
     <meta name="description" content="Checks a zero-knowledge proof in your browser and says what it does and does not establish. Prototype, unaudited." />
     <title>ZK-Proofscan</title>
@@ -17,6 +17,23 @@
       <p>It reads a Semaphore v4 proof, a RISC Zero Groth16 receipt or a Cairo proof from the Stone prover on its own. A Groth16, PLONK or FFLONK proof written by snarkjs, or a Noir proof written by Barretenberg, needs its public inputs and verification key as well. Noir proofs from Barretenberg 0.87.0, and looking a proof up by transaction, need the command-line tool.</p>
       <p class="notice">Prototype. Unaudited, and the explanation wording has not been reviewed by a qualified person. Do not rely on a result from this page for a decision.</p>
 
+      <section aria-labelledby="lookup-heading">
+        <h2 id="lookup-heading">Look up a transaction</h2>
+        <p>Paste a transaction hash, or the link to the transaction on a block explorer such as Etherscan or stellar.expert. A link tells the page which network to use.</p>
+        <div class="family" role="radiogroup" aria-label="Network family">
+          <label><input type="radio" name="family" value="ethereum" checked /> Ethereum</label>
+          <label><input type="radio" name="family" value="stellar" /> Stellar</label>
+        </div>
+        <!-- Radio buttons, not a select: WebKit draws a select with styles its own security policy then refuses. -->
+        <div id="lookup-network" class="networks" role="radiogroup" aria-label="Network"></div>
+        <label for="lookup-text">Transaction hash or link</label>
+        <input id="lookup-text" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="0x… or https://stellar.expert/explorer/testnet/tx/…" />
+        <button id="lookup" type="button">Look up</button>
+        <p id="lookup-note" class="note"></p>
+        <div class="examples">
+          <button id="example-lookup" type="button" class="quiet">Try one: an email proof on Ethereum Sepolia</button>
+        </div>
+      </section>
       <section aria-labelledby="example-heading">
         <h2 id="example-heading">Try an example</h2>
         <p>Test proofs made from throwaway values. Each is checked on this device like any other file.</p>
@@ -55,11 +72,14 @@
       <section id="report" aria-labelledby="report-heading" hidden>
         <h2 id="report-heading">Report</h2>
         <p id="rerun-result" hidden></p>
+        <p id="plain" class="plain" hidden></p>
+        <div id="source" class="section caution" hidden></div>
         <div id="sections"></div>
         <button id="download" type="button" hidden>Download evidence export</button>
+        <button id="share" type="button" class="quiet" hidden>Copy a link to this result</button>
       </section>
       <footer>
-        <p>The check runs in your browser, and the files you choose are not sent anywhere. Like any website, the company that hosts this page can see that you visited it and may set its own cookies. Public inputs in a proof can identify a person, so think before sharing a report or an export.</p>
+        <p>The check runs in your browser, and the files you choose are not sent anywhere. Looking up a transaction sends its hash, and nothing else, to the public RPC named beside the button, which can see that someone asked about it; opening a shared link to a result does the same. Like any website, the company that hosts this page can see that you visited it and may set its own cookies. Public inputs in a proof can identify a person, so think before sharing a report or an export.</p>
         <p>Open source, GPL-3.0-or-later. <a href="https://github.com/OGtev317/ZK-Proofscan" rel="noopener">Source, documentation and known limits</a>.</p>
       </footer>
     </main>

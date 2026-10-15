@@ -5,7 +5,11 @@ import cairoUrl from '../tests/fixtures/cairo/dynamic-stone6-96-bits.json?url';
 import noirProofUrl from '../tests/fixtures/noir/multiplier-evm.proof?url';
 import noirPublicUrl from '../tests/fixtures/noir/multiplier-evm.public_inputs?url';
 import noirKeyUrl from '../tests/fixtures/noir/multiplier-evm.vk?url';
+import { resolveTransaction } from '../src/chain/find.js';
+import { familyOf, NETWORKS, PAGE_RPCS, readTransactionReference, type ChainFamily } from '../src/chain/reference.js';
+import { renderChainSource, type ChainSource } from '../src/chain/source.js';
 import { MAX_EXPORT_CHARACTERS, writeExport } from '../src/export.js';
+import { plainWords } from '../src/plain.js';
 import { binaryBytes, isBinaryPart, MAX_PROOF_PART_CHARACTERS, MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, partFromBytes, type ProofInputs } from '../src/inputs.js';
 import { reportSections, unreadReport, type Report } from '../src/report.js';
 import type { Request, Response, ToPage } from './protocol.js';
@@ -27,11 +31,22 @@ const reportBox = $<HTMLElement>('report');
 const rerunResult = $<HTMLParagraphElement>('rerun-result');
 const sections = $<HTMLDivElement>('sections');
 const download = $<HTMLButtonElement>('download');
+const lookupText = $<HTMLInputElement>('lookup-text');
+const lookupButton = $<HTMLButtonElement>('lookup');
+const lookupNetwork = $<HTMLDivElement>('lookup-network');
+/** The network chosen. */
+const network = (): string => lookupNetwork.querySelector<HTMLInputElement>('input:checked')?.value ?? NETWORKS.ethereum[0]!;
+const lookupNote = $<HTMLParagraphElement>('lookup-note');
+const exampleLookup = $<HTMLButtonElement>('example-lookup');
+const familyChoices = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="family"]'));
+const plain = $<HTMLParagraphElement>('plain');
+const sourceBox = $<HTMLDivElement>('source');
+const share = $<HTMLButtonElement>('share');
 const examples = [$<HTMLButtonElement>('example-semaphore'), $<HTMLButtonElement>('example-tampered'), $<HTMLButtonElement>('example-risc-zero'), $<HTMLButtonElement>('example-noir'), $<HTMLButtonElement>('example-cairo')] as const;
 
 /** Longer than any supported proof takes on a phone; a check that runs past it is stopped and reported as not checked. */
 const TIME_LIMIT_MS = 300_000;
-type Sendable = { kind: 'check'; inputs: ProofInputs } | { kind: 'rerun'; export: string };
+type Sendable = { kind: 'check'; inputs: ProofInputs } | { kind: 'rerun'; export: string } | { kind: 'lookup'; network: string; hash: string };
 /**
  * Each check runs in a new worker that is discarded afterwards, so no
  * verifier instance, and nothing a malformed file did to one, outlasts the
@@ -79,10 +94,30 @@ proofText.addEventListener('input', () => {
   proofText.placeholder = '';
 });
 
-let current: { inputs: ProofInputs; report: Report } | undefined;
+let current: { inputs: ProofInputs; report: Report; source?: ChainSource; shared?: { network: string; hash: string } } | undefined;
 
 /** Everything shown comes through textContent: no file content is ever parsed as markup. */
-function show(report: Report): void {
+function show(report: Report, source?: ChainSource, recordedSource = false): void {
+  plain.textContent = plainWords(report, source);
+  plain.hidden = false;
+  if (source === undefined) {
+    sourceBox.hidden = true;
+    sourceBox.replaceChildren();
+  } else {
+    const [heading, ...lines] = renderChainSource(source, recordedSource).split('\n');
+    const title = document.createElement('h3');
+    title.textContent = 'Where the proof was found';
+    const intro = document.createElement('p');
+    intro.textContent = heading!;
+    const list = document.createElement('ul');
+    for (const line of lines) {
+      const entry = document.createElement('li');
+      entry.textContent = line.replace(/^\s*- /, '');
+      list.append(entry);
+    }
+    sourceBox.replaceChildren(title, intro, list);
+    sourceBox.hidden = false;
+  }
   sections.replaceChildren(
     ...reportSections(report).map((section) => {
       const box = document.createElement('div');
@@ -116,11 +151,12 @@ function notChecked(message: string): void {
   current = undefined;
   rerunResult.hidden = true;
   download.hidden = true;
+  share.hidden = true;
   show(unreadReport('error', message));
 }
 
 async function busy(label: string, work: () => Promise<void>): Promise<void> {
-  const controls = [checkButton, proofFile, publicFile, keyFile, exportFile, ...examples];
+  const controls = [checkButton, proofFile, publicFile, keyFile, exportFile, lookupButton, exampleLookup, ...examples];
   for (const control of controls) control.disabled = true;
   status.textContent = label;
   try {
@@ -171,6 +207,97 @@ async function checkInputs(inputs: ProofInputs): Promise<void> {
   rerunResult.hidden = true;
   show(response.report);
   download.hidden = false;
+  share.hidden = true;
+}
+
+const NETWORK_LABELS: Record<string, string> = {
+  sepolia: 'Ethereum Sepolia (test network)',
+  ethereum: 'Ethereum',
+  base: 'Base',
+  'base-sepolia': 'Base Sepolia (test network)',
+  optimism: 'Optimism',
+  arbitrum: 'Arbitrum One',
+  polygon: 'Polygon',
+  'stellar-testnet': 'Stellar testnet',
+  'stellar-mainnet': 'Stellar mainnet',
+};
+
+/** Shows the networks of one family, choosing `network` if given. */
+function chooseFamily(family: ChainFamily, network?: string): void {
+  for (const choice of familyChoices) choice.checked = choice.value === family;
+  const chosen = network ?? NETWORKS[family][0]!;
+  lookupNetwork.replaceChildren(
+    ...NETWORKS[family].map((name) => {
+      const label = document.createElement('label');
+      const input = document.createElement('input');
+      input.type = 'radio';
+      input.name = 'network';
+      input.value = name;
+      input.checked = name === chosen;
+      label.append(input, ` ${NETWORK_LABELS[name] ?? name}`);
+      return label;
+    }),
+  );
+  describeProvider();
+}
+function describeProvider(): void {
+  const host = new URL(PAGE_RPCS[network()]!).hostname;
+  lookupNote.textContent = `Looking up sends the transaction hash to ${host}, a public RPC, which can see that someone asked about it. The proof it finds is then checked on this device.`;
+}
+for (const choice of familyChoices) choice.addEventListener('change', () => chooseFamily(choice.value as ChainFamily));
+lookupNetwork.addEventListener('change', describeProvider);
+// A pasted link or hash picks its own family and network.
+lookupText.addEventListener('input', () => {
+  const reference = readTransactionReference(lookupText.value);
+  if (reference === undefined) return;
+  const chosen = familyChoices.find((choice) => choice.checked)?.value;
+  if (reference.network !== undefined) chooseFamily(reference.family, reference.network);
+  else if (chosen !== reference.family) chooseFamily(reference.family);
+});
+
+async function lookUp(): Promise<void> {
+  const resolved = resolveTransaction(lookupText.value, network());
+  if ('reason' in resolved) throw new Error(resolved.reason);
+  const mine = ++latest;
+  const response = await ask({ kind: 'lookup', network: resolved.network, hash: resolved.hash });
+  if (mine !== latest) return;
+  if (!response.ok) throw new Error(response.message);
+  if (response.kind !== 'lookup') throw new Error('unexpected answer from the verification worker');
+  if (!response.found) throw new Error(response.reason);
+  current = { inputs: response.inputs, report: response.report, source: response.source, shared: resolved };
+  rerunResult.hidden = true;
+  show(response.report, response.source);
+  download.hidden = false;
+  share.hidden = false;
+  // The address now names this result, so it can be shared or reloaded.
+  history.replaceState(null, '', `?network=${encodeURIComponent(resolved.network)}&tx=${encodeURIComponent(resolved.hash)}`);
+}
+lookupButton.addEventListener('click', () => void busy('Looking up the transaction, then checking its proof on this device…', lookUp));
+exampleLookup.addEventListener('click', () => {
+  lookupText.value = 'https://sepolia.etherscan.io/tx/0xca718b1f6cd0eb1d4bc47cd95a73d085bd0077cfc7553de6e61ae5d80669c787';
+  chooseFamily('ethereum', 'sepolia');
+  void busy('Looking up the transaction, then checking its proof on this device…', lookUp);
+});
+share.addEventListener('click', () => {
+  if (current?.shared === undefined) return;
+  const link = `${location.origin}${location.pathname}?network=${encodeURIComponent(current.shared.network)}&tx=${encodeURIComponent(current.shared.hash)}`;
+  void navigator.clipboard.writeText(link).then(
+    () => (status.textContent = 'Link copied. Opening it looks the transaction up again and checks its proof.'),
+    () => (status.textContent = `Copy this link: ${link}`),
+  );
+});
+
+// A shared link: look the transaction up as soon as the page opens.
+{
+  const params = new URLSearchParams(location.search);
+  const network = params.get('network');
+  const hash = params.get('tx');
+  const family = network === null ? undefined : familyOf(network);
+  chooseFamily(family ?? 'ethereum', family === undefined ? undefined : network!);
+  if (family !== undefined && hash !== null) {
+    lookupText.value = hash;
+    void busy('Looking up the shared transaction, then checking its proof on this device…', lookUp);
+  }
 }
 
 checkButton.addEventListener('click', () => {
@@ -239,28 +366,31 @@ exportFile.addEventListener('change', () => {
     const { result } = response;
     current = undefined;
     download.hidden = true;
+    share.hidden = true;
     rerunResult.hidden = false;
     if (result.reproduced) {
       rerunResult.className = 'pass';
       rerunResult.textContent = `REPRODUCED: checking the proof again gave the same report (outcome: ${result.report.outcome}).`;
-      show(result.report);
+      show(result.report, result.source, true);
     } else if (result.kind === 'unreadable') {
       rerunResult.className = 'fail';
       rerunResult.textContent = `Not rerun: ${result.reason}.`;
       sections.replaceChildren();
+      plain.hidden = true;
+      sourceBox.hidden = true;
       reportBox.hidden = false;
       reportBox.dataset.outcome = 'unreadable';
     } else {
       rerunResult.className = 'fail';
       rerunResult.textContent = `NOT REPRODUCED: checking the proof again gave a different report. Sections that differ: ${result.fields.join(', ')}. The report below is from this run.`;
-      show(result.report);
+      show(result.report, result.source, true);
     }
   });
 });
 
 download.addEventListener('click', () => {
   if (!current) return;
-  const url = URL.createObjectURL(new Blob([writeExport(current.inputs, current.report)], { type: 'application/json' }));
+  const url = URL.createObjectURL(new Blob([writeExport(current.inputs, current.report, current.source)], { type: 'application/json' }));
   const link = document.createElement('a');
   link.href = url;
   link.download = `zk-proofscan-evidence-${current.report.input.sha256.slice(0, 12)}.json`;

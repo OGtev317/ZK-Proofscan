@@ -302,7 +302,13 @@ describe('talking to a provider', () => {
     expect(failed.status).toBe(3);
     expect(JSON.parse(failed.stdout)).toEqual({ lookup: 'not-checked', reason: 'the provider reported an error for this request' });
     mode = 'chain';
-    for (const args of [['lookup', HASH], ['lookup', '--chain', 'sepolia'], ['lookup', HASH, '--chain', 'sepolia', '--key', 'k.json'], ['check', 'a.json', '--chain', 'sepolia'], ['rerun', 'a.json', '--chain', 'sepolia']]) {
+    // A bare hash with no network is understood, and the answer asks for the network; nothing is sent.
+    const sent = seen.length;
+    const bare = await cli(['lookup', HASH], { ZK_PROOFSCAN_RPC_URL: base });
+    expect(bare.status).toBe(3);
+    expect(bare.stdout).toContain('a hash on its own does not say which network it is on; name the network');
+    expect(seen.length).toBe(sent);
+    for (const args of [['lookup', '--chain', 'sepolia'], ['lookup', HASH, '--chain', 'sepolia', '--key', 'k.json'], ['check', 'a.json', '--chain', 'sepolia'], ['rerun', 'a.json', '--chain', 'sepolia']]) {
       expect((await cli(args, { ZK_PROOFSCAN_RPC_URL: base })).status, args.join(' ')).toBe(64);
     }
     // A check or a rerun never contacts a provider, even when one is configured.

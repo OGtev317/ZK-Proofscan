@@ -12,7 +12,10 @@ report. Instead of `0x7a2f…3b1c — Verified`, a report states:
 **Status: prototype.** A command-line tool, a browser page and a local tool
 server for AI agents check proofs and show the report above. The page is published at
 <https://akashi.zatrix.xyz/> with GitHub Pages, from each commit on `main` that
-passes the tests. The code is
+passes the tests. On the page, paste a transaction hash or a block explorer
+link from Ethereum or Stellar, and it finds the proof, checks it on your
+device, says in plain words what it shows, and gives a link to share the
+result. The code is
 unaudited and there is no versioned release.
 
 Every Groth16 proof is checked by two independent verifiers, snarkjs and
