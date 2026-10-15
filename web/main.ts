@@ -47,7 +47,10 @@ const networkSummary = $<HTMLSpanElement>('network-summary');
 const statusCell = $<HTMLDivElement>('status-cell');
 const factStatus = $<HTMLElement>('fact-status');
 const factProof = $<HTMLElement>('fact-proof');
-const statusNote = $<HTMLParagraphElement>('status-note');
+const statusNote = $<HTMLElement>('status-note');
+const proofDetail = $<HTMLElement>('proof-detail');
+const factSettlement = $<HTMLElement>('fact-settlement');
+const settlementDetail = $<HTMLElement>('settlement-detail');
 const provesBlock = $<HTMLDivElement>('proves-block');
 const provesList = $<HTMLUListElement>('proves');
 const unknownBlock = $<HTMLDivElement>('unknown-block');
@@ -117,11 +120,13 @@ function present(explained: Explained): void {
   plain.textContent = explained.happened;
   plain.hidden = false;
   statusCell.hidden = explained.status === undefined;
-  statusNote.hidden = explained.status === undefined;
   factStatus.textContent = explained.status?.text ?? '';
   statusNote.textContent = explained.status?.note ?? '';
   factProof.textContent = explained.proofCheck.text;
   factProof.className = explained.proofCheck.tone;
+  proofDetail.textContent = explained.proofCheck.detail ?? '';
+  factSettlement.textContent = explained.settlement.text;
+  settlementDetail.textContent = explained.settlement.detail;
   const fill = (block: HTMLElement, list: HTMLUListElement, lines: string[]): void => {
     list.replaceChildren(
       ...lines.map((line) => {

@@ -288,3 +288,22 @@ was checked against a real mainnet allowance (the test fixture).
 Not done: swaps. Token movements alone do not show that a trade happened
 or what was asked for; each exchange would need its own decoder.
 
+## Three parts of every result
+
+Added 2026-10-15. Every result on the page shows three answers side by
+side, each of which can be "not checked" or "not applicable":
+
+- **Read from the network:** the transaction's status, network, block or
+  ledger, and the provider that said so.
+- **Proof check:** passed, failed or not checked here, with the verifiers
+  and versions that ran, and, where the source names one, the contract on
+  the network that verifies or carries the proof (on Stellar with its code
+  hash).
+- **Settlement:** on Stellar, final, since a closed ledger is final (that
+  it closed is the provider's word); on an Ethereum-family chain, not
+  checked, since whether the block is finalized, or a rollup's batch
+  settled on Ethereum, is not read; for a proof checked from files, not
+  applicable. Following tracking of rollup settlement was considered and
+  set aside: for most rollups this tool could only repeat what the
+  settlement contract reported, not check the batch proof itself.
+

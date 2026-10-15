@@ -45,7 +45,9 @@ describe('what an ordinary transaction was', () => {
     expect(plainFacts(transfer)).toBe(`This is a transaction on Ethereum Sepolia (a test network): a transfer of 1 ETH to ${TO}. According to sepolia.drpc.org, the network accepted it. No zero-knowledge proof that this tool can read was found in it, so there is no proof to check.`);
     expect(factLines(transfer).map(([label]) => label)).toEqual(['Network', 'Transaction', 'Block', 'Status', 'Sent by', 'What it did', 'To']);
     const explained = explain({ facts: transfer });
-    expect(explained).toMatchObject({ status: { text: 'Succeeded' }, proofCheck: { text: 'No supported proof found', tone: 'caution' }, unknown: [] });
+    expect(explained).toMatchObject({ status: { text: 'Succeeded' }, proofCheck: { text: 'No supported proof found', tone: 'caution' }, settlement: { text: 'Not checked' }, unknown: [] });
+    expect(explained.status?.note).toMatch(/^Ethereum Sepolia \(a test network\), block 16, as reported by sepolia.drpc.org\./);
+    expect(explain({ facts: { ...transfer, family: 'stellar', network: 'stellar-testnet' } }).settlement).toMatchObject({ text: 'Final' });
   });
 });
 
@@ -58,17 +60,19 @@ describe('the reader\'s view of a result', () => {
 
   it('puts a key\'s caveat first among what remains unknown, and names both verifiers', () => {
     const view = explain({ report: valid(recognised('unconfirmed')) });
-    expect(view.proofCheck).toEqual({ text: 'Passed: two independent verifiers agree', tone: 'pass' });
+    expect(view.proofCheck).toMatchObject({ text: 'Passed: two independent verifiers agree', tone: 'pass' });
     expect(view.proves[0]).toBe('The proof fits a key this tool has on record: A recorded key.');
     expect(view.unknown).toEqual(['About the key: Made with no trusted ceremony.', 'A limit.', 'The explanation wording has not been reviewed by a qualified person.']);
     expect(view.status).toBeUndefined();
+    expect(view.settlement.text).toBe('Not applicable');
+    expect(view.proofCheck.detail).toBe('Checked on this device with snarkjs 0.7.6 and ark-groth16 0.6.0, two independent verifiers that agree.');
     expect(explain({ report: valid(recognised('established')) }).unknown[0]).toBe('A limit.');
     expect(explain({ report: valid({ match: 'none' }, { name: 'snarkjs', version: '0.7.6' }) }).proofCheck.text).toBe('Passed');
   });
 
   it('never shows a pass for a proof that was rejected or not checked', () => {
     const failed = explain({ report: { ...base, outcome: 'invalid', basis: 'bundled-circuit', public: [], verification: { result: 'failed', verifier: both, verificationKeysSha256: '0' } } as unknown as Report });
-    expect(failed.proofCheck).toEqual({ text: 'Failed: the verifier rejected the proof', tone: 'fail' });
+    expect(failed.proofCheck).toMatchObject({ text: 'Failed: the verifier rejected the proof', tone: 'fail' });
     expect(failed.proves).toEqual(['Nothing. A rejected proof establishes nothing.']);
     const unchecked = explain({ report: { ...base, outcome: 'unsupported', reason: 'no' } as unknown as Report });
     expect(unchecked).toMatchObject({ proofCheck: { text: 'Not checked' }, proves: ['Nothing was checked.'], unknown: ['Whether the proof is valid.'] });

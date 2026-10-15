@@ -56,6 +56,10 @@ test('checks a valid proof and shows every section of the report', async ({ page
     expect(text).toContain(expected);
   }
   await expect(page.locator('#download')).toBeVisible();
+  // A file check has no transaction: the network cell is hidden and settlement says it does not apply.
+  await expect(page.locator('#status-cell')).toBeHidden();
+  await expect(page.locator('#fact-settlement')).toHaveText('Not applicable');
+  await expect(page.locator('#proof-detail')).toContainText('Checked on this device with snarkjs 0.7.6 and ark-groth16 0.6.0');
   expect(problems).toEqual([]);
 });
 
@@ -389,7 +393,10 @@ test('looks up a transaction from an explorer link, explains it, and can share i
   await expect(page.locator('#source')).toContainText('Transaction 0xca718b1f6cd0eb1d4bc47cd95a73d085bd0077cfc7553de6e61ae5d80669c787 on sepolia');
   // The reader's view: both verdicts side by side, what it proves, what it does not.
   await expect(page.locator('#fact-status')).toHaveText('Succeeded');
-  await expect(page.locator('#status-note')).toContainText('As reported by sepolia.drpc.org');
+  await expect(page.locator('#status-note')).toContainText('Ethereum Sepolia (a test network), block 7339733, as reported by sepolia.drpc.org');
+  await expect(page.locator('#proof-detail')).toContainText('Checked on this device with snarkjs 0.7.6 and ark-groth16 0.6.0');
+  await expect(page.locator('#proof-detail')).toContainText('On the network: contract 0xab157f13e9643f45aea693fdb1a3c22dbdb984a5, a deployment this tool has on record');
+  await expect(page.locator('#fact-settlement')).toHaveText('Not checked');
   await expect(page.locator('#fact-proof')).toHaveText('Passed: two independent verifiers agree');
   await expect(page.locator('#proves')).toContainText('Someone had an email that carries a valid signature');
   await expect(page.locator('#unknown li').first()).toContainText('About the key:');
@@ -419,6 +426,8 @@ test('switches to Stellar from a pasted link and checks a private payment', asyn
   await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
   await expect(page.locator('#plain')).toContainText('It was made for a circuit this tool has on record: Stellar Private Payments (Nethermind), testnet key.');
   await expect(page.locator('#source')).toContainText('the verifier the called contract names');
+  await expect(page.locator('#fact-settlement')).toHaveText('Final');
+  await expect(page.locator('#proof-detail')).toContainText('On the network: verifier contract CA66PGQD3OUO5R64CMOWL3FIRAQTWORLX36ZERALPPYOJ4ORETGFO3P5');
   expect(asked.filter((entry) => entry.endsWith('getLedgerEntries'))).toHaveLength(3);
   expect(problems).toEqual([]);
 });
