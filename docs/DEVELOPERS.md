@@ -14,12 +14,17 @@ network.
 
 ## Install
 
-Not yet published to npm. From a checkout:
+```sh
+npm install -g lumenlenz   # puts lumenlenz, lumenlenz-mcp and stellar-lumenlenz on your PATH
+npm install lumenlenz      # or as a library in a project
+```
+
+From a checkout:
 
 ```sh
-git clone https://github.com/OGtev317/ZK-Proofscan && cd LumenLenz
+git clone https://github.com/OGtev317/ZK-Proofscan && cd ZK-Proofscan
 npm ci && npm run build
-npm link            # puts lumenlenz, lumenlenz-mcp and stellar-lumenlenz on your PATH
+npm link
 ```
 
 ## Command line
@@ -39,7 +44,7 @@ checked, 64 usage.
 ## As a Stellar CLI plugin
 
 The Stellar CLI runs any executable named `stellar-<name>` on your `PATH`
-as `stellar <name>`. After `npm link`:
+as `stellar <name>`. After `npm install -g lumenlenz` (or `npm link`):
 
 ```sh
 stellar lumenlenz lookup https://stellar.expert/explorer/testnet/tx/<hash>

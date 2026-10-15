@@ -158,9 +158,11 @@ mistake. The lost part was restored from `01d2144` in the next change.
   library entry point, a `stellar-lumenlenz` binary that the Stellar
   CLI runs as `stellar lumenlenz` (tested with stellar-cli 28.0.0), and
   [the developer guide](DEVELOPERS.md). A packed tarball installed into a
-  fresh project worked as a library and as a command. The owner approved
-  publishing it as an experimental release; `npm run release:check`
-  (also run in CI) checks the package before that.
+  fresh project worked as a library and as a command. Published to npm
+  on 2026-10-15 as `lumenlenz` 0.1.0, an experimental release, from commit
+  3344022 (tag `v0.1.0`); `npm run release:check` (also run in CI) passed
+  first, and the package installed from npm was tried as a library, a
+  command and a Stellar CLI plugin.
 - Mainnet RISC Zero, left open: no mainnet contract address is published
   by Boundless (`boundless-xyz/stellar-risc0-verifier`, its deployment
   notes) or Nethermind (`deployment.toml` has blank addresses), and the

@@ -59,8 +59,8 @@ read through an RPC the operator chooses; no proof has been found there yet
 
 Developers: install, the command line, the Stellar CLI plugin
 (`stellar lumenlenz …`), the library and the agent tool server are in
-[the developer guide](docs/DEVELOPERS.md). Version 0.1.0; not yet
-published to npm.
+[the developer guide](docs/DEVELOPERS.md). Version 0.1.0 is
+on npm as an experimental release: `npm install -g lumenlenz`.
 
 Read [the charter](docs/PROJECT_CHARTER.md), [the handoff](docs/HANDOFF.md)
 and [the prototype notes](docs/VERIFICATION_PROTOTYPE.md). What blocks a

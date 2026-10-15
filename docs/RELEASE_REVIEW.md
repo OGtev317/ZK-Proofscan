@@ -79,7 +79,7 @@ the blockers below were cleared; the page says it is an unaudited prototype.
 
 - Who reviews the adapter, and what evidence a review must leave behind.
 - Decided 2026-10-15: version 0.1.0 is published to npm as an experimental
-  release. A review of the Stellar Private Payments explanation has been
+  release, as `lumenlenz` (published 2026-10-15). A review of the Stellar Private Payments explanation has been
   prepared for its authors ([the review packet](review/stellar-private-payments.md))
   and is not yet sent.
 - Whether exports should bundle the key file and adapter so a rerun does not
