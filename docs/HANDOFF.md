@@ -102,7 +102,7 @@ a registry entry, an adapter and fixtures, not new code.
 - 2026-10-14: arkworks, from a list of libraries the owner gave. It is a
   second, independent verifier for every Groth16 proof. Of the same list,
   Circom and snarkjs were already here; o1js (for Mina, under Mina zkML) was
-  chosen to follow; libZK (Google's Longfellow) was left for later as the
+  chosen to follow, then deferred by the owner on 2026-10-15; libZK (Google's Longfellow) was left for later as the
   largest job; libsnark and zksk were not added, being unmaintained with no
   standard proof file.
 - 2026-10-11: verifier libraries so that the first test release covers four
