@@ -6,7 +6,7 @@ import type { SuppliedKeyEngine } from './supplied-key/verify.js';
 /** The arkworks release the module is built from. A test checks this against the build's lock file. */
 export const ARK_GROTH16_VERSION = '0.6.0';
 /** SHA-256 of `artifacts/ark-groth16/ark-groth16.wasm`, built by `scripts/build-ark-groth16.sh`. */
-export const ARK_GROTH16_WASM_SHA256 = '6925ac35fb0105e99fd3327eba756f187643b2e4f06855def045e06efedbe6d8';
+export const ARK_GROTH16_WASM_SHA256 = 'bee54115f999da60d06a830988da829b95acc91515dd5c1bc69c0a58eeaad7e8';
 
 export const ARK_IDENTITY: VerifierIdentity = { name: 'ark-groth16', version: ARK_GROTH16_VERSION };
 

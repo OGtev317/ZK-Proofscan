@@ -2,10 +2,14 @@
 
 `ark-groth16.wasm` is built from `verifiers/ark-groth16` by
 `scripts/build-ark-groth16.sh`, with Rust 1.97.1 (pinned in
-`rust-toolchain.toml`) and every crate version pinned in `Cargo.lock`. The
-script with `--check` rebuilds it and compares; the CI does the same on
-Linux. Its SHA-256 is pinned in `src/ark-groth16.ts`:
-`6925ac35fb0105e99fd3327eba756f187643b2e4f06855def045e06efedbe6d8`.
+`rust-toolchain.toml`) and every crate version pinned in `Cargo.lock`, on
+Linux x86-64: this file is the CI's build. The script with `--check`
+rebuilds it and compares, and the CI does so on every push. Measured: the
+same source and toolchain on macOS with Apple silicon give different,
+equally valid bytes, because the compiler's own platform affects its output;
+that build passes every test but does not match. Its SHA-256 is pinned in
+`src/ark-groth16.ts`:
+`bee54115f999da60d06a830988da829b95acc91515dd5c1bc69c0a58eeaad7e8`.
 
 The verifier is `ark-groth16` 0.6.0 from arkworks
 (<https://github.com/arkworks-rs/groth16>), with `ark-bn254` and

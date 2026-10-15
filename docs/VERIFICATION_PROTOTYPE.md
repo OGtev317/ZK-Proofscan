@@ -229,9 +229,10 @@ Since 2026-10-14 every Groth16 proof, on the command line, in the tool
 server and in the page, is checked by snarkjs and by `ark-groth16`, and a
 result stands only when both agree; a disagreement is reported as not
 checked. arkworks runs as a 188 KB WebAssembly module that imports
-nothing, built reproducibly from `verifiers/ark-groth16` with Rust 1.97.1;
-the CI rebuilds it on Linux and fails if it differs from the committed
-file.
+nothing, built from `verifiers/ark-groth16` with Rust 1.97.1 on Linux
+x86-64; the CI rebuilds it there on every push and fails if it differs from
+the committed file. A build on macOS gives different bytes; see
+`artifacts/ark-groth16/README.md`.
 
 ## Findings
 
