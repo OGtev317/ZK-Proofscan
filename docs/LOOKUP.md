@@ -2,7 +2,8 @@
 
 Written 2026-10-11. The owner approved read-only chain lookups through
 Alchemy, on any chain, on that date, and read-only requests to a public
-Stellar RPC, test network first, on 2026-10-14 (see "Stellar" below).
+Stellar RPC: the test network on 2026-10-14, the main network on
+2026-10-15 (see "Stellar" below).
 Nothing else on a chain is approved: no wallet, no signing, no
 transactions, no deployment.
 
@@ -179,9 +180,27 @@ before the transaction, and the proof passed here with nine public
 inputs. These are the first real proofs this tool has checked under any
 Stellar Private Payments key. The answers for the first are a test fixture.
 
+### The main network
+
+Added 2026-10-15: `lookup --chain stellar-mainnet` reads the same two
+calls. The Stellar Development Foundation runs no public RPC for the main
+network, so this tool has no default: the operator names one in
+`STELLAR_MAINNET_RPC_URL`, and the transaction hash goes to whoever runs
+it. Public ones are listed at
+<https://developers.stellar.org/docs/data/apis/rpc/providers>; Gateway,
+sorobanrpc.com and Lightsail each answered for the main network on
+2026-10-15.
+
+Tested on the main network that day through sorobanrpc.com: an ordinary
+recent transaction was reported as not a call this tool reads, the test
+network transaction's hash as not found, and the public testnet RPC named
+as a main-network RPC as not serving the main network. **No proof has been
+looked up on the main network**: no deployment of either contract there
+was found. The keys recorded for Stellar Private Payments are its testnet
+keys, and a report says so.
+
 ### Not done on Stellar
 
-- Stellar's main network. Only the test network is approved.
 - The Stellar Private Payments pool with an authority view key (`gvk`),
   whose call carries more fields; it had no transactions to test with.
   The RISC Zero verifier, which has no deployment on record in its

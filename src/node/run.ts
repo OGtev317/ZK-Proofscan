@@ -85,15 +85,21 @@ export const LOOKUP_CHAINS: readonly string[] = [...CHAINS.map((known) => known.
 
 /**
  * Finds a proof in a transaction and checks it here. Read-only. An Ethereum
- * chain needs a provider configured in the environment; Stellar's test
- * network uses `STELLAR_RPC_URL` if set, and otherwise its public RPC.
+ * chain needs a provider configured in the environment. Stellar's test
+ * network uses `STELLAR_RPC_URL` if set, and otherwise the Foundation's
+ * public RPC; its main network needs `STELLAR_MAINNET_RPC_URL`.
  */
 export async function lookupAndCheck(chainName: string, transaction: string, env: Record<string, string | undefined>): Promise<LookedUp> {
   const chain = CHAINS.find((known) => known.name === chainName);
   const stellar = STELLAR_NETWORKS.find((known) => known.name === chainName);
   if (chain === undefined && stellar === undefined) return { kind: 'not-checked', reason: `the chain must be one of ${LOOKUP_CHAINS.join(', ')}` };
-  const address = chain === undefined ? env.STELLAR_RPC_URL || stellar!.defaultRpc : rpcUrlFromEnvironment(chain, env);
-  if (address === undefined) return { kind: 'not-checked', reason: 'no chain data provider is configured; set ALCHEMY_API_KEY or ZK_PROOFSCAN_RPC_URL in the environment' };
+  const address = chain === undefined ? env[stellar!.rpcVariable] || stellar!.defaultRpc : rpcUrlFromEnvironment(chain, env);
+  if (address === undefined) {
+    return {
+      kind: 'not-checked',
+      reason: chain === undefined ? `no RPC is configured for ${stellar!.name}; set ${stellar!.rpcVariable} in the environment to the RPC you choose` : 'no chain data provider is configured; set ALCHEMY_API_KEY or ZK_PROOFSCAN_RPC_URL in the environment',
+    };
+  }
   let found;
   try {
     const rpc = httpRpc(address);

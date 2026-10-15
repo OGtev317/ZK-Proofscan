@@ -5,16 +5,23 @@ import type { Lookup } from './lookup.js';
 import { RpcError, type RpcClient } from './rpc.js';
 import type { StellarSource } from './source.js';
 
-/** A Stellar network this tool reads. Only the test network is approved. */
+/** A Stellar network this tool reads. Reading only: the owner approved the test network, then the main network, on 2026-10-14 and 2026-10-15. */
 export interface StellarNetwork {
   name: string;
   passphrase: string;
-  /** The public RPC used when the operator names none. */
-  defaultRpc: string;
+  /** The environment variable in which the operator names an RPC. */
+  rpcVariable: string;
+  /**
+   * The RPC used when the operator names none. The main network has none:
+   * the Stellar Development Foundation runs no public RPC for it, and this
+   * tool does not choose a company to send transaction hashes to.
+   */
+  defaultRpc?: string;
 }
 
 export const STELLAR_NETWORKS: readonly StellarNetwork[] = [
-  { name: 'stellar-testnet', passphrase: Networks.TESTNET, defaultRpc: 'https://soroban-testnet.stellar.org' },
+  { name: 'stellar-testnet', passphrase: Networks.TESTNET, rpcVariable: 'STELLAR_RPC_URL', defaultRpc: 'https://soroban-testnet.stellar.org' },
+  { name: 'stellar-mainnet', passphrase: Networks.PUBLIC, rpcVariable: 'STELLAR_MAINNET_RPC_URL' },
 ];
 
 /** The library that reads Stellar's transaction format. A test checks this against the installed package. */

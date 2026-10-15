@@ -180,7 +180,7 @@ const lookup: Tool = {
   name: 'lookup_transaction',
   title: 'Find and check a proof in a transaction',
   description:
-    `Asks the chain data provider the operator configured for one transaction, reads a zero-knowledge proof out of it if it is a call this tool knows, and checks that proof on this machine. Read-only: it sends the transaction hash to the provider and nothing to the chain. Chains: ${LOOKUP_CHAINS.join(', ')}. On stellar-testnet it reads a call to Nethermind's UltraHonk verifier contract, with the key that contract stores, or a transact call to a Stellar Private Payments pool, with the recorded key found in its verifier's code. The provider is trusted only for where the proof was found; the proof itself is verified here.`,
+    `Asks the chain data provider the operator configured for one transaction, reads a zero-knowledge proof out of it if it is a call this tool knows, and checks that proof on this machine. Read-only: it sends the transaction hash to the provider and nothing to the chain. Chains: ${LOOKUP_CHAINS.join(', ')}. On stellar-testnet and stellar-mainnet it reads a call to Nethermind's UltraHonk verifier contract, with the key that contract stores, or a transact call to a Stellar Private Payments pool, with the recorded key found in its verifier's code. The provider is trusted only for where the proof was found; the proof itself is verified here.`,
   inputSchema: {
     type: 'object',
     properties: {

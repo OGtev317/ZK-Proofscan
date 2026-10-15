@@ -223,9 +223,21 @@ describe('looking up on Stellar from the command line', () => {
     const rerun = await run('rerun', exported);
     expect(rerun.status).toBe(0);
     expect(rerun.stdout).toContain('Source recorded in the export');
-    // An Ethereum chain name is still refused without its own provider, and Stellar mainnet is not offered.
-    expect((await run('lookup', HASH, '--chain', 'stellar-mainnet')).stdout).toContain('the chain must be one of');
+    // A network this tool does not read is refused by name.
+    expect((await run('lookup', HASH, '--chain', 'stellar-futurenet')).stdout).toContain('the chain must be one of');
   }, 180_000);
+
+  it('reads the main network only through an RPC the operator names', async () => {
+    const mainnet = STELLAR_NETWORKS.find((network) => network.name === 'stellar-mainnet')!;
+    expect(mainnet.defaultRpc).toBeUndefined();
+    expect(await lookupAndCheck('stellar-mainnet', HASH, {})).toEqual({ kind: 'not-checked', reason: 'no RPC is configured for stellar-mainnet; set STELLAR_MAINNET_RPC_URL in the environment to the RPC you choose' });
+    // A test network RPC named as the main network is caught by its passphrase.
+    const testnetAnswers = await lookupStellarTransaction({ network: mainnet, transaction: HASH, rpc: fake(), recordedKeys: stellarPrivatePaymentsKeys });
+    expect(testnetAnswers).toEqual({ found: false, reason: 'the provider is not serving stellar-mainnet' });
+    // A provider that claims the main network but sends a test network transaction: its hash under the main network's passphrase is not the one asked for.
+    const claiming = fake({ getNetwork: { passphrase: mainnet.passphrase } });
+    await expect(lookupStellarTransaction({ network: mainnet, transaction: HASH, rpc: claiming, recordedKeys: stellarPrivatePaymentsKeys })).rejects.toThrow('the provider answered about a different transaction');
+  });
 
   it('offers stellar-testnet through the same lookup, refusing unknown names', async () => {
     const result = await lookupAndCheck('stellar-pubnet', HASH, {});

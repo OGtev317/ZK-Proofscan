@@ -25,8 +25,9 @@ lookup asks a chain data provider for a transaction, reads a proof out of it
 and checks that proof here. It only reads, and sends the transaction hash to
 that provider. Chains: ethereum, sepolia, base, base-sepolia, optimism,
 arbitrum and polygon, which need ALCHEMY_API_KEY or ZK_PROOFSCAN_RPC_URL in
-the environment; and stellar-testnet, which uses STELLAR_RPC_URL if set and
-otherwise the Stellar Development Foundation's public testnet RPC.`;
+the environment; stellar-testnet, which uses STELLAR_RPC_URL if set and
+otherwise the Stellar Development Foundation's public testnet RPC; and
+stellar-mainnet, which needs STELLAR_MAINNET_RPC_URL, an RPC you choose.`;
 
 // Exit codes keep "the proof is wrong" apart from "the check did not happen".
 const EXIT: Record<Report['outcome'], number> = { valid: 0, invalid: 1, unsupported: 2, error: 3 };

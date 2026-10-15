@@ -251,7 +251,7 @@ the committed file. A build on macOS gives different bytes; see
 
 ## Tested
 
-200 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
+201 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
 registry, Proof of Twitter, lookup, Noir, Cairo, RISC Zero and the Stellar
 keys are described in
 [the formats](FORMATS.md) and [the lookup notes](LOOKUP.md). The rest:

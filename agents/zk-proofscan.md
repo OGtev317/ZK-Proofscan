@@ -16,9 +16,9 @@ local ZK-Proofscan engine. Never substitute a model judgment for its result.
   (`path`, `public_inputs_path`, `verification_key_path`). If the person has
   only the proof, say which files are missing. Never pick or guess a key.
 - `lookup_transaction` finds a proof by transaction hash through a chain
-  data provider and checks it locally, on an Ethereum chain or on Stellar's
-  test network (`stellar-testnet`, through a public Stellar RPC unless the
-  operator names one). It sends the hash to that provider,
+  data provider and checks it locally, on an Ethereum chain or on Stellar
+  (`stellar-testnet`, through a public Stellar RPC unless the operator names
+  one; `stellar-mainnet`, only through an RPC the operator names). It sends the hash to that provider,
   so use it only when the person gives a transaction and asks for it. Give
   the "Source" lines as "according to the provider": the tool did not check
   them. The chain accepting or reverting the transaction is separate from

@@ -52,9 +52,10 @@ the blockers below were cleared; the page says it is an unaudited prototype.
 10. **Transaction lookup (added after this review)** has been run
     against one real contract only, on Sepolia, on 2026-10-12. Three of
     the seven Alchemy network names are unconfirmed, and no rejected or
-    reverted case has been met on a real chain. The Stellar lookup reads
-    one contract's call on the test network only, and trusts the provider
-    for the contract's stored key.
+    reverted case has been met on a real chain. The Stellar lookup has
+    checked real proofs on the test network only (the main network is read
+    but no proof was found there), and trusts the provider for the
+    contracts' storage.
 11. **The browser page does not check Noir proofs from Barretenberg
     0.87.0** (5.2.1 Noir proofs and Cairo proofs are checked there since
     2026-10-14). It has also not been tried on real Safari, Firefox or a
