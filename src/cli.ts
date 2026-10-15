@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { plainFacts, renderFacts } from './chain/facts.js';
 import { checkFile, lookupAndCheck, message, renderLookup, renderRerun, rerunCode, rerunFile, saveExport, type ProofPaths } from './node/run.js';
 import { stopEngines } from './node/stop.js';
 import { renderReport, type Report } from './report.js';
@@ -55,6 +56,11 @@ async function check(paths: ProofPaths, json: boolean, exportPath: string | unde
 
 async function lookup(transaction: string, chain: string | undefined, json: boolean, exportPath: string | undefined): Promise<number> {
   const found = await lookupAndCheck(chain, transaction, process.env);
+  if (found.kind === 'not-checked' && found.facts !== undefined) {
+    // The transaction was read; it holds no proof this tool reads.
+    console.log(json ? JSON.stringify({ lookup: 'no-supported-proof', reason: found.reason, facts: found.facts }, null, 2) : `${renderFacts(found.facts)}\n\n${plainFacts(found.facts)}`);
+    return EXIT.unsupported;
+  }
   if (found.kind === 'not-checked') {
     console.log(json ? JSON.stringify({ lookup: 'not-checked', reason: found.reason }, null, 2) : `Not checked: ${found.reason}.\nThis says nothing about whether a proof is valid.`);
     return EXIT.error;

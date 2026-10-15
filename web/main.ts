@@ -9,7 +9,8 @@ import { resolveTransaction } from '../src/chain/find.js';
 import { familyOf, NETWORKS, PAGE_RPCS, readTransactionReference, type ChainFamily } from '../src/chain/reference.js';
 import { renderChainSource, type ChainSource } from '../src/chain/source.js';
 import { MAX_EXPORT_CHARACTERS, writeExport } from '../src/export.js';
-import { plainWords } from '../src/plain.js';
+import { factLines, type TransactionFacts } from '../src/chain/facts.js';
+import { explain, type Explained } from '../src/explain.js';
 import { binaryBytes, isBinaryPart, MAX_PROOF_PART_CHARACTERS, MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, partFromBytes, type ProofInputs } from '../src/inputs.js';
 import { reportSections, unreadReport, type Report } from '../src/report.js';
 import type { Request, Response, ToPage } from './protocol.js';
@@ -40,6 +41,17 @@ const lookupNote = $<HTMLParagraphElement>('lookup-note');
 const exampleLookup = $<HTMLButtonElement>('example-lookup');
 const familyChoices = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="family"]'));
 const plain = $<HTMLParagraphElement>('plain');
+const lookupForm = $<HTMLFormElement>('lookup-form');
+const networkSummary = $<HTMLSpanElement>('network-summary');
+const statusCell = $<HTMLDivElement>('status-cell');
+const factStatus = $<HTMLElement>('fact-status');
+const factProof = $<HTMLElement>('fact-proof');
+const statusNote = $<HTMLParagraphElement>('status-note');
+const provesBlock = $<HTMLDivElement>('proves-block');
+const provesList = $<HTMLUListElement>('proves');
+const unknownBlock = $<HTMLDivElement>('unknown-block');
+const unknownList = $<HTMLUListElement>('unknown');
+const factsBox = $<HTMLDivElement>('facts');
 const sourceBox = $<HTMLDivElement>('source');
 const share = $<HTMLButtonElement>('share');
 const examples = [$<HTMLButtonElement>('example-semaphore'), $<HTMLButtonElement>('example-tampered'), $<HTMLButtonElement>('example-risc-zero'), $<HTMLButtonElement>('example-noir'), $<HTMLButtonElement>('example-cairo')] as const;
@@ -97,9 +109,55 @@ proofText.addEventListener('input', () => {
 let current: { inputs: ProofInputs; report: Report; source?: ChainSource; shared?: { network: string; hash: string } } | undefined;
 
 /** Everything shown comes through textContent: no file content is ever parsed as markup. */
-function show(report: Report, source?: ChainSource, recordedSource = false): void {
-  plain.textContent = plainWords(report, source);
+/** The reader's view: what happened, the two verdicts, what the proof shows and what it does not. */
+function present(explained: Explained): void {
+  plain.textContent = explained.happened;
   plain.hidden = false;
+  statusCell.hidden = explained.status === undefined;
+  statusNote.hidden = explained.status === undefined;
+  factStatus.textContent = explained.status?.text ?? '';
+  statusNote.textContent = explained.status?.note ?? '';
+  factProof.textContent = explained.proofCheck.text;
+  factProof.className = explained.proofCheck.tone;
+  const fill = (block: HTMLElement, list: HTMLUListElement, lines: string[]): void => {
+    list.replaceChildren(
+      ...lines.map((line) => {
+        const entry = document.createElement('li');
+        entry.textContent = line;
+        return entry;
+      }),
+    );
+    block.hidden = lines.length === 0;
+  };
+  fill(provesBlock, provesList, explained.proves);
+  fill(unknownBlock, unknownList, explained.unknown);
+}
+
+/** A transaction that was read but holds no proof this tool reads: its facts, and nothing to check. */
+function showFacts(facts: TransactionFacts): void {
+  present(explain({ facts }));
+  const title = document.createElement('h3');
+  title.textContent = 'What the provider reported about the transaction';
+  const list = document.createElement('dl');
+  list.className = 'facts-list';
+  for (const [label, value] of factLines(facts)) {
+    const term = document.createElement('dt');
+    term.textContent = label;
+    const detail = document.createElement('dd');
+    detail.textContent = value;
+    list.append(term, detail);
+  }
+  factsBox.replaceChildren(title, list);
+  factsBox.hidden = false;
+  sourceBox.hidden = true;
+  sections.replaceChildren();
+  reportBox.hidden = false;
+  reportBox.dataset.outcome = 'no-proof';
+}
+
+function show(report: Report, source?: ChainSource, recordedSource = false): void {
+  present(explain(source === undefined ? { report } : { report, source }));
+  factsBox.hidden = true;
   if (source === undefined) {
     sourceBox.hidden = true;
     sourceBox.replaceChildren();
@@ -240,29 +298,73 @@ function chooseFamily(family: ChainFamily, network?: string): void {
   );
   describeProvider();
 }
-function describeProvider(): void {
-  const host = new URL(PAGE_RPCS[network()]!).hostname;
-  lookupNote.textContent = `Looking up sends the transaction hash to ${host}, a public RPC, which can see that someone asked about it. The proof it finds is then checked on this device.`;
+/** The networks a lookup will ask, in order: a bare Stellar hash is tried on testnet, then mainnet, unless a network was chosen by hand. */
+let chosenByHand = false;
+function candidates(): string[] {
+  const reference = readTransactionReference(lookupText.value);
+  return reference?.family === 'stellar' && reference.network === undefined && !chosenByHand ? ['stellar-testnet', 'stellar-mainnet'] : [network()];
 }
-for (const choice of familyChoices) choice.addEventListener('change', () => chooseFamily(choice.value as ChainFamily));
-lookupNetwork.addEventListener('change', describeProvider);
+const host = (name: string): string => new URL(PAGE_RPCS[name]!).hostname;
+function describeProvider(): void {
+  const names = candidates();
+  networkSummary.textContent = names.length > 1 ? 'Stellar testnet, then mainnet' : (NETWORK_LABELS[names[0]!] ?? names[0]!);
+  const to = names.length > 1 ? `${host(names[0]!)}, then, if it is not found there, to ${host(names[1]!)}` : host(names[0]!);
+  lookupNote.textContent = `Checking sends the transaction hash to ${to}, a public RPC that can see someone asked about it. Any proof found is checked on this device.`;
+}
+for (const choice of familyChoices)
+  choice.addEventListener('change', () => {
+    chosenByHand = true;
+    chooseFamily(choice.value as ChainFamily);
+  });
+lookupNetwork.addEventListener('change', () => {
+  chosenByHand = true;
+  describeProvider();
+});
 // A pasted link or hash picks its own family and network.
 lookupText.addEventListener('input', () => {
   const reference = readTransactionReference(lookupText.value);
   if (reference === undefined) return;
   const chosen = familyChoices.find((choice) => choice.checked)?.value;
-  if (reference.network !== undefined) chooseFamily(reference.family, reference.network);
-  else if (chosen !== reference.family) chooseFamily(reference.family);
+  if (reference.network !== undefined) {
+    chosenByHand = false;
+    chooseFamily(reference.family, reference.network);
+  } else if (chosen !== reference.family) {
+    chosenByHand = false;
+    chooseFamily(reference.family);
+  } else describeProvider();
 });
 
 async function lookUp(): Promise<void> {
-  const resolved = resolveTransaction(lookupText.value, network());
-  if ('reason' in resolved) throw new Error(resolved.reason);
+  // A new lookup replaces the last result as soon as it starts.
+  reportBox.hidden = true;
   const mine = ++latest;
-  const response = await ask({ kind: 'lookup', network: resolved.network, hash: resolved.hash });
-  if (mine !== latest) return;
+  const tried = candidates();
+  let resolved: { network: string; hash: string } | undefined;
+  let response: Response | undefined;
+  for (const [index, name] of tried.entries()) {
+    const next = resolveTransaction(lookupText.value, name);
+    if ('reason' in next) throw new Error(next.reason);
+    resolved = next;
+    if (index > 0) status.textContent = `Not found on ${NETWORK_LABELS[tried[index - 1]!]}; trying ${NETWORK_LABELS[name]}…`;
+    response = await ask({ kind: 'lookup', network: next.network, hash: next.hash });
+    if (mine !== latest) return;
+    const notFound = response.ok && response.kind === 'lookup' && !response.found && response.facts === undefined && response.reason.startsWith('the provider has no such transaction');
+    if (!notFound) break;
+  }
+  if (response === undefined || resolved === undefined) throw new Error('no network to look the transaction up on');
   if (!response.ok) throw new Error(response.message);
   if (response.kind !== 'lookup') throw new Error('unexpected answer from the verification worker');
+  if (tried.length > 1) chooseFamily('stellar', resolved.network);
+  if (!response.found && response.facts !== undefined) {
+    // Read, but holding no proof this tool reads: show what it was rather than an error.
+    current = undefined;
+    rerunResult.hidden = true;
+    download.hidden = true;
+    share.hidden = true;
+    showFacts(response.facts);
+    history.replaceState(null, '', `?network=${encodeURIComponent(resolved.network)}&tx=${encodeURIComponent(resolved.hash)}`);
+    return;
+  }
   if (!response.found) throw new Error(response.reason);
   current = { inputs: response.inputs, report: response.report, source: response.source, shared: resolved };
   rerunResult.hidden = true;
@@ -272,9 +374,14 @@ async function lookUp(): Promise<void> {
   // The address now names this result, so it can be shared or reloaded.
   history.replaceState(null, '', `?network=${encodeURIComponent(resolved.network)}&tx=${encodeURIComponent(resolved.hash)}`);
 }
-lookupButton.addEventListener('click', () => void busy('Looking up the transaction, then checking its proof on this device…', lookUp));
+// Enter or the button: the form is never submitted anywhere.
+lookupForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (!lookupButton.disabled) void busy('Looking up the transaction, then checking any proof on this device…', lookUp);
+});
 exampleLookup.addEventListener('click', () => {
   lookupText.value = 'https://sepolia.etherscan.io/tx/0xca718b1f6cd0eb1d4bc47cd95a73d085bd0077cfc7553de6e61ae5d80669c787';
+  chosenByHand = false;
   chooseFamily('ethereum', 'sepolia');
   void busy('Looking up the transaction, then checking its proof on this device…', lookUp);
 });
@@ -295,6 +402,8 @@ share.addEventListener('click', () => {
   const family = network === null ? undefined : familyOf(network);
   chooseFamily(family ?? 'ethereum', family === undefined ? undefined : network!);
   if (family !== undefined && hash !== null) {
+    // The link names its network, so only that one is asked.
+    chosenByHand = true;
     lookupText.value = hash;
     void busy('Looking up the shared transaction, then checking its proof on this device…', lookUp);
   }

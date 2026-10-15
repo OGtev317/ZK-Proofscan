@@ -94,7 +94,7 @@ scope.onmessage = (event) => {
         const address = PAGE_RPCS[request.network];
         if (address === undefined) throw new Error('this page does not look up transactions on that network');
         const found = await findProof(request.network, request.hash, httpRpc(address), recordedFiles(scanning));
-        if (!found.found) scope.postMessage({ id: request.id, ok: true, kind: 'lookup', found: false, reason: found.reason });
+        if (!found.found) scope.postMessage({ id: request.id, ok: true, kind: 'lookup', found: false, reason: found.reason, ...(found.facts === undefined ? {} : { facts: found.facts }) });
         else scope.postMessage({ id: request.id, ok: true, kind: 'lookup', found: true, source: found.source, inputs: found.inputs, report: await scan(found.inputs, scanning) });
       } else if (request.kind === 'check') {
         scope.postMessage({ id: request.id, ok: true, kind: 'check', report: await scan(request.inputs, scanning) });

@@ -297,31 +297,49 @@ export async function lookupStellarTransaction(parts: { network: StellarNetwork;
 
   let envelope: xdr.TransactionEnvelope;
   let computed: string;
+  let sender: string;
   try {
     envelope = xdr.TransactionEnvelope.fromXDR(transaction.envelopeXdr, 'base64');
-    computed = hex(TransactionBuilder.fromXDR(envelope, network.passphrase).hash());
+    const built = TransactionBuilder.fromXDR(envelope, network.passphrase);
+    computed = hex(built.hash());
+    sender = 'innerTransaction' in built ? built.innerTransaction.source : built.source;
   } catch {
     throw new RpcError('the provider sent a transaction that cannot be read');
   }
   // The hash is computed here from what was sent, so the transaction read is the one asked for.
   if (computed !== hash) throw new RpcError('the provider answered about a different transaction');
 
-  const ops = operations(envelope);
-  if (ops === undefined || ops.length !== 1 || ops[0]!.body().switch().name !== 'invokeHostFunction') return no('the transaction is not a call this tool reads a proof from');
+  const ops = operations(envelope) ?? [];
+  // Read but holding no proof this tool reads: say what the transaction was.
+  const notRead = (reason: string): Lookup => ({
+    found: false,
+    reason,
+    facts: {
+      family: 'stellar',
+      provider: rpc.provider,
+      network: network.name,
+      transaction: hash,
+      position: ledger,
+      status: transaction.status === 'SUCCESS' ? 'succeeded' : 'failed',
+      from: sender,
+      ...describeOperations(ops),
+    },
+  });
+  if (ops.length !== 1 || ops[0]!.body().switch().name !== 'invokeHostFunction') return notRead('the transaction is not a call this tool reads a proof from');
   const host = ops[0]!.body().invokeHostFunctionOp().hostFunction();
-  if (host.switch().name !== 'hostFunctionTypeInvokeContract') return no('the transaction is not a call this tool reads a proof from');
+  if (host.switch().name !== 'hostFunctionTypeInvokeContract') return notRead('the transaction is not a call this tool reads a proof from');
   const invoked = host.invokeContract();
   const contract = Address.fromScAddress(invoked.contractAddress()).toString();
-  if (!StrKey.isValidContract(contract)) return no('the transaction is not a call this tool reads a proof from');
+  if (!StrKey.isValidContract(contract)) return notRead('the transaction is not a call this tool reads a proof from');
 
   let read: Read;
   try {
     const name = invoked.functionName().toString();
     if (name === SOROBAN_CALLS.ultraHonk.function) read = await readUltraHonkCall(rpc, invoked.contractAddress(), invoked.args());
     else if (name === SOROBAN_CALLS.privatePayments.function) read = await readPoolCall(rpc, invoked.contractAddress(), invoked.args(), parts.recordedKeys);
-    else return no('the transaction is not a call this tool reads a proof from');
+    else return notRead('the transaction is not a call this tool reads a proof from');
   } catch (error) {
-    if (error instanceof NotRead) return no(error.message);
+    if (error instanceof NotRead) return notRead(error.message);
     throw error;
   }
 
@@ -344,4 +362,54 @@ export async function lookupStellarTransaction(parts: { network: StellarNetwork;
       keyLastChanged: read.keyLastChanged,
     },
   };
+}
+
+/** Common operations in plain words; any other kind is spelt out from its name. */
+const OPERATIONS: Record<string, string> = {
+  payment: 'a payment',
+  createAccount: 'creating an account',
+  pathPaymentStrictSend: 'a payment converted between currencies',
+  pathPaymentStrictReceive: 'a payment converted between currencies',
+  manageBuyOffer: "an offer to buy on Stellar's exchange",
+  manageSellOffer: "an offer to sell on Stellar's exchange",
+  createPassiveSellOffer: "an offer to sell on Stellar's exchange",
+  changeTrust: 'allowing an account to hold an asset',
+  accountMerge: 'closing an account',
+  setOptions: "changing an account's settings",
+  invokeHostFunction: 'a smart contract operation',
+};
+const words = (name: string): string => OPERATIONS[name] ?? name.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
+
+/** What a Stellar transaction's operations did, and the one contract or account involved when there is one. */
+function describeOperations(ops: xdr.Operation[]): { action: string; to?: string } {
+  if (ops.length === 1) {
+    const body = ops[0]!.body();
+    const kind = body.switch().name;
+    try {
+      if (kind === 'invokeHostFunction' && body.invokeHostFunctionOp().hostFunction().switch().name === 'hostFunctionTypeInvokeContract') {
+        const invoked = body.invokeHostFunctionOp().hostFunction().invokeContract();
+        const contract = Address.fromScAddress(invoked.contractAddress()).toString();
+        return { action: `a call to ${invoked.functionName().toString()} on contract ${contract}`, to: contract };
+      }
+      if (kind === 'invokeHostFunction') {
+        const host = body.invokeHostFunctionOp().hostFunction().switch().name;
+        if (host === 'hostFunctionTypeUploadContractWasm') return { action: 'uploading the code of a smart contract' };
+        if (host.startsWith('hostFunctionTypeCreateContract')) return { action: 'creating a smart contract' };
+      }
+      if (kind === 'payment') {
+        const payment = body.paymentOp();
+        const kind = payment.asset().switch().name;
+        const code = (bytes: Uint8Array): string => new TextDecoder().decode(bytes).replace(/\0+$/, '');
+        const asset = kind === 'assetTypeNative' ? 'XLM' : kind === 'assetTypeCreditAlphanum4' ? code(payment.asset().alphaNum4().assetCode()) : kind === 'assetTypeCreditAlphanum12' ? code(payment.asset().alphaNum12().assetCode()) : 'an asset';
+        const amount = (Number(payment.amount().toBigInt()) / 1e7).toString();
+        const to = StrKey.encodeEd25519PublicKey(payment.destination().switch().name === 'keyTypeEd25519' ? payment.destination().ed25519() : payment.destination().med25519().ed25519());
+        return { action: `a payment of ${amount} ${asset}`, to };
+      }
+    } catch {
+      // Described by its kind alone below.
+    }
+    return { action: words(kind) };
+  }
+  const kinds = [...new Set(ops.map((op) => words(op.body().switch().name)))];
+  return { action: `${ops.length} operations: ${kinds.join('; ')}` };
 }

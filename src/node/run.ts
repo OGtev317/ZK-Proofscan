@@ -1,4 +1,5 @@
 import { readFile, stat, writeFile } from 'node:fs/promises';
+import type { TransactionFacts } from '../chain/facts.js';
 import { findProof, resolveTransaction } from '../chain/find.js';
 import { CHAINS, httpRpc, rpcUrlFromEnvironment } from '../chain/rpc.js';
 import { renderChainSource, type ChainSource } from '../chain/source.js';
@@ -74,7 +75,7 @@ export const saveExport = (path: string, inputs: ProofInputs, report: Report, so
 export type LookedUp =
   | { kind: 'checked'; source: ChainSource; inputs: ProofInputs; report: Report }
   /** Nothing was checked, and the reason is not a fault in any proof. */
-  | { kind: 'not-checked'; reason: string };
+  | { kind: 'not-checked'; reason: string; facts?: TransactionFacts };
 
 /** Every name `lookup` accepts. */
 export const LOOKUP_CHAINS: readonly string[] = [...CHAINS.map((known) => known.name), ...STELLAR_NETWORKS.map((known) => known.name)];
@@ -106,7 +107,7 @@ export async function lookupAndCheck(chainName: string | undefined, pasted: stri
   } catch (error) {
     return { kind: 'not-checked', reason: message(error) };
   }
-  if (!found.found) return { kind: 'not-checked', reason: found.reason };
+  if (!found.found) return { kind: 'not-checked', reason: found.reason, ...(found.facts === undefined ? {} : { facts: found.facts }) };
   return { kind: 'checked', source: found.source, inputs: found.inputs, report: await checkText(found.inputs) };
 }
 

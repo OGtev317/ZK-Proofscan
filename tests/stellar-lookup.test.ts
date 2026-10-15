@@ -144,7 +144,9 @@ describe('reading a Stellar Private Payments pool transaction', () => {
   it('uses no key that is not in the verifier\'s code', async () => {
     const others = async () => (await stellarPrivatePaymentsKeys()).filter((key) => !key.artifactId.endsWith('policy-tx-2-2-b'));
     const found = await lookUp({}, others);
-    expect(found).toEqual({ found: false, reason: 'no recorded Stellar Private Payments key, with this many public inputs, is in the code of the pool\'s verifier contract' });
+    expect(found).toMatchObject({ found: false, reason: 'no recorded Stellar Private Payments key, with this many public inputs, is in the code of the pool\'s verifier contract' });
+    // What the transaction was is still said.
+    expect(found).toMatchObject({ facts: { family: 'stellar', network: 'stellar-testnet', status: 'succeeded', action: 'a call to transact on contract CA73PEBSX2GXZSMMVL46PTCXY424AIMPXKI7WWUMYJXV22AVY2DXC6DQ' } });
   });
 
   it('refuses verifier code that does not match its hash', async () => {

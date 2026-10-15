@@ -233,3 +233,24 @@ Nethermind's UltraHonk verifier contract checks, is found by a lookup on
 the page but not checked there; the page says so and points to the
 command line.
 
+## Transactions with no proof, and the reader's view
+
+Added 2026-10-15, after a review of the page. A transaction that was read
+but holds no proof this tool reads is no longer reported as a failure to
+check: the lookup returns what the provider said it was (network, block or
+ledger, status, sender, and what it did: a transfer and its amount, a call
+and its function selector, a contract created, or on Stellar a payment, an
+exchange offer, a contract call and the like). The command line prints
+these facts and exits 2 (unsupported); the agent tool returns them as
+`lookup: "no-supported-proof"`. Nothing here is checked by this tool, and
+each line says it is the provider's word.
+
+On the page, a bare Stellar hash is tried on the test network and then,
+if not found there, on the main network; the note beside the button says
+both RPCs will be asked before anything is sent. Results are laid out for
+a reader: what happened; the transaction's status (the provider's word)
+and the proof check side by side; what the proof shows; and what remains
+unknown, which for a recorded key opens with what is known about how the
+key was made. Addresses, verifier versions and the full report are under
+technical details; file checks and export reruns under advanced tools.
+

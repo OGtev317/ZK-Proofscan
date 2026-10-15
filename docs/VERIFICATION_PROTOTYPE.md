@@ -69,7 +69,9 @@ as the command line, and binds them the same way before checking anything.
   hash in the page's address, so the result can be shared: opening such a
   link looks the transaction up again, and the footer says so. Every
   report, looked up or not, now opens with a few sentences in plain words,
-  built only from what the report itself establishes.
+  built only from what the report itself establishes, then the
+  transaction's status and the proof check side by side, what the proof
+  shows and what remains unknown (see the lookup notes).
 
 The page checks RISC Zero receipts, and since 2026-10-14 Noir proofs from
 Barretenberg 5.2.1 and Cairo proofs. A file that is not text, such as a
@@ -269,7 +271,7 @@ the committed file. A build on macOS gives different bytes; see
 
 ## Tested
 
-233 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
+237 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
 registry, Proof of Twitter, lookup, Noir, Cairo, RISC Zero and the Stellar
 keys are described in
 [the formats](FORMATS.md) and [the lookup notes](LOOKUP.md). The rest:
@@ -291,7 +293,7 @@ keys are described in
   refused arguments, exports that the command line reproduces, a forged
   export, malformed and oversized protocol messages.
 
-38 browser tests (nineteen scenarios, each in Chromium and WebKit, run headless
+42 browser tests (twenty-one scenarios, each in Chromium and WebKit, run headless
 through Playwright on macOS): a valid proof, a rejected proof, an unsupported
 file containing markup, recovery after a file that is not text, identical
 exports and cross-reruns between page and command line, a forged export, a
@@ -304,7 +306,9 @@ recorded answers so no network is contacted: an Etherscan link checked,
 exported with its source and rerun by the command line; a stellar.expert
 link that switches the page to Stellar and checks a private payment; and a
 shared link looked up as the page opens, with unreadable input refused
-before anything is sent.
+before anything is sent; a transaction with no proof described rather than
+reported as an error, checked by pressing Enter; and a bare Stellar hash
+tried on testnet, then mainnet.
 
 ## Not tested or not done
 

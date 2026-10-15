@@ -3,83 +3,114 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- The page loads nothing from other sites. The only addresses it may contact are the public RPCs used to look up a transaction, and only when asked to. -->
+    <!-- The page loads nothing from other sites. It contacts a named public RPC only after a transaction lookup or when opening a shared result. -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self'; connect-src 'self' https://sepolia.drpc.org https://eth.drpc.org https://base.drpc.org https://base-sepolia.drpc.org https://optimism.drpc.org https://arbitrum.drpc.org https://polygon-bor.publicnode.com https://soroban-testnet.stellar.org https://mainnet.sorobanrpc.com; base-uri 'none'; form-action 'none'" />
     <meta name="referrer" content="no-referrer" />
-    <meta name="description" content="Checks a zero-knowledge proof in your browser and says what it does and does not establish. Prototype, unaudited." />
+    <meta name="description" content="Paste a blockchain transaction and get a plain-English explanation of the zero-knowledge proof it contains. Prototype, unaudited." />
     <title>ZK-Proofscan</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <main>
-      <h1>ZK-Proofscan</h1>
-      <p class="lede">Checks a zero-knowledge proof on this device and says what it does and does not establish. Nothing is uploaded.</p>
-      <p>It reads a Semaphore v4 proof, a RISC Zero Groth16 receipt or a Cairo proof from the Stone prover on its own. A Groth16, PLONK or FFLONK proof written by snarkjs, or a Noir proof written by Barretenberg, needs its public inputs and verification key as well. Noir proofs from Barretenberg 0.87.0, and looking a proof up by transaction, need the command-line tool.</p>
-      <p class="notice">Prototype. Unaudited, and the explanation wording has not been reviewed by a qualified person. Do not rely on a result from this page for a decision.</p>
+      <header class="hero">
+        <p class="brand">ZK-Proofscan</p>
+        <h1>Paste a transaction.<br />Read what its proof actually shows.</h1>
+        <p class="lede">The proof is found on-chain, checked in your browser and translated into plain English.</p>
+      </header>
 
-      <section aria-labelledby="lookup-heading">
-        <h2 id="lookup-heading">Look up a transaction</h2>
-        <p>Paste a transaction hash, or the link to the transaction on a block explorer such as Etherscan or stellar.expert. A link tells the page which network to use.</p>
-        <div class="family" role="radiogroup" aria-label="Network family">
-          <label><input type="radio" name="family" value="ethereum" checked /> Ethereum</label>
-          <label><input type="radio" name="family" value="stellar" /> Stellar</label>
+      <section class="lookup-panel" aria-labelledby="lookup-heading">
+        <h2 id="lookup-heading" class="sr-only">Translate a transaction proof</h2>
+        <form id="lookup-form" class="search-bar" role="search">
+          <label class="sr-only" for="lookup-text">Transaction hash or block-explorer link</label>
+          <input id="lookup-text" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Paste a transaction hash or explorer link" />
+          <button id="lookup" type="submit">Check transaction</button>
+        </form>
+        <div class="lookup-meta">
+          <p id="lookup-note" class="note"></p>
+          <button id="example-lookup" type="button" class="text-button">Try an example</button>
         </div>
-        <!-- Radio buttons, not a select: WebKit draws a select with styles its own security policy then refuses. -->
-        <div id="lookup-network" class="networks" role="radiogroup" aria-label="Network"></div>
-        <label for="lookup-text">Transaction hash or link</label>
-        <input id="lookup-text" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="0x… or https://stellar.expert/explorer/testnet/tx/…" />
-        <button id="lookup" type="button">Look up</button>
-        <p id="lookup-note" class="note"></p>
-        <div class="examples">
-          <button id="example-lookup" type="button" class="quiet">Try one: an email proof on Ethereum Sepolia</button>
-        </div>
-      </section>
-      <section aria-labelledby="example-heading">
-        <h2 id="example-heading">Try an example</h2>
-        <p>Test proofs made from throwaway values. Each is checked on this device like any other file.</p>
-        <div class="examples">
-          <button id="example-semaphore" type="button" class="quiet">A valid membership proof</button>
-          <button id="example-tampered" type="button" class="quiet">The same proof, altered</button>
-          <button id="example-risc-zero" type="button" class="quiet">A RISC Zero receipt</button>
-          <button id="example-noir" type="button" class="quiet">A Noir proof, with its key</button>
-          <button id="example-cairo" type="button" class="quiet">A Cairo proof (1 MB, slower)</button>
-        </div>
-      </section>
-
-      <section aria-labelledby="check-heading">
-        <h2 id="check-heading">Check a proof</h2>
-        <label for="proof-file">Proof file (.json, a .txt RISC Zero receipt, or a Noir <code>proof</code> file)</label>
-        <input id="proof-file" type="file" />
-        <label for="proof-text">Or paste the proof</label>
-        <textarea id="proof-text" rows="6" spellcheck="false" autocomplete="off"></textarea>
-        <fieldset>
-          <legend>Only for a snarkjs or Noir proof, which is checked with its own verification key</legend>
-          <label for="public-file">Public inputs file (.json, or Noir's <code>public_inputs</code>)</label>
-          <input id="public-file" type="file" />
-          <label for="key-file">Verification key file (.json, or Noir's <code>vk</code>)</label>
-          <input id="key-file" type="file" />
-        </fieldset>
-        <button id="check" type="button">Check proof</button>
-      </section>
-
-      <section aria-labelledby="rerun-heading">
-        <h2 id="rerun-heading">Repeat someone else's check</h2>
-        <label for="export-file">Evidence export (.json)</label>
-        <input id="export-file" type="file" accept=".json,application/json" />
+        <details id="network-settings" class="settings">
+          <summary>Network: <span id="network-summary">Ethereum Sepolia</span></summary>
+          <p>A block-explorer link selects its network automatically. Choose the network here when you paste a hash by itself.</p>
+          <div class="family" role="radiogroup" aria-label="Network family">
+            <label><input type="radio" name="family" value="ethereum" checked /> Ethereum</label>
+            <label><input type="radio" name="family" value="stellar" /> Stellar</label>
+          </div>
+          <!-- Radio buttons, not a select: WebKit draws a select with styles its own security policy then refuses. -->
+          <div id="lookup-network" class="networks" role="radiogroup" aria-label="Network"></div>
+        </details>
       </section>
 
       <p id="status" role="status" aria-live="polite"></p>
-      <section id="report" aria-labelledby="report-heading" hidden>
-        <h2 id="report-heading">Report</h2>
+      <section id="report" class="report" aria-labelledby="report-heading" hidden>
+        <p class="eyebrow">Plain-English translation</p>
+        <h2 id="report-heading">Your transaction, explained</h2>
         <p id="rerun-result" hidden></p>
+        <h3 class="panel-heading">What happened</h3>
         <p id="plain" class="plain" hidden></p>
-        <div id="source" class="section caution" hidden></div>
-        <div id="sections"></div>
-        <button id="download" type="button" hidden>Download evidence export</button>
-        <button id="share" type="button" class="quiet" hidden>Copy a link to this result</button>
+        <dl class="verdicts">
+          <div id="status-cell" class="verdict" hidden><dt>Transaction status</dt><dd id="fact-status"></dd></div>
+          <div class="verdict"><dt>Proof check</dt><dd id="fact-proof"></dd></div>
+        </dl>
+        <p id="status-note" class="note" hidden></p>
+        <div id="proves-block" class="panel"><h3 class="panel-heading">What this proves</h3><ul id="proves"></ul></div>
+        <div id="unknown-block" class="panel"><h3 class="panel-heading">What remains unknown</h3><ul id="unknown"></ul></div>
+        <div class="result-actions">
+          <button id="share" type="button" class="quiet" hidden>Copy result link</button>
+          <button id="download" type="button" class="quiet" hidden>Download evidence</button>
+        </div>
+        <details id="technical-details" class="technical-details">
+          <summary>View technical details</summary>
+          <div id="facts" class="section caution" hidden></div>
+          <div id="source" class="section caution" hidden></div>
+          <div id="sections"></div>
+        </details>
       </section>
+
+      <p class="notice">Prototype. Unaudited, and the explanation wording has not been reviewed by a qualified person. Do not rely on a result from this page for a decision.</p>
+
+      <details id="advanced-tools" class="advanced-tools">
+        <summary>Advanced: check a proof file or evidence export</summary>
+        <div class="advanced-content">
+          <section aria-labelledby="example-heading">
+            <h2 id="example-heading">Try proof-file examples</h2>
+            <p>These test proofs use throwaway values and are checked on this device.</p>
+            <div class="examples">
+              <button id="example-semaphore" type="button" class="quiet">Valid membership proof</button>
+              <button id="example-tampered" type="button" class="quiet">Altered proof</button>
+              <button id="example-risc-zero" type="button" class="quiet">RISC Zero receipt</button>
+              <button id="example-noir" type="button" class="quiet">Noir proof and key</button>
+              <button id="example-cairo" type="button" class="quiet">Cairo proof</button>
+            </div>
+          </section>
+
+          <section aria-labelledby="check-heading">
+            <h2 id="check-heading">Check a proof</h2>
+            <p>Semaphore, RISC Zero and Cairo files can be read on their own. SnarkJS and Noir proofs also need their public inputs and verification key.</p>
+            <label for="proof-file">Proof file</label>
+            <input id="proof-file" type="file" />
+            <label for="proof-text">Or paste the proof</label>
+            <textarea id="proof-text" rows="6" spellcheck="false" autocomplete="off"></textarea>
+            <fieldset>
+              <legend>Additional snarkjs or Noir files</legend>
+              <label for="public-file">Public inputs file</label>
+              <input id="public-file" type="file" />
+              <label for="key-file">Verification key file</label>
+              <input id="key-file" type="file" />
+            </fieldset>
+            <button id="check" type="button">Check proof</button>
+          </section>
+
+          <section aria-labelledby="rerun-heading">
+            <h2 id="rerun-heading">Repeat someone else's check</h2>
+            <label for="export-file">Evidence export (.json)</label>
+            <input id="export-file" type="file" accept=".json,application/json" />
+          </section>
+        </div>
+      </details>
+
       <footer>
-        <p>The check runs in your browser, and the files you choose are not sent anywhere. Looking up a transaction sends its hash, and nothing else, to the public RPC named beside the button, which can see that someone asked about it; opening a shared link to a result does the same. Like any website, the company that hosts this page can see that you visited it and may set its own cookies. Public inputs in a proof can identify a person, so think before sharing a report or an export.</p>
+        <p>Proof files are checked locally and are not uploaded. A transaction lookup sends the transaction hash and standard RPC requests to the provider named above. Stellar lookups may also request the ledger entries needed to read the called contract and verifier. The provider can see the request and ordinary connection information. Public proof inputs can identify or link people, so think before sharing a result or export.</p>
         <p>Open source, GPL-3.0-or-later. <a href="https://github.com/OGtev317/ZK-Proofscan" rel="noopener">Source, documentation and known limits</a>.</p>
       </footer>
     </main>

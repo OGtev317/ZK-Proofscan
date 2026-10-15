@@ -1,3 +1,4 @@
+import type { TransactionFacts } from '../src/chain/facts.js';
 import type { ChainSource } from '../src/chain/source.js';
 import type { RerunResult } from '../src/export.js';
 import type { ProofInputs } from '../src/inputs.js';
@@ -9,7 +10,7 @@ export type Request = { id: number; kind: 'check'; inputs: ProofInputs } | { id:
 export type Response =
   | { id: number; ok: true; kind: 'check'; report: Report }
   | { id: number; ok: true; kind: 'rerun'; result: RerunResult }
-  | { id: number; ok: true; kind: 'lookup'; found: false; reason: string }
+  | { id: number; ok: true; kind: 'lookup'; found: false; reason: string; facts?: TransactionFacts }
   | { id: number; ok: true; kind: 'lookup'; found: true; source: ChainSource; inputs: ProofInputs; report: Report }
   | { id: number; ok: false; message: string };
 

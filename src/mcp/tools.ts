@@ -2,6 +2,7 @@ import { isAbsolute } from 'node:path';
 import { presentCheck, presentRerun } from '../agent/presentation.js';
 import { MAX_EXPORT_CHARACTERS } from '../export.js';
 import { MAX_PROOF_PART_CHARACTERS, type ProofInputs } from '../inputs.js';
+import { plainFacts, renderFacts } from '../chain/facts.js';
 import { renderChainSource } from '../chain/source.js';
 import { checkFile, checkText, LOOKUP_CHAINS, lookupAndCheck, message, renderRerun, rerunFile, rerunText, saveExport } from '../node/run.js';
 import type { Report } from '../report.js';
@@ -193,6 +194,10 @@ const lookup: Tool = {
   async call(args) {
     if (args.transaction === undefined) return refuse('give "transaction", and "chain" unless it is an explorer link');
     const found = await lookupAndCheck(args.chain, args.transaction, process.env);
+    if (found.kind === 'not-checked' && found.facts !== undefined) {
+      const text = `${renderFacts(found.facts)}\n\n${plainFacts(found.facts)}`;
+      return { content: [{ type: 'text', text }], structuredContent: { lookup: 'no-supported-proof', reason: found.reason, facts: found.facts } };
+    }
     if (found.kind === 'not-checked') {
       return { content: [{ type: 'text', text: `Not checked: ${found.reason}.\nThis says nothing about whether a proof is valid.` }], structuredContent: { lookup: 'not-checked', reason: found.reason } };
     }

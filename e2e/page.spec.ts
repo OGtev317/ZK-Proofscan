@@ -37,7 +37,12 @@ async function open(page: Page): Promise<string[]> {
     if (message.type() === 'error') problems.push(`console error: ${message.text()}`);
   });
   await page.goto('/');
+  await expandAll(page);
   return problems;
+}
+/** File checks and the full report sit in collapsed sections; these tests use them directly. */
+async function expandAll(page: Page): Promise<void> {
+  for (const id of ['advanced-tools', 'technical-details']) await page.locator(`#${id}`).evaluate((element) => ((element as HTMLDetailsElement).open = true));
 }
 
 const outcome = (page: Page) => page.locator('#report');
@@ -319,14 +324,18 @@ test('notices a forged export', async ({ page }) => {
 async function providers(page: Page, asked: string[]): Promise<void> {
   const sepolia = JSON.parse(readFileSync(fixture('sepolia/proof-of-twitter-mint.json'), 'utf8')) as Record<string, unknown>;
   const pool = JSON.parse(readFileSync(fixture('stellar-testnet/private-payments/answers.json'), 'utf8')) as Record<string, unknown>;
+  const plainTransaction = JSON.parse(readFileSync(fixture('stellar-testnet/not-a-proof/answers.json'), 'utf8')) as Record<string, unknown>;
+  const mainnet: Record<string, unknown> = { getNetwork: { passphrase: 'Public Global Stellar Network ; September 2015' }, getTransaction: { status: 'NOT_FOUND' } };
   const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type', 'access-control-allow-methods': 'POST' };
   await page.context().route(/^https:\/\//, async (route) => {
     const request = route.request();
     const host = new URL(request.url()).host;
-    const answers = host === 'sepolia.drpc.org' ? sepolia : host === 'soroban-testnet.stellar.org' ? pool : undefined;
-    if (answers === undefined) return route.abort();
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
-    const { id, method, params } = request.postDataJSON() as { id: number; method: string; params: { keys?: string[] } };
+    const { id, method, params } = request.postDataJSON() as { id: number; method: string; params: { keys?: string[]; hash?: string } };
+    // Stellar testnet answers for the pool transaction and the contract-creating one, and knows no other.
+    const testnet = params.hash === undefined || params.hash === (pool.getTransaction as { txHash: string }).txHash ? pool : params.hash === (plainTransaction.getTransaction as { txHash: string }).txHash ? plainTransaction : { ...pool, getTransaction: { status: 'NOT_FOUND' } };
+    const answers = host === 'sepolia.drpc.org' ? sepolia : host === 'soroban-testnet.stellar.org' ? testnet : host === 'mainnet.sorobanrpc.com' ? mainnet : undefined;
+    if (answers === undefined) return route.abort();
     asked.push(`${host} ${method}`);
     const answer = answers[method] as Record<string, unknown> | undefined;
     const result = method === 'getLedgerEntries' && answer !== undefined && !('entries' in answer) ? answer[params.keys![0]!] : answer;
@@ -348,13 +357,20 @@ async function openWithProviders(page: Page, asked: string[], path = '/'): Promi
 test('looks up a transaction from an explorer link, explains it, and can share it', async ({ page }, info) => {
   const asked: string[] = [];
   const problems = await openWithProviders(page, asked);
-  await expect(page.locator('#lookup-note')).toContainText('Looking up sends the transaction hash to sepolia.drpc.org');
+  await expect(page.locator('#lookup-note')).toContainText('Checking sends the transaction hash to sepolia.drpc.org');
   await page.click('#example-lookup');
   await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
   expect(asked).toEqual(['sepolia.drpc.org eth_chainId', 'sepolia.drpc.org eth_getTransactionByHash', 'sepolia.drpc.org eth_getTransactionReceipt']);
   await expect(page.locator('#plain')).toContainText('The proof is valid: snarkjs and ark-groth16, two independent verifiers, both accept it. What it shows: Someone had an email');
   await expect(page.locator('#plain')).toContainText('on Ethereum Sepolia (a test network), according to sepolia.drpc.org; the network accepted that transaction');
   await expect(page.locator('#source')).toContainText('Transaction 0xca718b1f6cd0eb1d4bc47cd95a73d085bd0077cfc7553de6e61ae5d80669c787 on sepolia');
+  // The reader's view: both verdicts side by side, what it proves, what it does not.
+  await expect(page.locator('#fact-status')).toHaveText('Succeeded');
+  await expect(page.locator('#status-note')).toContainText('As reported by sepolia.drpc.org');
+  await expect(page.locator('#fact-proof')).toHaveText('Passed: two independent verifiers agree');
+  await expect(page.locator('#proves')).toContainText('Someone had an email that carries a valid signature');
+  await expect(page.locator('#unknown li').first()).toContainText('About the key:');
+  await expect(page.locator('#unknown')).toContainText('The explanation wording has not been reviewed by a qualified person.');
   expect(new URL(page.url()).search).toBe('?network=sepolia&tx=0xca718b1f6cd0eb1d4bc47cd95a73d085bd0077cfc7553de6e61ae5d80669c787');
 
   // The export carries where the proof was found, and the command line reruns it.
@@ -400,5 +416,33 @@ test('looks up a shared link as it opens, and sends nothing for what it cannot r
   await page.fill('#lookup-text', 'cd1d09c950ff598c329ea4a55578fea38ad674a749bd9808d8316c823cdfb6fc');
   await expect(page.locator('input[name="family"][value="stellar"]')).toBeChecked();
   expect(asked.length).toBe(before);
+  expect(problems).toEqual([]);
+});
+
+test('describes a transaction with no proof instead of calling it an error, and Enter checks', async ({ page }) => {
+  const asked: string[] = [];
+  const problems = await openWithProviders(page, asked);
+  await page.fill('#lookup-text', 'https://stellar.expert/explorer/testnet/tx/294424f4b8818140ecf48e587bac0d9185ee3638f4a769de84dd3a49de1044bb');
+  await page.press('#lookup-text', 'Enter');
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'no-proof');
+  await expect(page.locator('#plain')).toContainText('This is a transaction on the Stellar test network: creating a smart contract. According to soroban-testnet.stellar.org, the network accepted it. No zero-knowledge proof that this tool can read was found in it');
+  await expect(page.locator('#fact-status')).toHaveText('Succeeded');
+  await expect(page.locator('#fact-proof')).toHaveText('No supported proof found');
+  await expect(page.locator('#unknown-block')).toBeHidden();
+  await expect(page.locator('#facts')).toContainText('GAYU5HRTJPRGF4BFKI4BXRLFBEKAMK5BF5L6VTNERKA3P42SN2Y5EJ46');
+  await expect(page.locator('#download')).toBeHidden();
+  expect(asked).toEqual(['soroban-testnet.stellar.org getNetwork', 'soroban-testnet.stellar.org getTransaction']);
+  expect(problems).toEqual([]);
+});
+
+test('tries a bare Stellar hash on testnet, then mainnet, and says so first', async ({ page }) => {
+  const asked: string[] = [];
+  const problems = await openWithProviders(page, asked);
+  await page.fill('#lookup-text', 'ab'.repeat(32));
+  await expect(page.locator('#lookup-note')).toContainText('soroban-testnet.stellar.org, then, if it is not found there, to mainnet.sorobanrpc.com');
+  await expect(page.locator('#network-summary')).toHaveText('Stellar testnet, then mainnet');
+  await page.click('#lookup');
+  await expect(page.locator('#plain')).toContainText('the provider has no such transaction on stellar-mainnet');
+  expect(asked).toEqual(['soroban-testnet.stellar.org getNetwork', 'soroban-testnet.stellar.org getTransaction', 'mainnet.sorobanrpc.com getNetwork', 'mainnet.sorobanrpc.com getTransaction']);
   expect(problems).toEqual([]);
 });

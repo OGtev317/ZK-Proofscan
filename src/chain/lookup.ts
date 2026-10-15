@@ -1,11 +1,16 @@
 import type { ProofInputs } from '../inputs.js';
 import { readCall } from './calls.js';
 import { RpcError, type Chain, type RpcClient } from './rpc.js';
+import type { TransactionFacts } from './facts.js';
 import type { ChainSource } from './source.js';
 
+/**
+ * A proof found in a transaction, or why none was. When the transaction was
+ * read but holds no proof this tool reads, `facts` says what it was.
+ */
 export type Lookup =
   | { found: true; source: ChainSource; inputs: ProofInputs }
-  | { found: false; reason: string };
+  | { found: false; reason: string; facts?: TransactionFacts };
 
 const HASH = /^0x[0-9a-f]{64}$/;
 const ADDRESS = /^0x[0-9a-f]{40}$/;
@@ -44,10 +49,8 @@ export async function lookupTransaction(parts: { chain: Chain; transaction: stri
   const blockNumber = lower(transaction.blockNumber, QUANTITY);
   if (blockHash === undefined || blockNumber === undefined) return no('the transaction is not in a block yet');
   const to = lower(transaction.to, ADDRESS);
-  if (to === undefined) return no('the transaction creates a contract and calls none');
-  if (typeof transaction.input !== 'string' || transaction.input.length > MAX_INPUT_CHARACTERS) return no('the transaction is not a call this tool reads a proof from');
-  const read = readCall(transaction.input.toLowerCase());
-  if (read === undefined) return no('the transaction is not a call this tool reads a proof from');
+  const from = lower(transaction.from, ADDRESS);
+  if (from === undefined || (transaction.to !== null && transaction.to !== undefined && to === undefined)) throw new RpcError('the provider described the transaction in a form this tool does not read');
 
   const receipt = record(await rpc.call('eth_getTransactionReceipt', [hash]));
   const status = receipt === undefined ? undefined : lower(receipt.status, QUANTITY);
@@ -55,8 +58,27 @@ export async function lookupTransaction(parts: { chain: Chain; transaction: stri
     throw new RpcError('the provider gave no consistent receipt for the transaction');
   }
 
+  // Read but holding no proof this tool reads: say what the transaction was.
+  const input = typeof transaction.input === 'string' ? transaction.input.toLowerCase() : '';
+  const facts = (): TransactionFacts => ({
+    family: 'ethereum',
+    provider: rpc.provider,
+    network: chain.name,
+    transaction: hash,
+    position: Number(BigInt(blockNumber)),
+    status: status === '0x1' ? 'succeeded' : 'reverted',
+    from,
+    action: describeCall(to, input, transaction.value, chain.name),
+    ...(to === undefined ? {} : { to }),
+  });
+  const notRead = (reason: string): Lookup => ({ found: false, reason, facts: facts() });
+  if (to === undefined) return notRead('the transaction creates a contract and calls none');
+  if (input.length > MAX_INPUT_CHARACTERS) return notRead('the transaction is not a call this tool reads a proof from');
+  const read = readCall(input);
+  if (read === undefined) return notRead('the transaction is not a call this tool reads a proof from');
+
   const files = read.call.read(read.words);
-  if (files === undefined) return no('the call does not hold a proof this tool reads');
+  if (files === undefined) return notRead('the call does not hold a proof this tool reads');
   const inputs: ProofInputs = read.call.recordedKey === undefined ? files : { ...files, verificationKey: await parts.keyText(read.call.recordedKey) };
   return {
     found: true,
@@ -75,4 +97,22 @@ export async function lookupTransaction(parts: { chain: Chain; transaction: stri
       contractOnRecord: read.call.deployments.some((deployment) => deployment.chainId === chain.chainId && deployment.address === to),
     },
   };
+}
+
+/** The coin each chain pays in, for a plain transfer. */
+const COIN: Record<string, string> = { polygon: 'POL' };
+
+/** What an Ethereum transaction did, from its recipient, call data and value. */
+function describeCall(to: string | undefined, input: string, value: unknown, chain: string): string {
+  if (to === undefined) return 'the creation of a contract';
+  let amount = '';
+  if (typeof value === 'string' && QUANTITY.test(value.toLowerCase()) && BigInt(value) > 0n) {
+    const wei = BigInt(value);
+    const whole = wei / 10n ** 18n;
+    const fraction = (wei % 10n ** 18n).toString().padStart(18, '0').slice(0, 6).replace(/0+$/, '');
+    amount = `${whole}${fraction === '' ? '' : `.${fraction}`} ${COIN[chain] ?? 'ETH'}`;
+  }
+  if (input === '0x' || input === '') return amount === '' ? `an empty transaction to ${to}` : `a transfer of ${amount} to ${to}`;
+  const selector = /^0x[0-9a-f]{8}/.exec(input)?.[0];
+  return `a call to contract ${to}${selector === undefined ? '' : `, function ${selector}`}${amount === '' ? '' : `, sending ${amount}`}`;
 }
