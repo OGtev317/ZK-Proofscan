@@ -213,7 +213,7 @@ describe('supplied-key evidence, exported and rerun', () => {
     expect(result.stdout).toMatch(new RegExp(`Cryptographic verification: PASSED using ${verifiers}, against the verification key supplied with the proof`));
     const bundle = JSON.parse(readFileSync(exported, 'utf8'));
     expect(Object.keys(bundle)).toEqual(['exportVersion', 'proof', 'publicInputs', 'verificationKey', 'report']);
-    expect(bundle.report).toMatchObject({ reportVersion: 2, outcome: 'valid', basis: 'supplied-key' });
+    expect(bundle.report).toMatchObject({ reportVersion: 3, outcome: 'valid', basis: 'supplied-key' });
     const again = cli('rerun', exported);
     expect(again.status).toBe(0);
     expect(again.stdout).toMatch(/^REPRODUCED/);

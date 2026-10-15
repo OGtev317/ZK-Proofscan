@@ -28,7 +28,13 @@ export const bbJsLegacyEngine: LegacyUltraHonkEngine = {
    * downloader, which would fetch them, is never used.
    */
   async verify(variant, key, publicInputs, proof) {
-    const point = await (g2 ??= readFile(new URL('../../artifacts/aztec-crs/bn254_g2.dat', import.meta.url)).then(pinnedG2));
+    // A failed read is not kept: the next check tries again.
+    const point = await (g2 ??= readFile(new URL('../../artifacts/aztec-crs/bn254_g2.dat', import.meta.url))
+      .then(pinnedG2)
+      .catch((error: unknown) => {
+        g2 = undefined;
+        throw error;
+      }));
     const { Barretenberg, RawBuffer } = (await import(BB_JS_LEGACY_PACKAGE)) as LegacyModule;
     const api = await Barretenberg.new({ threads: 1 });
     try {

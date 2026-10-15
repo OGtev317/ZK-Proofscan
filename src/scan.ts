@@ -4,7 +4,7 @@ import { looksLikeLegacyKey, verifyLegacyUltraHonk, type LegacyUltraHonkEngine }
 import { verifyUltraHonk, type UltraHonkEngine } from './noir/verify.js';
 import type { BoundRecordedCircuit } from './recorded/bind.js';
 import type { KeyRegistry } from './registry.js';
-import { buildCairoReport, buildRiscZeroReport, buildSuppliedKeyReport, TOOL, type KeyRecognition, type Report } from './report.js';
+import { buildCairoReport, buildRiscZeroReport, buildSuppliedKeyReport, TOOL, type KeyRecognition, REPORT_VERSION, type Report } from './report.js';
 import { looksLikeRiscZeroReceipt, verifyRiscZero, type RiscZeroBound } from './risc-zero/verify.js';
 import type { BoundSemaphoreV4 } from './semaphore-v4/bind.js';
 import { scanSemaphoreV4 } from './semaphore-v4/scan.js';
@@ -29,7 +29,7 @@ export interface Scanning {
   cairo?: CairoEngine;
 }
 
-const unsupported = (proof: string, reason: string): Report => ({ reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(partBytes(proof)) }, outcome: 'unsupported', reason });
+const unsupported = (proof: string, reason: string): Report => ({ reportVersion: REPORT_VERSION, tool: TOOL, input: { sha256: sha256Hex(partBytes(proof)) }, outcome: 'unsupported', reason });
 
 /**
  * Checks one proof. A proof that comes with public inputs and a verification

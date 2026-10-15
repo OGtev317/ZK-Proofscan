@@ -51,7 +51,7 @@ The owner asked for as many proof formats as possible. Built and on `main`: Grot
 proofs written by snarkjs, checked against a key the user supplies, on the
 command line, the page and the tool server. Such a report says the proof
 fits the key and that the circuit is unknown; every report now carries a
-`basis` field and `reportVersion` is 2. Read [the formats](FORMATS.md) for
+`basis` field and `reportVersion` is 3 (raised on 2026-10-15, when reports began naming a second verifier, so a rerun of an older export shows the difference as a version change). Read [the formats](FORMATS.md) for
 the rule, the findings and what each further format needs.
 A key registry (`registry/keys.json`, `src/registry.ts`) recognises a
 supplied key that is on record and reports provenance, the link to circuit
@@ -108,7 +108,7 @@ a registry entry, an adapter and fixtures, not new code.
 - 2026-10-11: verifier libraries so that the first test release covers four
   kinds of proof: snarkjs, Groth16, Noir and Starknet. Noir is built with
   `@aztec/bb.js` 5.2.1, and Cairo proofs (the proof system Starknet uses)
-  with `swiftness` 1.0.0, both on the command line and tool server only.
+  with `swiftness` 1.0.0; since 2026-10-14 both also in the page.
   Read "Noir proofs" and "Cairo proofs" in the formats document, including
   why the Cairo verifier is the weakest dependency and why this tool
   enforces its own security floor.
@@ -119,8 +119,8 @@ a registry entry, an adapter and fixtures, not new code.
   RISC Zero Groth16 receipts are verified with snarkjs. For the Soroban
   UltraHonk verifier, `@aztec/bb.js` 0.87.0 is installed beside 5.2.1.
   Testing that older version found four faults, each now refused before it
-  runs. No Stellar network was contacted; reading Stellar transactions or
-  contracts is not built and not approved.
+  runs. At the time no Stellar network was contacted; reading Stellar
+  test-network transactions was approved and built on 2026-10-14 (below).
 
 ## Review on 2026-10-11
 

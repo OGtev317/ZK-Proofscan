@@ -104,7 +104,12 @@ export function arkGroth16(wasm: () => Promise<Uint8Array>): { identity: Verifie
         if (error instanceof ArkLayout) return false;
         throw error;
       }
-      const instance = await WebAssembly.instantiate(await (module ??= load()), {});
+      // A failed load is not kept: the next check tries again.
+      const compiled = await (module ??= load().catch((error: unknown) => {
+        module = undefined;
+        throw error;
+      }));
+      const instance = await WebAssembly.instantiate(compiled, {});
       const exports = instance.exports as unknown as Exports;
       const pointer = exports.alloc(input.length);
       new Uint8Array(exports.memory.buffer, pointer, input.length).set(input);

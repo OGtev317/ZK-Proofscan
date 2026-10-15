@@ -15,6 +15,14 @@ import type { SuppliedResult } from './supplied-key/verify.js';
 
 export const TOOL = { name: 'zk-proofscan', version: '0.0.0' } as const;
 
+/**
+ * The report's format. Raised whenever what a report holds changes, so a
+ * rerun of an older export shows the change as a version difference rather
+ * than as an unexplained one. 3 (2026-10-15): a verification may name a
+ * second verifier that agreed, `alsoCheckedBy`.
+ */
+export const REPORT_VERSION = 3;
+
 export interface ReportExplanation {
   adapter: { id: string; revision: number; sha256: string };
   review: LoadedAdapter['manifest']['review'];
@@ -22,7 +30,7 @@ export interface ReportExplanation {
 }
 
 interface Common {
-  reportVersion: 2;
+  reportVersion: typeof REPORT_VERSION;
   tool: typeof TOOL;
   input: { sha256: string };
 }
@@ -158,12 +166,12 @@ export type Report =
 
 /** A report for input that could not even be read, so there is nothing to hash. */
 export function unreadReport(outcome: 'unsupported' | 'error', detail: string): Report {
-  const common: Common = { reportVersion: 2, tool: TOOL, input: { sha256: 'not computed' } };
+  const common: Common = { reportVersion: REPORT_VERSION, tool: TOOL, input: { sha256: 'not computed' } };
   return outcome === 'unsupported' ? { ...common, outcome, reason: detail } : { ...common, outcome, message: detail };
 }
 
 export function buildReport(proofText: string, result: VerificationResult, adapter: LoadedAdapter): Report {
-  const common: Common = { reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(partBytes(proofText)) } };
+  const common: Common = { reportVersion: REPORT_VERSION, tool: TOOL, input: { sha256: sha256Hex(partBytes(proofText)) } };
   if (result.status === 'unsupported') return { ...common, outcome: 'unsupported', reason: result.reason };
   if (result.status === 'error') return { ...common, outcome: 'error', message: result.message };
 
@@ -209,7 +217,7 @@ export function buildReport(proofText: string, result: VerificationResult, adapt
 
 /** The report for a Cairo proof: a run of a program known only by its hash. */
 export function buildCairoReport(proofText: string, result: CairoResult): Report {
-  const common: Common = { reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(partBytes(proofText)) } };
+  const common: Common = { reportVersion: REPORT_VERSION, tool: TOOL, input: { sha256: sha256Hex(partBytes(proofText)) } };
   if (result.status === 'unsupported') return { ...common, outcome: 'unsupported', reason: result.reason };
   if (result.status === 'error') return { ...common, outcome: 'error', message: result.message };
   const verification: CairoVerification = {
@@ -234,7 +242,7 @@ export function buildCairoReport(proofText: string, result: CairoResult): Report
 
 /** The report for a RISC Zero receipt: a run of a program known only by its image ID. */
 export function buildRiscZeroReport(receiptText: string, result: RiscZeroResult): Report {
-  const common: Common = { reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(partBytes(receiptText)) } };
+  const common: Common = { reportVersion: REPORT_VERSION, tool: TOOL, input: { sha256: sha256Hex(partBytes(receiptText)) } };
   if (result.status === 'unsupported') return { ...common, outcome: 'unsupported', reason: result.reason };
   if (result.status === 'error') return { ...common, outcome: 'error', message: result.message };
   const verification: RiscZeroVerification = {
@@ -265,7 +273,7 @@ export function buildSuppliedKeyReport(
   /** The explanation bound to this exact key, if this build has one. */
   explain: (contentSha256: string) => LoadedAdapter | undefined = () => undefined,
 ): Report {
-  const common: Common = { reportVersion: 2, tool: TOOL, input: { sha256: sha256Hex(partBytes(proofText)) } };
+  const common: Common = { reportVersion: REPORT_VERSION, tool: TOOL, input: { sha256: sha256Hex(partBytes(proofText)) } };
   if (result.status === 'unsupported') return { ...common, outcome: 'unsupported', reason: result.reason };
   if (result.status === 'error') return { ...common, outcome: 'error', message: result.message };
   const verification: SuppliedKeyVerification = {

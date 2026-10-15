@@ -185,6 +185,11 @@ describe('Noir proofs (UltraHonk, made by Barretenberg)', () => {
       bbJsEngine_(() => Promise.reject(new Error('cannot load')), g2),
     ];
     for (const engine of broken) expect(await verifyUltraHonk(good, engine)).toMatchObject({ status: 'error' });
+    // A failed read of the setup point is not kept: the next check reads it again.
+    let reads = 0;
+    const flaky = bbJsEngine_(real, () => (++reads === 1 ? Promise.reject(new Error('cannot read')) : g2()));
+    expect(await verifyUltraHonk(good, flaky)).toMatchObject({ status: 'error' });
+    expect(await verifyUltraHonk(good, flaky)).toMatchObject({ status: 'valid', variant: 'evm' });
     expect(await verifyUltraHonk(good, bbJsEngine_(real, g2))).toMatchObject({ status: 'valid', variant: 'evm' });
   }, 120_000);
 

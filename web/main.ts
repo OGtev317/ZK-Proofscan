@@ -56,6 +56,7 @@ const ask = (request: Sendable): Promise<Response> =>
       finish(message);
     };
     worker.onerror = () => finish({ id: 0, ok: false, message: 'the verification worker stopped' });
+    worker.onmessageerror = () => finish({ id: 0, ok: false, message: 'the verification worker sent an answer that could not be read' });
     worker.postMessage({ ...request, id: 1 } satisfies Request);
   });
 

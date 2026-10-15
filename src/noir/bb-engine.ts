@@ -57,7 +57,13 @@ export function bbJsEngine(load: () => Promise<BbJsModule>, g2: () => Promise<Ui
      * point or start an instance is thrown.
      */
     async verify(variant, key, publicInputs, proof) {
-      const g2Point = await (point ??= g2().then(pinnedG2));
+      // A failed read is not kept: the next check tries again.
+      const g2Point = await (point ??= g2()
+        .then(pinnedG2)
+        .catch((error: unknown) => {
+          point = undefined;
+          throw error;
+        }));
       const { Barretenberg, BackendType, UltraHonkVerifierBackend } = await load();
       // The WebAssembly build, not the native program the Node package also ships:
       // the native one fetches its own setup files.

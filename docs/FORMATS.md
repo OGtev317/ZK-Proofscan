@@ -32,7 +32,7 @@ treating `valid` as a statement about any claim.
 | snarkjs FFLONK on BN254 | `supplied-key` | Proof, public inputs, verification key | snarkjs 0.7.6 |
 | Cairo STARK proof (Stone prover layout) | `cairo-program` | Proof | `swiftness` 1.0.0 |
 | Noir (UltraHonk on BN254, written by Barretenberg) | `supplied-key` | `proof`, `public_inputs`, `vk`, all binary | `@aztec/bb.js` 5.2.1 |
-| Noir, as Barretenberg 0.87.0 wrote it with the Keccak transcript | `supplied-key` | The same three files | `@aztec/bb.js` 0.87.0. Command line and tool server only |
+| Noir, as Barretenberg 0.87.0 wrote it with the Keccak transcript | `supplied-key` | The same three files | `@aztec/bb.js` 0.87.0. Command line and tool server; the page says it cannot check these |
 | RISC Zero Groth16 receipt, verifier parameters 3.0.0 | `risc-zero-program` | One file: three lines of hex | snarkjs 0.7.6 and `ark-groth16` 0.6.0, Groth16 on BN254 |
 
 **Every Groth16 proof is checked twice, since 2026-10-14:** by snarkjs and
@@ -258,6 +258,10 @@ Not tested or not done:
   memory is never read as an answer about the proof: before this was found
   it made the verifier's rejection under the other Stone layout show as
   FAILED for a valid proof.
+- Each run on the page's own thread loads a fresh copy of the verifier,
+  which the browser keeps until the page is closed: measured at about 5 MB
+  of memory per run, plus the compiled code. Many Cairo checks in one
+  WebKit session use memory that is only returned by reloading the page.
 
 ### Stellar: three candidates reviewed on 2026-10-11
 

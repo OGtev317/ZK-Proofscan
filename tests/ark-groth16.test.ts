@@ -111,6 +111,20 @@ describe("arkworks' Groth16 verifier", () => {
     expect(await verifySuppliedKey(inputs, crossCheckedSupplied(snarkjsSuppliedKeyEngine, altered))).toMatchObject({ status: 'error' });
   });
 
+  it('tries loading the module again after a failed load', async () => {
+    // Found in review: a failed load was kept, so a long-running tool server would fail every later check.
+    const { key, proof, signals } = files('tests/fixtures/snarkjs/groth16-bn128');
+    let calls = 0;
+    const flaky = arkGroth16(async () => {
+      calls += 1;
+      if (calls === 1) throw new Error('could not read');
+      return new Uint8Array(wasm);
+    });
+    await expect(flaky.verify(key, signals, proof)).rejects.toThrow('could not read');
+    expect(await flaky.verify(key, signals, proof)).toBe(true);
+    expect(calls).toBe(2);
+  });
+
   it('leaves PLONK and FFLONK to snarkjs alone, and says so', async () => {
     for (const system of ['plonk-bn128', 'fflonk-bn128']) {
       const base = `tests/fixtures/snarkjs/${system}`;
