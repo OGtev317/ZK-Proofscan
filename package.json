@@ -1,17 +1,59 @@
 {
   "name": "zk-proofscan",
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Checks zero-knowledge proofs, alone or found in Ethereum and Stellar transactions, with established verifiers, and reports what each establishes, what it does not, and what rests on network data.",
   "private": true,
-  "description": "Turns a supported zero-knowledge proof into a readable, checkable evidence report.",
-  "license": "GPL-3.0-or-later",
   "type": "module",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OGtev317/ZK-Proofscan.git"
+  },
+  "homepage": "https://akashi.zatrix.xyz/",
+  "keywords": [
+    "zero-knowledge",
+    "zk",
+    "proof",
+    "verifier",
+    "groth16",
+    "noir",
+    "ultrahonk",
+    "cairo",
+    "risc-zero",
+    "stellar",
+    "soroban",
+    "ethereum",
+    "mcp"
+  ],
   "engines": {
     "node": ">=22"
   },
   "bin": {
     "zk-proofscan": "dist/cli.js",
-    "zk-proofscan-mcp": "dist/mcp.js"
+    "zk-proofscan-mcp": "dist/mcp.js",
+    "stellar-zk-proofscan": "dist/cli.js"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "artifacts",
+    "!artifacts/aztec-crs/bn254_g1_compressed.dat",
+    "!artifacts/aztec-crs/grumpkin_g1_v2.flat.dat",
+    "!artifacts/aztec-crs/grumpkin_size",
+    "adapters",
+    "registry",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "docs/DEVELOPERS.md"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "build:web": "vite build",

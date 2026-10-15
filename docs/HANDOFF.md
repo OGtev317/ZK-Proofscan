@@ -6,7 +6,7 @@ Build steps 1 to 3 are written: strict import and verification, explanation
 binding, and the readable report with export and rerun, on the command line
 and in a browser page. Read
 [the prototype notes](VERIFICATION_PROTOTYPE.md) for what exists, what was
-measured and what is untested. 256 unit tests and 48 browser tests pass.
+measured and what is untested. 257 unit tests and 48 browser tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
 for the first version. The main checkout holds the core, command line and
@@ -146,6 +146,29 @@ same separation, and a Cairo file containing a backslash is refused.
 
 That commit (`3b47ecf`) also cut this file down to its last sections by
 mistake. The lost part was restored from `01d2144` in the next change.
+
+## Built on 2026-10-15, after an outside review
+
+- Readable Stellar facts (fee, memo, operation outcomes, token movements
+  from committed events), typed Soroban arguments and events from contract
+  interfaces, contract build provenance (SEP-55), explorer links, and a
+  draft, unreviewed explanation of Stellar Private Payments' blocklist
+  pool. See the lookup notes and the formats document.
+- A developer release, prepared and not published: version 0.1.0, a
+  library entry point, a `stellar-zk-proofscan` binary that the Stellar
+  CLI runs as `stellar zk-proofscan` (tested with stellar-cli 28.0.0), and
+  [the developer guide](DEVELOPERS.md). A packed tarball installed into a
+  fresh project worked as a library and as a command. The package is
+  still marked private; publishing to npm needs the owner's go-ahead.
+- Mainnet RISC Zero, left open: no mainnet contract address is published
+  by Boundless (`boundless-xyz/stellar-risc0-verifier`, its deployment
+  notes) or Nethermind (`deployment.toml` has blank addresses), and the
+  testnet verifier named in the Stellar Foundation's article
+  (`CBY3GOBG…`) no longer exists on testnet. No reader was built without a
+  real transaction to check it against.
+- A local network (Quickstart) for test transactions was set aside: it
+  means deploying contracts and signing transactions, which needs the
+  owner's approval even locally.
 
 ## Next, for the owner
 

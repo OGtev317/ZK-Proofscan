@@ -13,7 +13,7 @@ import { CURVE_NAME, SUPPLIED_KEY, SYSTEM_NAME } from './supplied-key/explanatio
 import type { Curve, Protocol } from './supplied-key/importer.js';
 import type { SuppliedResult } from './supplied-key/verify.js';
 
-export const TOOL = { name: 'zk-proofscan', version: '0.0.0' } as const;
+export const TOOL = { name: 'zk-proofscan', version: '0.1.0' } as const;
 
 /**
  * The report's format. Raised whenever what a report holds changes, so a

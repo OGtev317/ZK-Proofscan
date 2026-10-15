@@ -73,7 +73,7 @@ the blockers below were cleared; the page says it is an unaudited prototype.
 ## Owner decisions still open
 
 - Who reviews the adapter, and what evidence a review must leave behind.
-- Whether the package is published to npm. It is marked private.
+- Whether the package is published to npm. Version 0.1.0 is prepared (library entry, Stellar CLI plugin binary, developer guide) and still marked private.
 - Whether exports should bundle the key file and adapter so a rerun does not
   depend on having the same version of the tool.
 - Which further circuits or programs get an explanation. Each one needs its

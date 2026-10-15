@@ -52,6 +52,11 @@ contract and a Stellar Private Payments pool. Stellar's main network can be
 read through an RPC the operator chooses; no proof has been found there yet
 ([lookup notes](docs/LOOKUP.md)).
 
+Developers: install, the command line, the Stellar CLI plugin
+(`stellar zk-proofscan …`), the library and the agent tool server are in
+[the developer guide](docs/DEVELOPERS.md). Version 0.1.0; not yet
+published to npm.
+
 Read [the charter](docs/PROJECT_CHARTER.md), [the handoff](docs/HANDOFF.md)
 and [the prototype notes](docs/VERIFICATION_PROTOTYPE.md). What blocks a
 release is in [the release review](docs/RELEASE_REVIEW.md).
