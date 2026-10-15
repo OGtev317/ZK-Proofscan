@@ -129,7 +129,7 @@ describe('RISC Zero Groth16 receipts', () => {
   });
 
   it('checks, exports and reruns from the command line', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'zk-proofscan-risc-zero-'));
+    const dir = mkdtempSync(join(tmpdir(), 'lumenlenz-risc-zero-'));
     const cli = (...args: string[]) => spawnSync(process.execPath, [join(root, 'dist/cli.js'), ...args], { encoding: 'utf8', timeout: 120_000 });
     const exported = join(dir, 'evidence.json');
     const done = cli('check', receiptPath, '--export', exported);

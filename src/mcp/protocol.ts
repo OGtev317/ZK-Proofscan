@@ -43,7 +43,7 @@ export async function handle(input: unknown): Promise<Response | undefined> {
     case 'initialize': {
       const asked = params.protocolVersion;
       const version = PROTOCOL_VERSIONS.find((supported) => supported === asked) ?? PROTOCOL_VERSIONS[0];
-      return ok({ protocolVersion: version, capabilities: { tools: {} }, serverInfo: { name: TOOL.name, title: 'ZK-Proofscan', version: TOOL.version }, instructions: INSTRUCTIONS });
+      return ok({ protocolVersion: version, capabilities: { tools: {} }, serverInfo: { name: TOOL.name, title: 'LumenLenz', version: TOOL.version }, instructions: INSTRUCTIONS });
     }
     case 'ping':
       return ok({});

@@ -231,7 +231,7 @@ describe('UltraHonk proofs from Barretenberg 0.87.0 (the version the Stellar ver
   }, 120_000);
 
   it('checks, exports and reruns from the command line', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'zk-proofscan-noir-legacy-'));
+    const dir = mkdtempSync(join(tmpdir(), 'lumenlenz-noir-legacy-'));
     const cli = (...args: string[]) => spawnSync(process.execPath, [join(root, 'dist/cli.js'), ...args], { encoding: 'utf8', timeout: 120_000 });
     const paths = at('keccak-zk');
     const exported = join(dir, 'evidence.json');

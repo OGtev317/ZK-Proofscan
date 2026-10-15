@@ -8,7 +8,7 @@ import { expect, test, type Page } from '@playwright/test';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const fixture = (name: string): string => join(root, 'tests/fixtures', name);
 const validText = readFileSync(fixture('semaphore-v4-valid.json'), 'utf8');
-const dir = mkdtempSync(join(tmpdir(), 'zk-proofscan-e2e-'));
+const dir = mkdtempSync(join(tmpdir(), 'lumenlenz-e2e-'));
 const temp = (name: string, content: string | Uint8Array): string => {
   const path = join(dir, name);
   writeFileSync(path, content);

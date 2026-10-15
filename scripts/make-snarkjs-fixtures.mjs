@@ -14,7 +14,7 @@ import * as snarkjs from 'snarkjs';
 
 const circuit = fileURLToPath(new URL('./circuits/multiplier.circom', import.meta.url));
 const out = fileURLToPath(new URL('../tests/fixtures/snarkjs/', import.meta.url));
-const work = mkdtempSync(join(tmpdir(), 'zk-proofscan-fixtures-'));
+const work = mkdtempSync(join(tmpdir(), 'lumenlenz-fixtures-'));
 const entropy = () => randomBytes(32).toString('hex');
 const save = (name, value) => writeFileSync(join(out, name), `${JSON.stringify(value, null, 1)}\n`, { flag: 'wx' });
 

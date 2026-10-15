@@ -5,10 +5,10 @@ import { stopEngines } from './node/stop.js';
 import { renderReport, type Report } from './report.js';
 
 const USAGE = `Usage:
-  zk-proofscan check <proof.json> [--json] [--export <file>]
-  zk-proofscan check <proof> --public <public inputs> --key <verification key> [--json] [--export <file>]
-  zk-proofscan rerun <export.json>
-  zk-proofscan lookup <transaction hash or explorer link> [--chain <name>] [--json] [--export <file>]
+  lumenlenz check <proof.json> [--json] [--export <file>]
+  lumenlenz check <proof> --public <public inputs> --key <verification key> [--json] [--export <file>]
+  lumenlenz rerun <export.json>
+  lumenlenz lookup <transaction hash or explorer link> [--chain <name>] [--json] [--export <file>]
 
 The first form checks a Semaphore v4 proof against keys bundled with this
 tool; a Cairo STARK proof in the Stone prover's JSON layout, which needs no
@@ -27,7 +27,7 @@ and checks that proof here. It only reads, and sends the transaction hash to
 that provider. Give the hash, or the transaction's page on a block explorer
 (Etherscan and its kin, stellar.expert, Stellar Lab, stellarchain.io), whose
 address names the network; a bare hash needs --chain. Chains: ethereum, sepolia, base, base-sepolia, optimism,
-arbitrum and polygon, which need ALCHEMY_API_KEY or ZK_PROOFSCAN_RPC_URL in
+arbitrum and polygon, which need ALCHEMY_API_KEY or LUMENLENZ_RPC_URL in
 the environment; stellar-testnet, which uses STELLAR_RPC_URL if set and
 otherwise the Stellar Development Foundation's public testnet RPC; and
 stellar-mainnet, which needs STELLAR_MAINNET_RPC_URL, an RPC you choose.`;

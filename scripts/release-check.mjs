@@ -67,7 +67,7 @@ expectThat(local.length === 0, local.length === 0 ? 'no local machine paths in a
 expectThat(packed.size < 2_000_000, `packed size ${(packed.size / 1000).toFixed(1)} kB, ${files.length} files`);
 
 step('a fresh install, outside this checkout');
-const scratch = mkdtempSync(join(tmpdir(), 'zk-proofscan-release-'));
+const scratch = mkdtempSync(join(tmpdir(), 'lumenlenz-release-'));
 try {
   const tarball = join(scratch, run('npm', ['pack', '--silent', '--ignore-scripts', '--pack-destination', scratch]).trim().split('\n').pop());
   const app = join(scratch, 'app');
@@ -79,7 +79,7 @@ try {
   writeFileSync(
     join(app, 'use.mjs'),
     `import { readFileSync } from 'node:fs';
-import { checkProof, renderReport, TOOL, stop } from 'zk-proofscan';
+import { checkProof, renderReport, TOOL, stop } from 'lumenlenz';
 const report = await checkProof({ proof: readFileSync(${JSON.stringify(proof)}, 'utf8') });
 await stop();
 if (report.outcome !== 'valid' || !renderReport(report).startsWith('Claim:')) { console.error(report); process.exit(1); }
@@ -87,18 +87,18 @@ console.log(TOOL.version);
 `,
   );
   expectThat(run('node', ['use.mjs'], { cwd: app }).trim() === pkg.version, 'the library checks a proof');
-  for (const command of ['zk-proofscan', 'stellar-zk-proofscan']) {
+  for (const command of ['lumenlenz', 'stellar-lumenlenz']) {
     const done = spawnSync(join(app, 'node_modules/.bin', command), ['check', proof], { cwd: app, encoding: 'utf8' });
     expectThat(done.status === 0 && done.stdout.startsWith('Claim:'), `${command} check exits 0 for a valid proof`);
   }
   // Noir proofs need only the small setup point the package ships, not the large reference string it leaves out.
   for (const fixture of ['noir/multiplier-evm', 'noir-legacy/multiplier-keccak']) {
     const base = join(root, 'tests/fixtures', fixture);
-    const done = spawnSync(join(app, 'node_modules/.bin', 'zk-proofscan'), ['check', `${base}.proof`, '--public', `${base}.public_inputs`, '--key', `${base}.vk`, '--json'], { cwd: app, encoding: 'utf8' });
+    const done = spawnSync(join(app, 'node_modules/.bin', 'lumenlenz'), ['check', `${base}.proof`, '--public', `${base}.public_inputs`, '--key', `${base}.vk`, '--json'], { cwd: app, encoding: 'utf8' });
     expectThat(done.status === 0 && JSON.parse(done.stdout).outcome === 'valid', `checks the Noir proof ${fixture} with the packaged files only`);
   }
-  const mcp = spawnSync(join(app, 'node_modules/.bin', 'zk-proofscan-mcp'), [], { cwd: app, encoding: 'utf8', input: `${JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'release-check', version: '0' } } })}\n`, timeout: 20_000 });
-  expectThat(/"serverInfo"/.test(mcp.stdout), 'zk-proofscan-mcp answers an MCP initialize');
+  const mcp = spawnSync(join(app, 'node_modules/.bin', 'lumenlenz-mcp'), [], { cwd: app, encoding: 'utf8', input: `${JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'release-check', version: '0' } } })}\n`, timeout: 20_000 });
+  expectThat(/"serverInfo"/.test(mcp.stdout), 'lumenlenz-mcp answers an MCP initialize');
 } finally {
   rmSync(scratch, { recursive: true, force: true });
 }

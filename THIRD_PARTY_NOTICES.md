@@ -1,6 +1,6 @@
 # Third-party notices
 
-ZK-Proofscan is licensed GPL-3.0-or-later (see `LICENSE`). It is distributed
+LumenLenz is licensed GPL-3.0-or-later (see `LICENSE`). It is distributed
 with the packages below, each under its own licence. This list is generated
 by `node scripts/notices.mjs` from the production dependencies in
 `package-lock.json`, including the optional packages for every platform;

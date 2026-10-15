@@ -17,7 +17,7 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const [out, ...only] = process.argv.slice(2);
 if (out === undefined) throw new Error('usage: eval-agent.mjs <results.json> [case id ...]');
 
-const dir = mkdtempSync(join(tmpdir(), 'zk-proofscan-eval-'));
+const dir = mkdtempSync(join(tmpdir(), 'lumenlenz-eval-'));
 const put = (name, content) => {
   const path = join(dir, name);
   writeFileSync(path, content);
@@ -59,9 +59,9 @@ const SETUP = {
   unsupported: { prompt: `Translate this proof into its claim. ${put('proof-d.json', '{"proof":"0x7a2f"}')}` },
 };
 
-const instructions = readFileSync(join(root, 'agents/zk-proofscan.md'), 'utf8');
-const TOOLS = ['check_proof', 'rerun_export', 'write_export'].map((name) => `mcp__zk-proofscan__${name}`);
-const withServer = put('mcp.json', JSON.stringify({ mcpServers: { 'zk-proofscan': { command: process.execPath, args: [join(root, 'dist/mcp.js')] } } }));
+const instructions = readFileSync(join(root, 'agents/lumenlenz.md'), 'utf8');
+const TOOLS = ['check_proof', 'rerun_export', 'write_export'].map((name) => `mcp__lumenlenz__${name}`);
+const withServer = put('mcp.json', JSON.stringify({ mcpServers: { 'lumenlenz': { command: process.execPath, args: [join(root, 'dist/mcp.js')] } } }));
 const withoutServer = put('mcp-none.json', JSON.stringify({ mcpServers: {} }));
 
 function run(setup) {
@@ -96,13 +96,13 @@ function run(setup) {
 
 const plan = JSON.parse(readFileSync(join(root, 'agents/evaluation-cases.json'), 'utf8'));
 const cases = plan.cases.filter((entry) => only.length === 0 || only.includes(entry.id));
-const record = { claudeCode: execFileSync('claude', ['--version'], { encoding: 'utf8' }).trim(), instructionsSha256: execFileSync('shasum', ['-a', '256', join(root, 'agents/zk-proofscan.md')], { encoding: 'utf8' }).slice(0, 64), runs: [] };
+const record = { claudeCode: execFileSync('claude', ['--version'], { encoding: 'utf8' }).trim(), instructionsSha256: execFileSync('shasum', ['-a', '256', join(root, 'agents/lumenlenz.md')], { encoding: 'utf8' }).slice(0, 64), runs: [] };
 for (const entry of cases) {
   const setup = SETUP[entry.id];
   if (setup === undefined) throw new Error(`no setup for ${entry.id}`);
   const result = run(setup);
   // Temporary paths differ between runs and say nothing about the result.
   record.runs.push(JSON.parse(JSON.stringify({ id: entry.id, required: entry.required, prompt: setup.prompt, ...result }).replaceAll(dir, '<dir>')));
-  console.log(`${entry.id}: calls ${result.calls.map((call) => call.tool.replace('mcp__zk-proofscan__', '')).join(', ') || 'none'}; report lines kept ${result.reportLinesInReply}/${result.reportLines}`);
+  console.log(`${entry.id}: calls ${result.calls.map((call) => call.tool.replace('mcp__lumenlenz__', '')).join(', ') || 'none'}; report lines kept ${result.reportLinesInReply}/${result.reportLines}`);
 }
 writeFileSync(out, `${JSON.stringify(record, null, 2)}\n`);

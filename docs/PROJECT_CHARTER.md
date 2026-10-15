@@ -1,4 +1,4 @@
-# ZK-Proofscan project charter
+# LumenLenz project charter
 
 Created 2026-10-11. **Proposed direction, not settled requirements.** The idea
 was supplied by the owner. Nothing here is implemented, specified or approved
@@ -7,7 +7,7 @@ for release.
 ## The idea
 
 A zero-knowledge proof is normally shown as an opaque value and the word
-"Verified". That tells a reader nothing about what was proved. ZK-Proofscan
+"Verified". That tells a reader nothing about what was proved. LumenLenz
 would take a supported proof and produce an evidence report a non-specialist
 can read and a specialist can re-check.
 
@@ -90,5 +90,5 @@ Proposed, not decided:
    need before a report may quote it?
 6. Are online checks (for example, confirming a group root on a chain) ever in
    scope? This needs explicit approval before any work.
-7. Is "ZK-Proofscan" the final name? Whether the name is already in use has
+7. Is "LumenLenz" the final name? Whether the name is already in use has
    not been checked.

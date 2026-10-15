@@ -166,7 +166,7 @@ describe('Cairo proofs (Stone prover layout)', () => {
   });
 
   it('checks, exports and reruns from the command line', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'zk-proofscan-cairo-'));
+    const dir = mkdtempSync(join(tmpdir(), 'lumenlenz-cairo-'));
     const cli = (...args: string[]) => spawnSync(process.execPath, [join(root, 'dist/cli.js'), ...args], { encoding: 'utf8', timeout: 120_000, maxBuffer: 32 * 1024 * 1024 });
     const exported = join(dir, 'evidence.json');
     const done = cli('check', path('dynamic-stone6-96-bits.json'), '--export', exported);

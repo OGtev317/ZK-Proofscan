@@ -63,7 +63,7 @@ proofs are inside the transaction where this tool does not look.
 ## Safeguards
 
 - The provider address comes from the environment (`ALCHEMY_API_KEY` or
-  `ZK_PROOFSCAN_RPC_URL`), never from an argument, a file or an AI agent.
+  `LUMENLENZ_RPC_URL`), never from an argument, a file or an AI agent.
 - HTTPS only, no redirects, a time limit and a size limit. Error messages
   and reports never contain the address, which holds the key; reports name
   the provider's host only. The provider's own error text is not repeated.
@@ -324,7 +324,7 @@ address, and names the function and its arguments when Sourcify has
 verified source for it, saying so ("named from the contract's verified
 source on Sourcify"). A saved example asks no one; the page names
 Sourcify in the note beside the button; the command line skips it with
-`ZK_PROOFSCAN_SOURCIFY=off`. Tested on a real mainnet WETH withdrawal.
+`LUMENLENZ_SOURCIFY=off`. Tested on a real mainnet WETH withdrawal.
 Production dependencies are now 120 packages.
 
 ## Issued Stellar assets
@@ -337,7 +337,7 @@ the command line the tool then fetches that domain's
 `/.well-known/stellar.toml` (SEP-1), with smol-toml 1.9.0 (BSD-3-Clause)
 to read it, and says whether the file lists this asset code with this
 issuer, which is what makes the link two-way; a redirect is followed only
-to the same domain or its `www.` form. `ZK_PROOFSCAN_STELLAR_TOML=off`
+to the same domain or its `www.` form. `LUMENLENZ_STELLAR_TOML=off`
 fetches no such file. The page does not fetch it: that would mean
 contacting whatever domain an issuer names, so it reports the claim as
 not checked.
@@ -414,7 +414,7 @@ it was built with and, under SEP-55, its source repository. The report
 gives both as the code's claim. On the command line, when a repository is
 named, the tool asks GitHub's API for the build attestation of that exact
 code hash and checks it names the same code and repository, reporting the
-commit; `ZK_PROOFSCAN_SEP55=off` asks GitHub nothing. The attestation's
+commit; `LUMENLENZ_SEP55=off` asks GitHub nothing. The attestation's
 signature (a Sigstore bundle) is not verified here, so that answer rests
 on GitHub's API, and an attestation shows how code was built, not that the
 source is correct or safe. Neither testnet contract here names a source

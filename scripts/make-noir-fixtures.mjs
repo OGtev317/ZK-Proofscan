@@ -16,7 +16,7 @@ const out = fileURLToPath(new URL('../tests/fixtures/noir/', import.meta.url));
 const { program } = await compile(createFileManager(fileURLToPath(new URL('./circuits/noir-multiplier/', import.meta.url))));
 const { witness } = await new Noir(program).execute({ a: '3', b: '11' });
 
-const crs = mkdtempSync(join(tmpdir(), 'zk-proofscan-fixture-crs-'));
+const crs = mkdtempSync(join(tmpdir(), 'lumenlenz-fixture-crs-'));
 cpSync(fileURLToPath(new URL('../artifacts/aztec-crs/', import.meta.url)), crs, { recursive: true });
 const api = await Barretenberg.new({ threads: 1, crsPath: crs, srsSize: 2 ** 17, backend: BackendType.Wasm });
 const backend = new UltraHonkBackend(program.bytecode, api);

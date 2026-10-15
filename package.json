@@ -1,5 +1,5 @@
 {
-  "name": "zk-proofscan",
+  "name": "lumenlenz",
   "version": "0.1.0",
   "description": "Experimental, unaudited. Checks zero-knowledge proofs, alone or found in Ethereum and Stellar transactions, with established verifiers, and reports what each establishes, what it does not, and what rests on network data.",
   "type": "module",
@@ -28,9 +28,9 @@
     "node": ">=22"
   },
   "bin": {
-    "zk-proofscan": "dist/cli.js",
-    "zk-proofscan-mcp": "dist/mcp.js",
-    "stellar-zk-proofscan": "dist/cli.js"
+    "lumenlenz": "dist/cli.js",
+    "lumenlenz-mcp": "dist/mcp.js",
+    "stellar-lumenlenz": "dist/cli.js"
   },
   "exports": {
     ".": {

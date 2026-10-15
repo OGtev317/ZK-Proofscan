@@ -197,7 +197,7 @@ describe('proofs checked with a supplied key', () => {
 });
 
 describe('supplied-key evidence, exported and rerun', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'zk-proofscan-supplied-'));
+  const dir = mkdtempSync(join(tmpdir(), 'lumenlenz-supplied-'));
   const cli = (...args: string[]) => spawnSync(process.execPath, [join(root, 'dist/cli.js'), ...args], { encoding: 'utf8', timeout: 60_000 });
   const withKey = (system: System): string[] => {
     const at = paths(system);

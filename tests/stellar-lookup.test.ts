@@ -212,7 +212,7 @@ describe('looking up on Stellar from the command line', () => {
     });
     await new Promise<void>((resolve) => server!.listen(0, '127.0.0.1', resolve));
     const address = `http://127.0.0.1:${(server.address() as AddressInfo).port}/`;
-    const dir = mkdtempSync(join(tmpdir(), 'zk-proofscan-stellar-'));
+    const dir = mkdtempSync(join(tmpdir(), 'lumenlenz-stellar-'));
     const run = (...args: string[]): Promise<{ status: number | null; stdout: string }> =>
       new Promise((resolve) => {
         const child = spawn(process.execPath, [join(root, 'dist/cli.js'), ...args], { env: { ...process.env, STELLAR_RPC_URL: address } });

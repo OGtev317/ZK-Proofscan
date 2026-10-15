@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { plus, text, validText } from './helpers.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const dir = mkdtempSync(join(tmpdir(), 'zk-proofscan-'));
+const dir = mkdtempSync(join(tmpdir(), 'lumenlenz-'));
 const file = (name: string, content: string): string => {
   const path = join(dir, name);
   writeFileSync(path, content);

@@ -19,7 +19,7 @@ const depths = requested.length > 0 ? requested : Array.from({ length: 32 }, (_,
 const keysPath = new URL('../artifacts/semaphore-v4/verification-keys.json', import.meta.url);
 const keysBytes = await readFile(keysPath);
 const all = JSON.parse(keysBytes.toString());
-const dir = await mkdtemp(join(tmpdir(), 'zk-proofscan-zkeys-'));
+const dir = await mkdtemp(join(tmpdir(), 'lumenlenz-zkeys-'));
 const results = [];
 try {
   for (const depth of depths) {

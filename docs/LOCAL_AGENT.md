@@ -1,13 +1,13 @@
 # Agent definition: written, tested once, not installed
 
-Step 2 of the owner's agent plan. The agent is a way to use ZK-Proofscan: it
+Step 2 of the owner's agent plan. The agent is a way to use LumenLenz: it
 runs the check through the tool server and shows the result. It does not
 verify anything and does not supply the claim wording.
 
 | Piece | Where | State |
 | --- | --- | --- |
 | Tool server | `src/mcp.ts`, `dist/mcp.js` | Built and tested (step 1) |
-| Agent instructions | `agents/zk-proofscan.md` | Written; run once in a test; not installed in any client |
+| Agent instructions | `agents/lumenlenz.md` | Written; run once in a test; not installed in any client |
 | Fixed presentation | `src/agent/presentation.ts` | Used by the tool server |
 | Evaluation scenarios | `agents/evaluation-cases.json` | Run once on one model, 2026-10-11; see below |
 
@@ -52,24 +52,24 @@ For Claude Code, add a file `.mcp.json` at the repository root after
 `npm ci && npm run build`:
 
 ```json
-{ "mcpServers": { "zk-proofscan": { "command": "node", "args": ["dist/mcp.js"] } } }
+{ "mcpServers": { "lumenlenz": { "command": "node", "args": ["dist/mcp.js"] } } }
 ```
 
-and copy `agents/zk-proofscan.md` to `.claude/agents/zk-proofscan.md` with
+and copy `agents/lumenlenz.md` to `.claude/agents/lumenlenz.md` with
 this at the top:
 
 ```text
 ---
-name: zk-proofscan
-description: Checks a zero-knowledge proof or evidence export with the local ZK-Proofscan tools and shows the fixed report.
-tools: mcp__zk-proofscan__check_proof, mcp__zk-proofscan__rerun_export, mcp__zk-proofscan__write_export
+name: lumenlenz
+description: Checks a zero-knowledge proof or evidence export with the local LumenLenz tools and shows the fixed report.
+tools: mcp__lumenlenz__check_proof, mcp__lumenlenz__rerun_export, mcp__lumenlenz__write_export
 ---
 ```
 
 The `tools` line leaves the agent without a shell, file access or web
 access, which limits what planted text could make it do. It also leaves out
 `lookup_transaction`, so this agent cannot send anything to a chain data
-provider; add `mcp__zk-proofscan__lookup_transaction` only if that is
+provider; add `mcp__lumenlenz__lookup_transaction` only if that is
 wanted. This configuration has not been tried: the evaluation passed the same instructions and tools on
 the command line instead.
 

@@ -222,7 +222,7 @@ describe('talking to a provider', () => {
     expect(rpcUrlFromEnvironment(sepolia, { ALCHEMY_API_KEY: 'abcDEF123_-xyz' })).toBe('https://eth-sepolia.g.alchemy.com/v2/abcDEF123_-xyz');
     expect(rpcUrlFromEnvironment(CHAINS[0]!, { ALCHEMY_API_KEY: 'abcDEF123_-xyz' })).toBe('https://eth-mainnet.g.alchemy.com/v2/abcDEF123_-xyz');
     expect(rpcUrlFromEnvironment(sepolia, { ALCHEMY_API_KEY: 'abc/../../x?y=1#' })).toBeUndefined();
-    expect(rpcUrlFromEnvironment(sepolia, { ALCHEMY_API_KEY: 'abcDEF123_-xyz', ZK_PROOFSCAN_RPC_URL: 'https://rpc.example/x' })).toBe('https://rpc.example/x');
+    expect(rpcUrlFromEnvironment(sepolia, { ALCHEMY_API_KEY: 'abcDEF123_-xyz', LUMENLENZ_RPC_URL: 'https://rpc.example/x' })).toBe('https://rpc.example/x');
   });
 
   it('refuses a provider address that is not https, and never repeats the address', async () => {
@@ -246,7 +246,7 @@ describe('talking to a provider', () => {
 
   const run = (file: string, args: string[], env: Record<string, string>, input?: string) =>
     new Promise<{ status: number | null; stdout: string; stderr: string }>((resolve, reject) => {
-      const { ALCHEMY_API_KEY: _a, ZK_PROOFSCAN_RPC_URL: _b, ...clean } = process.env;
+      const { ALCHEMY_API_KEY: _a, LUMENLENZ_RPC_URL: _b, ...clean } = process.env;
       const child = spawn(process.execPath, [join(root, file), ...args], { env: { ...clean, ...env } });
       let stdout = '';
       let stderr = '';
@@ -261,9 +261,9 @@ describe('talking to a provider', () => {
   it('looks up, checks, exports and reruns from the command line', async () => {
     mode = 'chain';
     seen.length = 0;
-    const dir = mkdtempSync(join(tmpdir(), 'zk-proofscan-chain-'));
+    const dir = mkdtempSync(join(tmpdir(), 'lumenlenz-chain-'));
     const exported = join(dir, 'looked-up.json');
-    const done = await cli(['lookup', HASH, '--chain', 'sepolia', '--export', exported], { ZK_PROOFSCAN_RPC_URL: base });
+    const done = await cli(['lookup', HASH, '--chain', 'sepolia', '--export', exported], { LUMENLENZ_RPC_URL: base });
     expect(done.status).toBe(0);
     expect(done.stdout).toMatch(/^Source, as reported by 127\.0\.0\.1 and not checked by this tool:/);
     expect(done.stdout).toContain(`Transaction ${HASH} on sepolia (chain id 11155111)`);
@@ -278,11 +278,11 @@ describe('talking to a provider', () => {
     expect(again.stdout).toContain('Source recorded in the export (not checked by this rerun, and never checked by this tool):');
     expect(readFileSync(exported, 'utf8')).not.toContain('SECRET');
 
-    const asJson = await cli(['lookup', HASH, '--chain', 'sepolia', '--json'], { ZK_PROOFSCAN_RPC_URL: base });
+    const asJson = await cli(['lookup', HASH, '--chain', 'sepolia', '--json'], { LUMENLENZ_RPC_URL: base });
     expect(JSON.parse(asJson.stdout)).toMatchObject({ source: { provider: '127.0.0.1', status: 'succeeded' }, report: { outcome: 'valid', basis: 'recorded-circuit' } });
 
     mode = 'reverted';
-    const reverted = await cli(['lookup', HASH, '--chain', 'sepolia'], { ZK_PROOFSCAN_RPC_URL: base });
+    const reverted = await cli(['lookup', HASH, '--chain', 'sepolia'], { LUMENLENZ_RPC_URL: base });
     expect(reverted.status).toBe(0);
     expect(reverted.stdout).toContain('The chain REVERTED the transaction.');
     expect(reverted.stdout).toContain('Cryptographic verification: PASSED');
@@ -295,32 +295,32 @@ describe('talking to a provider', () => {
     expect(none.status).toBe(3);
     expect(none.stdout).toMatch(/^Not checked: no chain data provider is configured/);
     expect(none.stdout).toContain('This says nothing about whether a proof is valid.');
-    expect((await cli(['lookup', HASH, '--chain', 'moon'], { ZK_PROOFSCAN_RPC_URL: base })).stdout).toMatch(/the chain must be one of ethereum, sepolia/);
-    expect((await cli(['lookup', 'abc', '--chain', 'sepolia'], { ZK_PROOFSCAN_RPC_URL: base })).status).toBe(3);
+    expect((await cli(['lookup', HASH, '--chain', 'moon'], { LUMENLENZ_RPC_URL: base })).stdout).toMatch(/the chain must be one of ethereum, sepolia/);
+    expect((await cli(['lookup', 'abc', '--chain', 'sepolia'], { LUMENLENZ_RPC_URL: base })).status).toBe(3);
     mode = 'error';
-    const failed = await cli(['lookup', HASH, '--chain', 'sepolia', '--json'], { ZK_PROOFSCAN_RPC_URL: base });
+    const failed = await cli(['lookup', HASH, '--chain', 'sepolia', '--json'], { LUMENLENZ_RPC_URL: base });
     expect(failed.status).toBe(3);
     expect(JSON.parse(failed.stdout)).toEqual({ lookup: 'not-checked', reason: 'the provider reported an error for this request' });
     mode = 'chain';
     // A bare hash with no network is understood, and the answer asks for the network; nothing is sent.
     const sent = seen.length;
-    const bare = await cli(['lookup', HASH], { ZK_PROOFSCAN_RPC_URL: base });
+    const bare = await cli(['lookup', HASH], { LUMENLENZ_RPC_URL: base });
     expect(bare.status).toBe(3);
     expect(bare.stdout).toContain('a hash on its own does not say which network it is on; name the network');
     expect(seen.length).toBe(sent);
     for (const args of [['lookup', '--chain', 'sepolia'], ['lookup', HASH, '--chain', 'sepolia', '--key', 'k.json'], ['check', 'a.json', '--chain', 'sepolia'], ['rerun', 'a.json', '--chain', 'sepolia']]) {
-      expect((await cli(args, { ZK_PROOFSCAN_RPC_URL: base })).status, args.join(' ')).toBe(64);
+      expect((await cli(args, { LUMENLENZ_RPC_URL: base })).status, args.join(' ')).toBe(64);
     }
     // A check or a rerun never contacts a provider, even when one is configured.
     const before = seen.length;
-    await cli(['check', join(root, 'tests/fixtures/semaphore-v4-valid.json')], { ZK_PROOFSCAN_RPC_URL: base });
+    await cli(['check', join(root, 'tests/fixtures/semaphore-v4-valid.json')], { LUMENLENZ_RPC_URL: base });
     expect(seen.length).toBe(before);
   });
 
   it('offers the lookup to an agent, labelled as coming from a provider', async () => {
     const ask = (args: Record<string, unknown>, env: Record<string, string>) =>
       run('dist/mcp.js', [], env, `${JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'lookup_transaction', arguments: args } })}\n`).then((done) => JSON.parse(done.stdout).result);
-    const found = await ask({ chain: 'sepolia', transaction: HASH }, { ZK_PROOFSCAN_RPC_URL: base });
+    const found = await ask({ chain: 'sepolia', transaction: HASH }, { LUMENLENZ_RPC_URL: base });
     expect(found.structuredContent).toMatchObject({ outcome: 'valid', source: { provider: '127.0.0.1', call: 'proof-of-twitter.mint' }, report: { basis: 'recorded-circuit' } });
     expect(found.structuredContent.notes).toContainEqual(expect.stringMatching(/according to the provider/));
     expect(found.content[0].text).toMatch(/^Source, as reported by 127\.0\.0\.1 and not checked by this tool:/);
@@ -330,6 +330,6 @@ describe('talking to a provider', () => {
     expect(none.structuredContent).toMatchObject({ lookup: 'not-checked', reason: expect.stringMatching(/no chain data provider is configured/) });
     // The agent cannot point the tool at a provider of its choosing.
     expect((await ask({ chain: 'sepolia', transaction: HASH, rpc_url: 'https://evil.example' }, {})).isError).toBe(true);
-    expect((await ask({ chain: 'sepolia' }, { ZK_PROOFSCAN_RPC_URL: base })).isError).toBe(true);
+    expect((await ask({ chain: 'sepolia' }, { LUMENLENZ_RPC_URL: base })).isError).toBe(true);
   });
 });

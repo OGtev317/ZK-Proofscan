@@ -1,4 +1,7 @@
-# ZK-Proofscan
+# LumenLenz
+
+*Formerly ZK-Proofscan; renamed on 2026-10-15. The repository keeps its
+old address for now.*
 
 An open-source Stellar proof-verification tool that turns supported
 transactions into readable reports, separating what the network data says,
@@ -55,7 +58,7 @@ read through an RPC the operator chooses; no proof has been found there yet
 ([lookup notes](docs/LOOKUP.md)).
 
 Developers: install, the command line, the Stellar CLI plugin
-(`stellar zk-proofscan …`), the library and the agent tool server are in
+(`stellar lumenlenz …`), the library and the agent tool server are in
 [the developer guide](docs/DEVELOPERS.md). Version 0.1.0; not yet
 published to npm.
 

@@ -1,10 +1,10 @@
 /**
- * ZK-Proofscan as a library, for Node 22 or later. The same checks the
+ * LumenLenz as a library, for Node 22 or later. The same checks the
  * command line, the tool server and the page run: a proof is verified on
  * this machine, and a looked-up transaction's network data is kept apart
  * from that check. Nothing here signs, sends or writes to any network.
  *
- *   import { checkProof, lookUp, explain } from 'zk-proofscan';
+ *   import { checkProof, lookUp, explain } from 'lumenlenz';
  *   const report = await checkProof({ proof, publicInputs, verificationKey });
  *   const found = await lookUp('https://stellar.expert/explorer/testnet/tx/…');
  *
@@ -25,7 +25,7 @@ export const checkFiles = (paths: ProofPaths): ReturnType<typeof checkFile> => c
  * Looks a transaction up and checks any proof it holds. `transaction` is a
  * hash or a block explorer link; `network` is needed for a bare hash. The
  * provider comes from `env` as on the command line (ALCHEMY_API_KEY or
- * ZK_PROOFSCAN_RPC_URL for Ethereum chains; STELLAR_RPC_URL, or the public
+ * LUMENLENZ_RPC_URL for Ethereum chains; STELLAR_RPC_URL, or the public
  * testnet RPC, for stellar-testnet; STELLAR_MAINNET_RPC_URL for
  * stellar-mainnet). Read-only.
  */

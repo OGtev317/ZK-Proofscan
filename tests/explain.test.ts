@@ -52,7 +52,7 @@ describe('what an ordinary transaction was', () => {
 });
 
 describe('the reader\'s view of a result', () => {
-  const base = { reportVersion: 3, tool: { name: 'zk-proofscan', version: '0.1.0' }, input: { sha256: '0' } };
+  const base = { reportVersion: 3, tool: { name: 'lumenlenz', version: '0.1.0' }, input: { sha256: '0' } };
   const both = { name: 'snarkjs', version: '0.7.6', alsoCheckedBy: { name: 'ark-groth16', version: '0.6.0' } };
   const recognised = (status: string) => ({ match: 'exact', artifact: { description: 'A recorded key', circuitLink: { status, note: 'Made with no trusted ceremony.' } } });
   const valid = (keyRecognition: unknown, verifier: unknown = both) =>

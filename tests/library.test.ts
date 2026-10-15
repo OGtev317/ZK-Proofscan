@@ -12,7 +12,7 @@ describe('the library interface', () => {
     for (const name of ['checkProof', 'checkFiles', 'lookUp', 'rerun', 'stop', 'explain', 'plainWords', 'renderReport', 'writeExport', 'readTransactionReference', 'explorerLinks']) {
       expect(typeof (library as Record<string, unknown>)[name], name).toBe('function');
     }
-    expect(library.TOOL).toEqual({ name: 'zk-proofscan', version: JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version });
+    expect(library.TOOL).toEqual({ name: 'lumenlenz', version: JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version });
     const report = await library.checkProof({ proof: readFileSync(join(root, 'tests/fixtures/semaphore-v4-valid.json'), 'utf8') });
     expect(report.outcome).toBe('valid');
     expect(library.explain({ report }).proofCheck.text).toBe('Passed: two independent verifiers agree');

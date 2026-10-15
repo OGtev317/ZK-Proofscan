@@ -1,7 +1,7 @@
-# Review request: how ZK-Proofscan reads Stellar Private Payments
+# Review request: how LumenLenz reads Stellar Private Payments
 
 Prepared 2026-10-15 for Nethermind's Stellar Private Payments team. Not yet
-sent. ZK-Proofscan is an open-source, unaudited, experimental tool
+sent. LumenLenz is an open-source, unaudited, experimental tool
 (GPL-3.0-or-later, <https://github.com/OGtev317/ZK-Proofscan>) that
 re-verifies zero-knowledge proofs found in Stellar transactions and
 explains them in plain language. It reads your blocklist pool on testnet.
@@ -147,7 +147,7 @@ trivially. The first also moved 0.1 XLM from the sender to the pool,
 according to the RPC's events. Reproduce with:
 
 ```sh
-npx zk-proofscan lookup https://stellar.expert/explorer/testnet/tx/cd1d09c950ff598c329ea4a55578fea38ad674a749bd9808d8316c823cdfb6fc
+npx lumenlenz lookup https://stellar.expert/explorer/testnet/tx/cd1d09c950ff598c329ea4a55578fea38ad674a749bd9808d8316c823cdfb6fc
 ```
 
 The RPC's answers for the first are kept as a test fixture

@@ -1,4 +1,4 @@
-# ZK-Proofscan handoff
+# LumenLenz handoff
 
 ## Prototype (2026-10-11)
 
@@ -71,7 +71,7 @@ a registry entry, an adapter and fixtures, not new code.
 
 ## State on 2026-10-11
 
-- The project was renamed and refocused to ZK-Proofscan on the owner's
+- The project was renamed and refocused to LumenLenz on the owner's
   instruction. Remote: `https://github.com/OGtev317/ZK-Proofscan`, made
   public on 2026-10-12 by the owner's decision.
 - An older local folder from before the rename holds another session's
@@ -86,7 +86,7 @@ a registry entry, an adapter and fixtures, not new code.
 ## Approvals given, and their limits
 
 - 2026-10-11: read-only chain lookups through Alchemy, on any chain.
-  `zk-proofscan lookup` and the `lookup_transaction` tool are built for that.
+  `lumenlenz lookup` and the `lookup_transaction` tool are built for that.
   On 2026-10-12 the owner put a key in a local `.env` and the lookup was run
   on Sepolia: 16 real transactions, all verified. Read [the lookup
   notes](LOOKUP.md). Wallet
@@ -155,8 +155,8 @@ mistake. The lost part was restored from `01d2144` in the next change.
   draft, unreviewed explanation of Stellar Private Payments' blocklist
   pool. See the lookup notes and the formats document.
 - A developer release, prepared and not published: version 0.1.0, a
-  library entry point, a `stellar-zk-proofscan` binary that the Stellar
-  CLI runs as `stellar zk-proofscan` (tested with stellar-cli 28.0.0), and
+  library entry point, a `stellar-lumenlenz` binary that the Stellar
+  CLI runs as `stellar lumenlenz` (tested with stellar-cli 28.0.0), and
   [the developer guide](DEVELOPERS.md). A packed tarball installed into a
   fresh project worked as a library and as a command. The owner approved
   publishing it as an experimental release; `npm run release:check`
@@ -172,6 +172,15 @@ mistake. The lost part was restored from `01d2144` in the next change.
   keys, recorded and replayed in `tests/stellar-local.test.ts`. They found
   that the asset contract's `approve` names its last parameter
   `live_until_ledger`, now fixed. Nothing was sent to testnet or mainnet.
+- Renamed from ZK-Proofscan to LumenLenz on 2026-10-15, by the owner's
+  decision, before the first npm release: the package, the commands
+  (`lumenlenz`, `lumenlenz-mcp`, `stellar-lumenlenz`), the name in reports
+  and the tool server, the page and the documentation, and the
+  environment variables (`LUMENLENZ_RPC_URL` and the `LUMENLENZ_…=off`
+  switches). Kept: the GitHub repository's address, the arkworks
+  module's crate name (renaming it would change the committed WebAssembly,
+  which CI rebuilds byte for byte), and the recorded agent evaluation
+  results, which are records of past runs.
 - A review packet for the Stellar Private Payments explanation is in
   [docs/review](review/stellar-private-payments.md), not yet sent.
 
@@ -187,5 +196,5 @@ mistake. The lost part was restored from `01d2144` in the next change.
 - Decide whether to send the request to ZK Email's maintainers drafted in
   the formats document. It has not been sent.
 - The release questions in [the release review](RELEASE_REVIEW.md),
-  including whether the name "ZK-Proofscan" is already used by another
+  including whether the name "LumenLenz" is already used by another
   product, which has not been checked.

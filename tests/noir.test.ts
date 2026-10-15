@@ -194,7 +194,7 @@ describe('Noir proofs (UltraHonk, made by Barretenberg)', () => {
   }, 120_000);
 
   it('checks, exports and reruns from the command line with the files as they are on disk', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'zk-proofscan-noir-'));
+    const dir = mkdtempSync(join(tmpdir(), 'lumenlenz-noir-'));
     const cli = (...args: string[]) => spawnSync(process.execPath, [join(root, 'dist/cli.js'), ...args], { encoding: 'utf8', timeout: 120_000 });
     const paths = at('noir-recursive');
     const exported = join(dir, 'evidence.json');
@@ -220,7 +220,7 @@ describe('Noir proofs (UltraHonk, made by Barretenberg)', () => {
     expect(cli('check', paths.proof, '--public', altered, '--key', paths.verificationKey).status).toBe(1);
     expect(cli('check', paths.proof).status).toBe(2);
     // The command line leaves no setup files behind.
-    const copies = (): number => Number(execFileSync('sh', ['-c', `ls -d "${tmpdir()}"/zk-proofscan-crs-* 2>/dev/null | wc -l`], { encoding: 'utf8' }).trim());
+    const copies = (): number => Number(execFileSync('sh', ['-c', `ls -d "${tmpdir()}"/lumenlenz-crs-* 2>/dev/null | wc -l`], { encoding: 'utf8' }).trim());
     const before = copies();
     expect(cli('check', paths.proof, '--public', paths.publicInputs, '--key', paths.verificationKey).status).toBe(0);
     expect(copies()).toBe(before);

@@ -13,7 +13,7 @@ import { plus, text, validText } from './helpers.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const server = join(root, 'dist/mcp.js');
-const dir = mkdtempSync(join(tmpdir(), 'zk-proofscan-mcp-'));
+const dir = mkdtempSync(join(tmpdir(), 'lumenlenz-mcp-'));
 const file = (name: string, content: string): string => {
   const path = join(dir, name);
   writeFileSync(path, content);
@@ -44,7 +44,7 @@ function raw(input: string | Buffer): Promise<{ lines: any[]; code: number | nul
 const request = (id: number, method: string, params?: unknown): string => `${JSON.stringify({ jsonrpc: '2.0', id, method, params })}\n`;
 
 beforeAll(async () => {
-  client = new Client({ name: 'zk-proofscan-tests', version: '0.0.0' });
+  client = new Client({ name: 'lumenlenz-tests', version: '0.0.0' });
   await client.connect(new StdioClientTransport({ command: process.execPath, args: [server] }));
 }, 120_000);
 
@@ -55,7 +55,7 @@ afterAll(async () => {
 
 describe('tool server, through the official client', () => {
   it('introduces itself and tells the model how to use the results', () => {
-    expect(client.getServerVersion()).toMatchObject({ name: 'zk-proofscan' });
+    expect(client.getServerVersion()).toMatchObject({ name: 'lumenlenz' });
     expect(client.getInstructions()).toMatch(/only when a tool result/);
   });
 

@@ -31,11 +31,11 @@ const TIMEOUT_MS = 20_000;
 /**
  * The provider address comes from the operator's environment only, never
  * from a command-line argument, a file being checked or an AI agent.
- * `ZK_PROOFSCAN_RPC_URL` is used as given; otherwise `ALCHEMY_API_KEY`
+ * `LUMENLENZ_RPC_URL` is used as given; otherwise `ALCHEMY_API_KEY`
  * selects Alchemy's endpoint for the chain.
  */
 export function rpcUrlFromEnvironment(chain: Chain, env: Record<string, string | undefined>): string | undefined {
-  const direct = env.ZK_PROOFSCAN_RPC_URL;
+  const direct = env.LUMENLENZ_RPC_URL;
   if (direct !== undefined && direct !== '') return direct;
   const key = env.ALCHEMY_API_KEY;
   if (key !== undefined && /^[A-Za-z0-9_-]{8,128}$/.test(key)) return `https://${chain.alchemy}.g.alchemy.com/v2/${key}`;

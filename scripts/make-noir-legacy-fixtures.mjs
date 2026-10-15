@@ -20,7 +20,7 @@ const out = process.argv[2] === undefined ? fileURLToPath(new URL('../tests/fixt
 const { program } = await compile(createFileManager(fileURLToPath(new URL('./circuits/noir-multiplier/', import.meta.url))));
 const { witness } = await new Noir(program).execute({ a: '3', b: '11' });
 
-const crs = mkdtempSync(join(tmpdir(), 'zk-proofscan-legacy-crs-'));
+const crs = mkdtempSync(join(tmpdir(), 'lumenlenz-legacy-crs-'));
 const backend = new UltraHonkBackend(program.bytecode, { threads: 1, crsPath: crs });
 // "poseidon" is this version's default transcript. This tool does not check it; the fixture shows that it is refused and not failed.
 for (const [name, options] of [['keccak', { keccak: true }], ['keccak-zk', { keccakZK: true }], ['poseidon', {}]]) {

@@ -577,7 +577,7 @@ download.addEventListener('click', () => {
   const url = URL.createObjectURL(new Blob([writeExport(current.inputs, current.report, current.source)], { type: 'application/json' }));
   const link = document.createElement('a');
   link.href = url;
-  link.download = `zk-proofscan-evidence-${current.report.input.sha256.slice(0, 12)}.json`;
+  link.download = `lumenlenz-evidence-${current.report.input.sha256.slice(0, 12)}.json`;
   link.click();
   URL.revokeObjectURL(url);
 });

@@ -165,7 +165,7 @@ describe('a supplied key that is on record', () => {
   });
 
   it('gives the same result on the command line and through an export', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'zk-proofscan-registry-'));
+    const dir = mkdtempSync(join(tmpdir(), 'lumenlenz-registry-'));
     // A file name that claims a circuit changes nothing.
     const at = { proof: join(dir, 'age-over-18.proof.json'), publicInputs: join(dir, 'public.json'), verificationKey: join(dir, 'official-passport-key.json') };
     writeFileSync(at.proof, semaphore.proof);
