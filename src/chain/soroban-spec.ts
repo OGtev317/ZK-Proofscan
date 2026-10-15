@@ -106,7 +106,7 @@ export const STANDARD_TOKEN_SPEC: ContractSpec = {
   functions: new Map<string, string[]>([
     ['transfer', ['from', 'to', 'amount']],
     ['transfer_from', ['spender', 'from', 'to', 'amount']],
-    ['approve', ['from', 'spender', 'amount', 'expiration_ledger']],
+    ['approve', ['from', 'spender', 'amount', 'live_until_ledger']],
     ['burn', ['from', 'amount']],
     ['burn_from', ['spender', 'from', 'amount']],
     ['mint', ['to', 'amount']],

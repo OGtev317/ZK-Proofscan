@@ -427,7 +427,29 @@ Tests pin that only a successful transaction's committed events are read
 as movements: a real transfer event given as a diagnostic event, or from
 a failed transaction, is not. `humanizeEvents` from the Stellar library
 was considered and not used, since it drops whether the enclosing call
-succeeded. A local network (Quickstart) for generating test transactions
-was set aside: it means deploying contracts and signing transactions,
-which needs the owner's approval even locally.
+succeeded.
+
+## Local regression transactions
+
+Added 2026-10-15, with the owner's approval for a local network only.
+`scripts/local-stellar-regression.mjs` sends transactions on a local
+Stellar network (the official Quickstart image, "Standalone Network ;
+February 2017"), with throwaway keys made by the Stellar CLI, and records
+every RPC answer the lookup receives for each in
+`tests/fixtures/stellar-local/`. It refuses to run against any other
+network. `tests/stellar-local.test.ts` replays them with no network:
+
+| Transaction | What the tests pin |
+| --- | --- |
+| A 12.5 XLM payment with a text memo | Amount, memo, fee, outcome, movement |
+| An issuer paying its own asset | The issuer named; the payment read as creating the asset |
+| A payment for more than the sender holds | Failed, with the reason "underfunded", and no movement |
+| A transfer through a Stellar Asset Contract | The call named by the standard token interface; the movement |
+| An unlimited allowance through the same contract | Flagged unlimited, with the parameter `live_until_ledger` |
+| Nethermind's UltraHonk verifier (rs-soroban-ultrahonk at 9aae958), deployed with this tool's Barretenberg 0.87.0 test key, verifying the test proof | The proof and key found, the call typed from the contract's interface, the build metadata read, and the proof valid here |
+
+The allowance test found a fault: the standard interface's last `approve`
+parameter was named `expiration_ledger`; the asset contract calls it
+`live_until_ledger`. Nothing here was sent to testnet or mainnet. The
+script's header gives the commands to start the network and make the keys.
 

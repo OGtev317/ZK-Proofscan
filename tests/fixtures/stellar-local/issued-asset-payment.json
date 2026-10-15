@@ -1,0 +1,38 @@
+{
+  "recorded": "2026-10-15",
+  "network": "local Stellar Quickstart (Standalone Network ; February 2017)",
+  "description": "The issuer pays 1000 of its asset ZKP.",
+  "getLedgerEntries": {
+    "AAAAAAAAAABpa1MlFQrWTJBleSW2J26nrBGcI4/RtCIVMHmjHwtucQ==": {
+      "entries": [
+        {
+          "key": "AAAAAAAAAABpa1MlFQrWTJBleSW2J26nrBGcI4/RtCIVMHmjHwtucQ==",
+          "xdr": "AAAAAAAAAABpa1MlFQrWTJBleSW2J26nrBGcI4/RtCIVMHmjHwtucQAAABdIdhMIAAAAFgAAAAQAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAADAAAAAAAAAPYAAAAAatBe/Q==",
+          "lastModifiedLedgerSeq": 246
+        }
+      ],
+      "latestLedger": 246
+    }
+  },
+  "getNetwork": {
+    "passphrase": "Standalone Network ; February 2017"
+  },
+  "getTransaction": {
+    "status": "SUCCESS",
+    "txHash": "8ab00bec15e0d6c74a9d3049855a98105ec7a9d470bb7cf42e0e04d5259614d9",
+    "ledger": 246,
+    "createdAt": "1792040701",
+    "envelopeXdr": "AAAAAgAAAABpa1MlFQrWTJBleSW2J26nrBGcI4/RtCIVMHmjHwtucQAAAGQAAAAWAAAABAAAAAEAAAAAAAAAAAAAAABq0F84AAAAAAAAAAEAAAAAAAAAAQAAAADkqiQWIoI5fW1KwKTeegfI5RM7eoJBfLKb1AOxCbPxPQAAAAFaS1AAAAAAAGlrUyUVCtZMkGV5JbYnbqesEZwjj9G0IhUweaMfC25xAAAAAlQL5AAAAAAAAAAAAR8LbnEAAABAZgZQwl8v8dfWswEyeOcg5rZorppDRKshOoBl5K3t7itfdJsyKPYvc2jue7xRfHVk+FxM4KqudB1xzbpRh3lHDg==",
+    "resultXdr": "AAAAAAAAAGQAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAA=",
+    "events": {
+      "transactionEventsXdr": [
+        "AAAAAAAAAAAAAAAB2LKxTGD+y2X7KqgcvqedCDXK/A4NhR+GESV8HltB4cIAAAABAAAAAAAAAAIAAAAPAAAAA2ZlZQAAAAASAAAAAAAAAABpa1MlFQrWTJBleSW2J26nrBGcI4/RtCIVMHmjHwtucQAAAAoAAAAAAAAAAAAAAAAAAABk"
+      ],
+      "contractEventsXdr": [
+        [
+          "AAAAAAAAAAHsFxRUTrxnccJ7w01m+5atSZ38HGd6MPQAyk9+RTI79QAAAAEAAAAAAAAAAwAAAA8AAAAEbWludAAAABIAAAAAAAAAAOSqJBYigjl9bUrApN56B8jlEzt6gkF8spvUA7EJs/E9AAAADgAAADxaS1A6R0JVV1dVWkZDVUZOTVRFUU1WNFNMTlJITjJUMllFTTRFT0g1RE5CQ0NVWUhUSVk3Qk5YSERFTEQAAAAKAAAAAAAAAAAAAAACVAvkAA=="
+        ]
+      ]
+    }
+  }
+}

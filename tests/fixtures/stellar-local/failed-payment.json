@@ -1,0 +1,33 @@
+{
+  "recorded": "2026-10-15",
+  "network": "local Stellar Quickstart (Standalone Network ; February 2017)",
+  "description": "A payment of more ZKP than the sender holds, which fails on the network.",
+  "getLedgerEntries": {
+    "AAAAAAAAAABpa1MlFQrWTJBleSW2J26nrBGcI4/RtCIVMHmjHwtucQ==": {
+      "entries": [
+        {
+          "key": "AAAAAAAAAABpa1MlFQrWTJBleSW2J26nrBGcI4/RtCIVMHmjHwtucQ==",
+          "xdr": "AAAAAAAAAABpa1MlFQrWTJBleSW2J26nrBGcI4/RtCIVMHmjHwtucQAAABdIdhMIAAAAFgAAAAQAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAADAAAAAAAAAPYAAAAAatBe/Q==",
+          "lastModifiedLedgerSeq": 246
+        }
+      ],
+      "latestLedger": 247
+    }
+  },
+  "getNetwork": {
+    "passphrase": "Standalone Network ; February 2017"
+  },
+  "getTransaction": {
+    "status": "FAILED",
+    "txHash": "ea0a78ecdfc3b9701c5f99de387aaf8eceb5379361661aa9420d7ec8807a5122",
+    "ledger": 247,
+    "createdAt": "1792040702",
+    "envelopeXdr": "AAAAAgAAAADkqiQWIoI5fW1KwKTeegfI5RM7eoJBfLKb1AOxCbPxPQAAAGQAAAASAAAADgAAAAEAAAAAAAAAAAAAAABq0F85AAAAAAAAAAEAAAAAAAAAAQAAAABGjYS7bTyP9+lTwDloI62uEJqIRoDve8M/wD/QHMH6lAAAAAFaS1AAAAAAAGlrUyUVCtZMkGV5JbYnbqesEZwjj9G0IhUweaMfC25xAAAAC6Q7dAAAAAAAAAAAAQmz8T0AAABAs5JopdIV8JcVPIpxfsJk8jiilDt1jeTXSemkkX1njpQsXBJRi/2PyFQPgykm0FM0nA2bd/KotLXqyzDq4HamBw==",
+    "resultXdr": "AAAAAAAAAGT/////AAAAAQAAAAAAAAAB/////gAAAAA=",
+    "events": {
+      "transactionEventsXdr": [
+        "AAAAAAAAAAAAAAAB2LKxTGD+y2X7KqgcvqedCDXK/A4NhR+GESV8HltB4cIAAAABAAAAAAAAAAIAAAAPAAAAA2ZlZQAAAAASAAAAAAAAAADkqiQWIoI5fW1KwKTeegfI5RM7eoJBfLKb1AOxCbPxPQAAAAoAAAAAAAAAAAAAAAAAAABk"
+      ]
+    }
+  }
+}

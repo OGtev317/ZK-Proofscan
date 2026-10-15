@@ -1,0 +1,27 @@
+{
+  "recorded": "2026-10-15",
+  "network": "local Stellar Quickstart (Standalone Network ; February 2017)",
+  "description": "A payment of 12.5 XLM with a text memo.",
+  "getLedgerEntries": {},
+  "getNetwork": {
+    "passphrase": "Standalone Network ; February 2017"
+  },
+  "getTransaction": {
+    "status": "SUCCESS",
+    "txHash": "924330c0630c90bc357c08fed3eda08656b6c7753f7d50d9d65d804abecaad53",
+    "ledger": 243,
+    "createdAt": "1792040698",
+    "envelopeXdr": "AAAAAgAAAADkqiQWIoI5fW1KwKTeegfI5RM7eoJBfLKb1AOxCbPxPQAAAGQAAAASAAAADAAAAAEAAAAAAAAAAAAAAABq0F81AAAAAQAAAA56a3AgcmVncmVzc2lvbgAAAAAAAQAAAAAAAAABAAAAAEaNhLttPI/36VPAOWgjra4QmohGgO97wz/AP9AcwfqUAAAAAAAAAAAHc1lAAAAAAAAAAAEJs/E9AAAAQCDifRCh+vW1aOFwAjY/nH+purPCkpxDb9ydsqma5ApTv9TKacFeB84dhjYAsEZvjSzusjtmZg2vdG/itxnDtwo=",
+    "resultXdr": "AAAAAAAAAGQAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAA=",
+    "events": {
+      "transactionEventsXdr": [
+        "AAAAAAAAAAAAAAAB2LKxTGD+y2X7KqgcvqedCDXK/A4NhR+GESV8HltB4cIAAAABAAAAAAAAAAIAAAAPAAAAA2ZlZQAAAAASAAAAAAAAAADkqiQWIoI5fW1KwKTeegfI5RM7eoJBfLKb1AOxCbPxPQAAAAoAAAAAAAAAAAAAAAAAAABk"
+      ],
+      "contractEventsXdr": [
+        [
+          "AAAAAAAAAAHYsrFMYP7LZfsqqBy+p50INcr8Dg2FH4YRJXweW0HhwgAAAAEAAAAAAAAABAAAAA8AAAAIdHJhbnNmZXIAAAASAAAAAAAAAADkqiQWIoI5fW1KwKTeegfI5RM7eoJBfLKb1AOxCbPxPQAAABIAAAAAAAAAAEaNhLttPI/36VPAOWgjra4QmohGgO97wz/AP9AcwfqUAAAADgAAAAZuYXRpdmUAAAAAABEAAAABAAAAAgAAAA8AAAAGYW1vdW50AAAAAAAKAAAAAAAAAAAAAAAAB3NZQAAAAA8AAAALdG9fbXV4ZWRfaWQAAAAADgAAAA56a3AgcmVncmVzc2lvbgAA"
+        ]
+      ]
+    }
+  }
+}
