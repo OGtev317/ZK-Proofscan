@@ -43,6 +43,12 @@ jobs:
       - uses: actions/checkout@v5
       - run: rustup toolchain install 1.97.1 --profile minimal --target wasm32-unknown-unknown
       - run: scripts/build-ark-groth16.sh --check
+      # On a mismatch, keep this build so the difference can be examined.
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ark-groth16-linux
+          path: verifiers/ark-groth16/target/wasm32-unknown-unknown/release/zk_proofscan_ark_groth16.wasm
   # Publishes the page only from a commit on main that passed the jobs above.
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
