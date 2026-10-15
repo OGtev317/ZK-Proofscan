@@ -57,7 +57,7 @@ export async function stellarPrivatePaymentsKeys(): Promise<{ artifactId: string
 }
 
 /** Adapters for circuits whose key the user supplies and the registry records. */
-export const RECORDED_ADAPTERS = ['zk-email-proof-of-twitter'] as const;
+export const RECORDED_ADAPTERS = ['zk-email-proof-of-twitter', 'stellar-private-payments-blocklist'] as const;
 
 export async function bundledScanning(): Promise<Scanning> {
   const registry = loadKeyRegistry(await file('registry/keys.json'));

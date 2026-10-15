@@ -103,6 +103,9 @@ describe('Proof of Twitter: a recorded key with an explanation bound to it', () 
       const report = await check({ ...good, publicInputs: JSON.stringify(other) });
       // Still the recorded key, so it is named; the proof establishes nothing.
       expect(report).toMatchObject({ outcome: 'invalid', basis: 'supplied-key', keyRecognition: { match: 'exact' } });
+      // A rejected proof uses nothing from the explanation, and its record says so (found in review: it said "applied").
+      expect(report).toMatchObject({ keyRecognition: { explanation: { adapter: 'zk-email-proof-of-twitter', applied: false } } });
+      expect(renderReport(report)).toContain('Explanation of the circuit: this tool has one (adapter zk-email-proof-of-twitter), which this report does not apply.');
       expect(renderReport(report)).toMatch(/^Claim: None/);
       expect(renderReport(report)).not.toMatch(/Someone had an email|Checks not performed/);
     }

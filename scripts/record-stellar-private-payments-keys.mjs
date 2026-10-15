@@ -40,7 +40,8 @@ export const entries = readdirSync(folder).filter((name) => name.endsWith('_vk.j
       status: 'unconfirmed',
       note: "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked.",
     },
-    explanationAdapter: null,
+    // The blocklist pool's key has an explanation (adapters/stellar-private-payments-blocklist); the others have none.
+    explanationAdapter: stem === 'policy_tx_2_2_B' ? 'stellar-private-payments-blocklist' : null,
     entryReview: { status: 'unreviewed', note: "Written with the tool. No maintainer has checked this entry against the publisher's files." },
     keys: [{ label: "the circuit's only key", contentSha256: keyContentSha256(JSON.parse(bytes.toString('utf8'))) }],
   };

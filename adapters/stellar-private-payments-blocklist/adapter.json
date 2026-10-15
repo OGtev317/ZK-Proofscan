@@ -1,0 +1,107 @@
+{
+  "id": "stellar-private-payments-blocklist",
+  "revision": 1,
+  "format": "snarkjs-groth16-bn128",
+  "verifier": {
+    "name": "snarkjs",
+    "version": "0.7.6"
+  },
+  "artifacts": [
+    {
+      "role": "verification-key",
+      "sha256": "e30ed2a42074bd6e4f7afb8f2a3068cfd9c08467213cff6b687ed13b45e63afc",
+      "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/deployments/testnet/circuit_keys/policy_tx_2_2_B_vk.json"
+    }
+  ],
+  "circuit": {
+    "name": "policy_tx_2_2_B: PolicyTransactionBlocklist(2, 2, 1, 20, 32)",
+    "source": "https://github.com/NethermindEth/stellar-private-payments/blob/ef42a47ee6a84b5c7a289b979e2fa2526c73aabc/circuits/src/policy_tx_2_2_B.circom",
+    "linkToArtifacts": "Unconfirmed. The publisher records this key's setup as local: made on one machine with no trusted ceremony. That the key was built from this source was not checked, and circuit source alone cannot recreate a Groth16 key."
+  },
+  "publicFields": [
+    {
+      "name": "root",
+      "meaning": "The root of the pool's tree of notes. Every spent note with a non-zero amount is a leaf of the tree with this root. Whether the pool has ever had this root is the pool contract's check."
+    },
+    {
+      "name": "public amount",
+      "meaning": "What enters the pool (as a positive number) or leaves it, net of the fee, as a number in the BN254 field: an amount leaving is written as the field's size minus that amount. Whether it matches what was paid is the pool contract's check."
+    },
+    {
+      "name": "external data hash",
+      "meaning": "A hash, computed by the pool contract, of the transaction's external data: recipient, external amount and encrypted outputs. The proof is bound to it but the circuit does not look inside it."
+    },
+    {
+      "name": "input nullifier 1",
+      "meaning": "Derived from the first spent note and its owner's private key. Publishing it lets the pool refuse a second spend of that note without revealing which note it was."
+    },
+    {
+      "name": "input nullifier 2",
+      "meaning": "Derived from the second spent note and its owner's private key, as for the first."
+    },
+    {
+      "name": "output commitment 1",
+      "meaning": "A commitment to a new note: an amount, an owner's public key and a blinding value, all hidden."
+    },
+    {
+      "name": "output commitment 2",
+      "meaning": "A commitment to a second new note, as for the first."
+    },
+    {
+      "name": "blocklist root for input 1",
+      "meaning": "The root of the blocklist tree the owner of the first input is shown to be absent from. A root of 0 is the empty tree, which every key is absent from. Whether it is the pool's current blocklist is the pool contract's check."
+    },
+    {
+      "name": "blocklist root for input 2",
+      "meaning": "The same for the owner of the second input. A root of 0 is the empty tree."
+    }
+  ],
+  "explanation": {
+    "claim": "Mathematical statement only: whoever made this proof knew, for each of two inputs, a private key, an amount and a blinding value from which the nullifier shown is derived; any input with a non-zero amount is a note in the tree with the root shown; each input's owner key is absent from the blocklist tree with the root shown; and they knew the note behind each output commitment shown. The nullifiers differ, the inputs plus the public amount equal the outputs, and the proof is bound to the external data hash shown.",
+    "hidden": [
+      "The amounts of the spent and the new notes.",
+      "Which notes were spent: their places in the tree are not revealed.",
+      "The private keys of the spent notes' owners, and the public keys of the new notes' owners.",
+      "The blinding values that hide each note."
+    ],
+    "applicationChecks": [
+      {
+        "id": "known-root",
+        "description": "Whether the root is one the pool's tree has had. The pool contract checks this; this tool did not."
+      },
+      {
+        "id": "nullifiers-unspent",
+        "description": "Whether either nullifier was used before, which would make this a second spend of a note. The pool contract checks this."
+      },
+      {
+        "id": "blocklist-current",
+        "description": "Whether the blocklist roots are the pool's current blocklist. The pool contract checks this."
+      },
+      {
+        "id": "external-data",
+        "description": "Whether the external data hash matches this transaction's recipient, external amount and encrypted outputs. The pool contract computes it."
+      },
+      {
+        "id": "amount-paid",
+        "description": "Whether the public amount matches the tokens actually deposited or withdrawn, net of the fee. The pool contract checks this."
+      }
+    ],
+    "limits": [
+      "This is the mathematical statement alone. That the transaction was a valid private payment in this pool, made by someone not on its blocklist, also rests on the pool contract's own checks listed above, which this tool did not perform.",
+      "An input with a zero amount is not checked against the tree, so a deposit made with two zero-amount inputs shows nothing about earlier notes.",
+      "This does not establish who sent or received anything, or what the hidden amounts were.",
+      "Absence from the blocklist means only that the owner's key is not on the list its maintainer published. It says nothing about the person behind the key.",
+      "Nethermind publishes Stellar Private Payments as unaudited work in progress for testnet only. This key's setup was run on one machine with no trusted ceremony, so whoever ran it could make passing proofs of false statements."
+    ],
+    "assumptions": [
+      "The Groth16 proof system, the BN254 curve and the Poseidon2 hash are sound.",
+      "The setup that produced this verification key was performed honestly. The publisher records it as local, with no ceremony.",
+      "The verification key belongs to the named circuit, and that circuit, with the Merkle tree, sparse Merkle tree and hash circuits it includes, enforces the statement above.",
+      "The verifier libraries are correct."
+    ]
+  },
+  "review": {
+    "status": "unreviewed",
+    "note": "Draft written on 2026-10-15 from reading policy_tx_2_2_B, PolicyTransactionBlocklist, PolicyTransaction, AspNonMembership and Keypair at commit ef42a47. The Merkle, sparse Merkle and Poseidon2 circuits they include were not read. No qualified person has reviewed it; it is meant to be offered to Nethermind for review."
+  }
+}

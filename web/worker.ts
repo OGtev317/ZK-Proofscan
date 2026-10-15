@@ -8,6 +8,8 @@ import registryUrl from '../registry/keys.json?url';
 import riscZeroUrl from '../artifacts/risc-zero-groth16/parameters-3.0.0.json?url';
 import twitterAdapterUrl from '../adapters/zk-email-proof-of-twitter/adapter.json?url';
 import twitterLockUrl from '../adapters/zk-email-proof-of-twitter/lock.json?url';
+import blocklistAdapterUrl from '../adapters/stellar-private-payments-blocklist/adapter.json?url';
+import blocklistLockUrl from '../adapters/stellar-private-payments-blocklist/lock.json?url';
 import { rerunExport } from '../src/export.js';
 import { bindSemaphoreV4, type AdapterLock } from '../src/semaphore-v4/bind.js';
 import { bindRecordedCircuit } from '../src/recorded/bind.js';
@@ -36,13 +38,14 @@ const suppliedKeyEngine = crossCheckedSupplied(snarkjsSuppliedKeyEngine, ark);
 let binding: Promise<Scanning> | undefined;
 const bound = (): Promise<Scanning> =>
   (binding ??= (async () => {
-    const [adapterBytes, lockBytes, keyBytes, registryBytes, twitterAdapter, twitterLock, riscZeroBytes] = await Promise.all(
-      [adapterUrl, lockUrl, keysUrl, registryUrl, twitterAdapterUrl, twitterLockUrl, riscZeroUrl].map(bytes),
-    ) as [Uint8Array, Uint8Array, Uint8Array, Uint8Array, Uint8Array, Uint8Array, Uint8Array];
+    const [adapterBytes, lockBytes, keyBytes, registryBytes, twitterAdapter, twitterLock, riscZeroBytes, blocklistAdapter, blocklistLock] = await Promise.all(
+      [adapterUrl, lockUrl, keysUrl, registryUrl, twitterAdapterUrl, twitterLockUrl, riscZeroUrl, blocklistAdapterUrl, blocklistLockUrl].map(bytes),
+    ) as [Uint8Array, Uint8Array, Uint8Array, Uint8Array, Uint8Array, Uint8Array, Uint8Array, Uint8Array, Uint8Array];
     const lock = JSON.parse(new TextDecoder().decode(lockBytes)) as AdapterLock;
     const registry = loadKeyRegistry(registryBytes);
     const recorded = [
       bindRecordedCircuit({ adapterBytes: twitterAdapter, lock: JSON.parse(new TextDecoder().decode(twitterLock)) as AdapterLock, registry, verifier: snarkjsSuppliedKeyEngine.identity }),
+      bindRecordedCircuit({ adapterBytes: blocklistAdapter, lock: JSON.parse(new TextDecoder().decode(blocklistLock)) as AdapterLock, registry, verifier: snarkjsSuppliedKeyEngine.identity }),
     ];
     return { semaphoreV4: bindSemaphoreV4({ adapterBytes, lock, keyBytes, engine: groth16Engine }), suppliedKey: suppliedKeyEngine, registry, recorded, riscZero: { parameters: loadRiscZeroParameters(riscZeroBytes), engine: groth16Engine }, ultraHonk: ultraHonkEngine, ultraHonkLegacy: legacyUltraHonkEngine, cairo: cairoEngine(onPage) };
   })());

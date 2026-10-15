@@ -424,7 +424,9 @@ test('switches to Stellar from a pasted link and checks a private payment', asyn
   await expect(page.locator('#lookup-note')).toContainText('soroban-testnet.stellar.org');
   await page.click('#lookup');
   await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
-  await expect(page.locator('#plain')).toContainText('It was made for a circuit this tool has on record: Stellar Private Payments (Nethermind), testnet key.');
+  // The blocklist pool's circuit is explained, as a mathematical statement only.
+  await expect(page.locator('#plain')).toContainText('What it shows: Mathematical statement only: whoever made this proof knew, for each of two inputs, a private key');
+  await expect(page.locator('#unknown')).toContainText('This is the mathematical statement alone.');
   await expect(page.locator('#source')).toContainText('the verifier the called contract names');
   await expect(page.locator('#fact-settlement')).toHaveText('Final');
   await expect(page.locator('#proof-detail')).toContainText('On the network: verifier contract CA66PGQD3OUO5R64CMOWL3FIRAQTWORLX36ZERALPPYOJ4ORETGFO3P5');

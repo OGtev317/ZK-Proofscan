@@ -35,7 +35,8 @@ describe('Stellar Private Payments testnet keys', () => {
       // Nothing is claimed for these keys beyond where they were published.
       expect(entry!.circuitLink.status).toBe('unconfirmed');
       expect(entry!.circuitLink.note).toContain('no trusted ceremony');
-      expect(entry!.explanationAdapter).toBeNull();
+      // Only the blocklist pool's key has an explanation.
+      expect(entry!.explanationAdapter).toBe(name === 'policy_tx_2_2_B_vk.json' ? 'stellar-private-payments-blocklist' : null);
       expect(entry!.entryReview.status).toBe('unreviewed');
       expect(entry!.provenance.url).toContain('ef42a47ee6a84b5c7a289b979e2fa2526c73aabc');
     }
@@ -46,7 +47,9 @@ describe('Stellar Private Payments testnet keys', () => {
       const verificationKey = readFileSync(join(folder, name), 'utf8');
       const report = await check({ proof: otherProof, publicInputs: inputsFor(JSON.parse(verificationKey)), verificationKey });
       if (report.outcome !== 'invalid' || report.basis !== 'supplied-key') throw new Error(`${name}: ${JSON.stringify(report).slice(0, 200)}`);
-      expect(report.keyRecognition, name).toMatchObject({ match: 'exact', explanation: null, artifact: { provenance: { publisher: 'Nethermind' } } });
+      expect(report.keyRecognition, name).toMatchObject({ match: 'exact', artifact: { provenance: { publisher: 'Nethermind' } } });
+      // A rejected proof is never explained, whether or not its key has an explanation.
+      if (name !== 'policy_tx_2_2_B_vk.json') expect(report.keyRecognition, name).toMatchObject({ explanation: null });
       expect(report).not.toHaveProperty('claim');
     }
     const verificationKey = readFileSync(join(folder, 'policy_tx_2_2_B_vk.json'), 'utf8');
@@ -57,7 +60,7 @@ describe('Stellar Private Payments testnet keys', () => {
       'Tied to that circuit source: Unconfirmed.',
       'whoever made it could make passing proofs of false statements',
       'This record: NOT REVIEWED.',
-      'Explanation of the circuit: this tool has none.',
+      'Explanation of the circuit: this tool has one (adapter stellar-private-payments-blocklist), which this report does not apply.',
     ]) expect(shown).toContain(line);
   });
 

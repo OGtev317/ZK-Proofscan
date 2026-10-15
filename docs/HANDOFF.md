@@ -153,8 +153,9 @@ mistake. The lost part was restored from `01d2144` in the next change.
   then every explanation says NOT REVIEWED.
 - Choose which Noir circuits, Cairo programs or RISC Zero programs, if any,
   should get an explanation. Today those formats verify and are not
-  explained. Stellar Private Payments now has real testnet proofs to test
-  an explanation with (see the lookup notes).
+  explained. Stellar Private Payments' blocklist pool has a draft
+  explanation (2026-10-15); decide whether to offer it to Nethermind for
+  review, which is what would lift NOT REVIEWED.
 - Decide whether to send the request to ZK Email's maintainers drafted in
   the formats document. It has not been sent.
 - The release questions in [the release review](RELEASE_REVIEW.md),

@@ -282,7 +282,7 @@ lookup notes).
 
 | Candidate | New library | What is built | What is not |
 | --- | --- | --- | --- |
-| Nethermind Stellar Private Payments (circom, Groth16) | None: snarkjs reads its keys | Its 16 testnet keys are recognised; two real testnet proofs pass | No explanation |
+| Nethermind Stellar Private Payments (circom, Groth16) | None: snarkjs reads its keys | Its 16 testnet keys are recognised; two real testnet proofs pass | The blocklist pool's circuit is explained (draft, unreviewed); the other 15 are not |
 | Nethermind Stellar RISC Zero verifier | None: the seal is a Groth16 proof | Receipts are verified, with a new basis | Nothing says what a program does |
 | Soroban UltraHonk verifier (Noir) | `@aztec/bb.js` 0.87.0, beside 5.2.1 | Proofs of the version that verifier is built for are checked | The Stellar verifier itself is Rust and is not run here |
 
@@ -301,8 +301,27 @@ one is reported as using a known key.
 - The publisher calls the project a work in progress, unaudited, for
   testnet only. Its keys were replaced three times in six weeks; a proof
   for an earlier or later key is reported as an unrecognised key.
-- No explanation is applied. An adapter would need the meaning of each
-  public input and a qualified review.
+- **Explanation, since 2026-10-15, for the blocklist pool's key only**
+  (`policy_tx_2_2_B`, `adapters/stellar-private-payments-blocklist`),
+  written from the circuit source at commit `ef42a47` and marked NOT
+  REVIEWED. It states the mathematical statement alone: for each of two
+  inputs, knowledge of a key, amount and blinding value giving the
+  nullifier shown, membership of the tree with the root shown for any
+  input with a non-zero amount, absence of each input's owner key from the
+  blocklist tree with the root shown, knowledge of each output's note,
+  distinct nullifiers, conservation of value with the public amount, and
+  binding to the external data hash. What the application claims beyond
+  that (a known root, unspent nullifiers, the current blocklist, matching
+  external data and payment) is the pool contract's check, listed as such
+  and not performed here. It also says that a zero-amount input is not
+  checked against the tree, and that a blocklist root of 0 is the empty
+  tree, as in both real testnet proofs. The Merkle, sparse Merkle and
+  Poseidon2 circuits it includes were not read. The other fifteen keys
+  have no explanation.
+- Found while adding it: a rejected proof under a key with an explanation
+  was recorded as having that explanation "applied", though nothing from
+  it was used. That is now said only of a proof that passed; the same
+  applied to Proof of Twitter.
 - **Real proofs, since 2026-10-14.** The repository holds no test proof,
   but `lookup --chain stellar-testnet` reads the deployed pools' `transact`
   calls, and the two found on testnet that day pass under `policy_tx_2_2_B`.

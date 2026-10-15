@@ -81,12 +81,15 @@ export async function scan(inputs: ProofInputs, scanning: Scanning): Promise<Rep
     if (found === undefined) return { match: 'none' };
     const named = found.artifact.explanationAdapter;
     const bound = explain(contentSha256);
-    // Review status is reported as the adapter states it, never upgraded.
+    // Review status is reported as the adapter states it, never upgraded. An explanation is applied
+    // only to a proof that passed: found in review, a rejected proof's record said "applied" though
+    // its report used nothing from the explanation.
+    const known = recorded.find((candidate) => candidate.adapter.manifest.id === named)?.adapter ?? (named === semaphoreV4.adapter.manifest.id ? semaphoreV4.adapter : undefined);
     const explanation =
-      bound !== undefined && bound.artifactId === found.artifact.id && bound.adapter.manifest.id === named
+      result.status === 'valid' && bound !== undefined && bound.artifactId === found.artifact.id && bound.adapter.manifest.id === named
         ? { adapter: bound.adapter.manifest.id, review: bound.adapter.manifest.review, applied: true }
-        : named === semaphoreV4.adapter.manifest.id
-          ? { adapter: named, review: semaphoreV4.adapter.manifest.review, applied: false }
+        : named !== null && known !== undefined
+          ? { adapter: named, review: known.manifest.review, applied: false }
           : null;
     return { match: 'exact', registry: { revision: registry.revision, sha256: registry.sha256 }, artifact: found.artifact, key: found.label, explanation };
   };

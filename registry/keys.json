@@ -1,6 +1,6 @@
 {
   "registryVersion": 1,
-  "revision": 3,
+  "revision": 4,
   "artifacts": [
     {
       "id": "semaphore-v4-verification-keys",
@@ -455,7 +455,7 @@
         "status": "unconfirmed",
         "note": "The publisher records this key's setup as local: it was made on one machine with no trusted ceremony, so whoever made it could make passing proofs of false statements. The publisher says the keys are for testnet only and the code is unaudited. That the key was built from this source was not checked."
       },
-      "explanationAdapter": null,
+      "explanationAdapter": "stellar-private-payments-blocklist",
       "entryReview": {
         "status": "unreviewed",
         "note": "Written with the tool. No maintainer has checked this entry against the publisher's files."

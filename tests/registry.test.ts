@@ -101,7 +101,7 @@ describe('a supplied key that is on record', () => {
     expect(report.keyRecognition).toMatchObject({
       match: 'exact',
       key: 'tree depth 3',
-      registry: { revision: 3, sha256: KEY_REGISTRY_SHA256 },
+      registry: { revision: 4, sha256: KEY_REGISTRY_SHA256 },
       artifact: { id: 'semaphore-v4-verification-keys', circuitLink: { status: 'partly-established' }, entryReview: { status: 'unreviewed' } },
       explanation: { adapter: 'semaphore-v4', review: { status: 'unreviewed' }, applied: false },
     });
