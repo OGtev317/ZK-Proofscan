@@ -47,7 +47,7 @@ test('checks a valid proof and shows every section of the report', async ({ page
   await page.setInputFiles('#proof-file', fixture('semaphore-v4-valid.json'));
   await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
   const text = await page.locator('#sections').innerText();
-  for (const expected of ['Claim', 'Someone knew the secret behind a membership commitment', 'Hidden by the proof', 'Public', 'PASSED using snarkjs 0.7.6.', 'NOT REVIEWED.', 'Application checks not performed', 'Whether this nullifier has been used before.', 'Limits', 'This result assumes', 'fixture message']) {
+  for (const expected of ['Claim', 'Someone knew the secret behind a membership commitment', 'Hidden by the proof', 'Public', 'PASSED using snarkjs 0.7.6 and ark-groth16 0.6.0, two independent verifiers that agree.', 'NOT REVIEWED.', 'Application checks not performed', 'Whether this nullifier has been used before.', 'Limits', 'This result assumes', 'fixture message']) {
     expect(text).toContain(expected);
   }
   await expect(page.locator('#download')).toBeVisible();
@@ -61,7 +61,7 @@ test('shows no claim for a rejected proof', async ({ page }) => {
   await expect(outcome(page)).toHaveAttribute('data-outcome', 'invalid');
   const text = await page.locator('#sections').innerText();
   expect(text).toContain('None. The verifier rejected this proof');
-  expect(text).toContain('FAILED using snarkjs 0.7.6.');
+  expect(text).toContain('FAILED using snarkjs 0.7.6 and ark-groth16 0.6.0, two independent verifiers that agree.');
   expect(text).not.toContain('Someone knew the secret');
   expect(text).not.toContain('PASSED');
   expect(problems).toEqual([]);
@@ -189,7 +189,7 @@ test('checks a RISC Zero receipt, the same as the command line', async ({ page }
   await page.setInputFiles('#proof-file', fixture('risc-zero/nethermind-test-receipt.txt'));
   await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
   const text = await page.locator('#sections').innerText();
-  for (const expected of ['A program with the image ID shown ran in the RISC Zero virtual machine', 'image ID of the program: a77e54910c792ddc3f14878f3f1360af96612408d69074e87389a215f57595b9', 'PASSED using snarkjs 0.7.6 (RISC Zero Groth16 receipt, verifier parameters version 3.0.0).', 'NOT REVIEWED.', 'This tool did not see the journal.', 'This is not a statement about Stellar or any other network.']) {
+  for (const expected of ['A program with the image ID shown ran in the RISC Zero virtual machine', 'image ID of the program: a77e54910c792ddc3f14878f3f1360af96612408d69074e87389a215f57595b9', 'PASSED using snarkjs 0.7.6 and ark-groth16 0.6.0, two independent verifiers that agree (RISC Zero Groth16 receipt, verifier parameters version 3.0.0).', 'NOT REVIEWED.', 'This tool did not see the journal.', 'This is not a statement about Stellar or any other network.']) {
     expect(text).toContain(expected);
   }
   const [saved] = await Promise.all([page.waitForEvent('download'), page.click('#download')]);
@@ -221,7 +221,7 @@ test('runs each example, and an example leaves earlier files out', async ({ page
 
   await page.click('#example-risc-zero');
   await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
-  await expect(page.locator('#sections')).toContainText('PASSED using snarkjs 0.7.6 (RISC Zero Groth16 receipt');
+  await expect(page.locator('#sections')).toContainText('PASSED using snarkjs 0.7.6 and ark-groth16 0.6.0, two independent verifiers that agree (RISC Zero Groth16 receipt');
   expect(await page.locator('#proof-text').inputValue()).toBe(readFileSync(fixture('risc-zero/nethermind-test-receipt.txt'), 'utf8'));
 
   await expect(page.locator('footer a')).toHaveAttribute('href', 'https://github.com/OGtev317/ZK-Proofscan');

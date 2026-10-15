@@ -6,7 +6,7 @@ Build steps 1 to 3 are written: strict import and verification, explanation
 binding, and the readable report with export and rerun, on the command line
 and in a browser page. Read
 [the prototype notes](VERIFICATION_PROTOTYPE.md) for what exists, what was
-measured and what is untested. 191 unit tests and 32 browser tests pass.
+measured and what is untested. 199 unit tests and 32 browser tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
 for the first version. The main checkout holds the core, command line and
@@ -99,6 +99,12 @@ a registry entry, an adapter and fixtures, not new code.
   transactions. Built the same day: `lookup --chain stellar-testnet` reads
   calls to Nethermind's UltraHonk verifier contract and to Stellar Private
   Payments pools; two real testnet proofs of each passed. Read [the lookup notes](LOOKUP.md).
+- 2026-10-14: arkworks, from a list of libraries the owner gave. It is a
+  second, independent verifier for every Groth16 proof. Of the same list,
+  Circom and snarkjs were already here; o1js (for Mina, under Mina zkML) was
+  chosen to follow; libZK (Google's Longfellow) was left for later as the
+  largest job; libsnark and zksk were not added, being unmaintained with no
+  standard proof file.
 - 2026-10-11: verifier libraries so that the first test release covers four
   kinds of proof: snarkjs, Groth16, Noir and Starknet. Noir is built with
   `@aztec/bb.js` 5.2.1, and Cairo proofs (the proof system Starknet uses)

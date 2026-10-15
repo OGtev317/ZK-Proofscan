@@ -221,8 +221,17 @@ vulnerabilities. The development-only Semaphore packages bring in older
 packages with open advisories (snarkjs 0.5.0, `ws`); they are not part of
 what the tool runs.
 
-No audit status has been confirmed for snarkjs 0.7.6, `@aztec/bb.js` 5.2.1
-or 0.87.0, `swiftness` 1.0.0 or this code.
+No audit status has been confirmed for snarkjs 0.7.6, arkworks'
+`ark-groth16` 0.6.0, `@aztec/bb.js` 5.2.1 or 0.87.0, `swiftness` 1.0.0 or
+this code.
+
+Since 2026-10-14 every Groth16 proof, on the command line, in the tool
+server and in the page, is checked by snarkjs and by `ark-groth16`, and a
+result stands only when both agree; a disagreement is reported as not
+checked. arkworks runs as a 188 KB WebAssembly module that imports
+nothing, built reproducibly from `verifiers/ark-groth16` with Rust 1.97.1;
+the CI rebuilds it on Linux and fails if it differs from the committed
+file.
 
 ## Findings
 
@@ -241,7 +250,7 @@ or 0.87.0, `swiftness` 1.0.0 or this code.
 
 ## Tested
 
-191 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
+199 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
 registry, Proof of Twitter, lookup, Noir, Cairo, RISC Zero and the Stellar
 keys are described in
 [the formats](FORMATS.md) and [the lookup notes](LOOKUP.md). The rest:

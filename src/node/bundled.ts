@@ -7,9 +7,16 @@ import { loadKeyRegistry } from '../registry.js';
 import { loadRiscZeroParameters } from '../risc-zero/parameters.js';
 import type { Scanning } from '../scan.js';
 import { bindSemaphoreV4, type AdapterLock, type BoundSemaphoreV4 } from '../semaphore-v4/bind.js';
+import { arkGroth16, crossCheckedGroth16, crossCheckedSupplied } from '../ark-groth16.js';
 import { snarkjsEngine, snarkjsSuppliedKeyEngine } from '../snarkjs-engine.js';
 
 const file = (path: string): Promise<Uint8Array> => readFile(new URL(`../../${path}`, import.meta.url));
+
+/** arkworks' Groth16 verifier, the second check on every Groth16 proof. */
+export const arkGroth16Engine = arkGroth16(() => file('artifacts/ark-groth16/ark-groth16.wasm'));
+/** Groth16 checks stand only when snarkjs and arkworks agree. */
+export const groth16Engine = crossCheckedGroth16(snarkjsEngine, arkGroth16Engine);
+export const suppliedKeyEngine = crossCheckedSupplied(snarkjsSuppliedKeyEngine, arkGroth16Engine);
 
 /** The adapter, lock, key file and verifier shipped with this build, bound together. */
 export async function bundledSemaphoreV4(): Promise<BoundSemaphoreV4> {
@@ -18,7 +25,7 @@ export async function bundledSemaphoreV4(): Promise<BoundSemaphoreV4> {
     adapterBytes: await file('adapters/semaphore-v4/adapter.json'),
     lock,
     keyBytes: await file('artifacts/semaphore-v4/verification-keys.json'),
-    engine: snarkjsEngine,
+    engine: groth16Engine,
   });
 }
 
@@ -64,6 +71,6 @@ export async function bundledScanning(): Promise<Scanning> {
       }),
     ),
   );
-  const riscZero = { parameters: loadRiscZeroParameters(await file('artifacts/risc-zero-groth16/parameters-3.0.0.json')), engine: snarkjsEngine };
-  return { semaphoreV4: await bundledSemaphoreV4(), suppliedKey: snarkjsSuppliedKeyEngine, registry, recorded, riscZero, ultraHonk: bbJsEngine, ultraHonkLegacy: bbJsLegacyEngine, cairo: swiftnessEngine };
+  const riscZero = { parameters: loadRiscZeroParameters(await file('artifacts/risc-zero-groth16/parameters-3.0.0.json')), engine: groth16Engine };
+  return { semaphoreV4: await bundledSemaphoreV4(), suppliedKey: suppliedKeyEngine, registry, recorded, riscZero, ultraHonk: bbJsEngine, ultraHonkLegacy: bbJsLegacyEngine, cairo: swiftnessEngine };
 }

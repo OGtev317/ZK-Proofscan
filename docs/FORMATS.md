@@ -25,15 +25,30 @@ treating `valid` as a statement about any claim.
 
 | Format | Basis | Files | Verifier |
 | --- | --- | --- | --- |
-| Semaphore v4 membership proof | `bundled-circuit` | Proof | snarkjs 0.7.6, Groth16 on BN254 |
-| ZK Email "Proof of Twitter" demonstration | `recorded-circuit` | Proof, public inputs, and the published verification key | snarkjs 0.7.6, Groth16 on BN254 |
-| snarkjs Groth16 on BN254 or BLS12-381 | `supplied-key` | Proof, public inputs, verification key | snarkjs 0.7.6 |
+| Semaphore v4 membership proof | `bundled-circuit` | Proof | snarkjs 0.7.6 and arkworks `ark-groth16` 0.6.0, Groth16 on BN254 |
+| ZK Email "Proof of Twitter" demonstration | `recorded-circuit` | Proof, public inputs, and the published verification key | snarkjs 0.7.6 and `ark-groth16` 0.6.0, Groth16 on BN254 |
+| snarkjs Groth16 on BN254 or BLS12-381 | `supplied-key` | Proof, public inputs, verification key | snarkjs 0.7.6 and `ark-groth16` 0.6.0 |
 | snarkjs PLONK on BN254 | `supplied-key` | Proof, public inputs, verification key | snarkjs 0.7.6 |
 | snarkjs FFLONK on BN254 | `supplied-key` | Proof, public inputs, verification key | snarkjs 0.7.6 |
-| Cairo STARK proof (Stone prover layout) | `cairo-program` | Proof | `swiftness` 1.0.0. Command line and tool server only |
-| Noir (UltraHonk on BN254, written by Barretenberg) | `supplied-key` | `proof`, `public_inputs`, `vk`, all binary | `@aztec/bb.js` 5.2.1. Command line and tool server only |
+| Cairo STARK proof (Stone prover layout) | `cairo-program` | Proof | `swiftness` 1.0.0 |
+| Noir (UltraHonk on BN254, written by Barretenberg) | `supplied-key` | `proof`, `public_inputs`, `vk`, all binary | `@aztec/bb.js` 5.2.1 |
 | Noir, as Barretenberg 0.87.0 wrote it with the Keccak transcript | `supplied-key` | The same three files | `@aztec/bb.js` 0.87.0. Command line and tool server only |
-| RISC Zero Groth16 receipt, verifier parameters 3.0.0 | `risc-zero-program` | One file: three lines of hex | snarkjs 0.7.6, Groth16 on BN254 |
+| RISC Zero Groth16 receipt, verifier parameters 3.0.0 | `risc-zero-program` | One file: three lines of hex | snarkjs 0.7.6 and `ark-groth16` 0.6.0, Groth16 on BN254 |
+
+**Every Groth16 proof is checked twice, since 2026-10-14:** by snarkjs and
+by arkworks' `ark-groth16` 0.6.0, two implementations written separately,
+in JavaScript and in Rust. A result stands only when both give the same
+answer, and the report names both. If they disagree the proof is reported
+as not checked, never as passed or failed. arkworks also refuses any
+number that is not a field element and any point that is off its curve or
+outside its prime-order subgroup, so a proof or key that relies on one
+verifier skipping such a check cannot pass. PLONK and FFLONK proofs have
+no second verifier here and say so by naming snarkjs alone. arkworks runs
+as WebAssembly built from `verifiers/ark-groth16` (see
+`artifacts/ark-groth16/README.md`); no audit of `ark-groth16` 0.6.0 was
+found. Found while adding it: points written without their third
+coordinate, as Semaphore's proofs are, were first refused by the new
+encoder, and the disagreement was reported as not checked, as intended.
 
 ```sh
 node dist/cli.js check proof.json --public public.json --key verification_key.json

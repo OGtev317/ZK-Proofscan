@@ -208,7 +208,9 @@ describe('supplied-key evidence, exported and rerun', () => {
     const exported = join(dir, `${system}.json`);
     const result = cli('check', ...withKey(system), '--export', exported);
     expect(result.status).toBe(0);
-    expect(result.stdout).toMatch(/Cryptographic verification: PASSED using snarkjs 0\.7\.6, against the verification key supplied with the proof/);
+    // Groth16 proofs are checked by arkworks as well, and both must agree; PLONK and FFLONK by snarkjs alone.
+    const verifiers = system.startsWith('groth16') ? 'snarkjs 0\\.7\\.6 and ark-groth16 0\\.6\\.0, two independent verifiers that agree' : 'snarkjs 0\\.7\\.6';
+    expect(result.stdout).toMatch(new RegExp(`Cryptographic verification: PASSED using ${verifiers}, against the verification key supplied with the proof`));
     const bundle = JSON.parse(readFileSync(exported, 'utf8'));
     expect(Object.keys(bundle)).toEqual(['exportVersion', 'proof', 'publicInputs', 'verificationKey', 'report']);
     expect(bundle.report).toMatchObject({ reportVersion: 2, outcome: 'valid', basis: 'supplied-key' });

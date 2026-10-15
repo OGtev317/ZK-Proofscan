@@ -14,10 +14,17 @@ import { bindRecordedCircuit } from '../src/recorded/bind.js';
 import { loadKeyRegistry } from '../src/registry.js';
 import { loadRiscZeroParameters } from '../src/risc-zero/parameters.js';
 import { scan, type Scanning } from '../src/scan.js';
+import arkUrl from '../artifacts/ark-groth16/ark-groth16.wasm?url';
+import { arkGroth16, crossCheckedGroth16, crossCheckedSupplied } from '../src/ark-groth16.js';
 import { snarkjsEngine, snarkjsSuppliedKeyEngine } from '../src/snarkjs-engine.js';
 import { bytes, cairoEngine, ultraHonkEngine } from './engines.js';
 import type { CairoDone, Request, ToPage, ToWorker } from './protocol.js';
 import type { SwiftnessOutcome } from './swiftness.js';
+
+// Groth16 checks stand only when snarkjs and arkworks agree, as on the command line.
+const ark = arkGroth16(() => bytes(arkUrl));
+const groth16Engine = crossCheckedGroth16(snarkjsEngine, ark);
+const suppliedKeyEngine = crossCheckedSupplied(snarkjsSuppliedKeyEngine, ark);
 
 let binding: Promise<Scanning> | undefined;
 const bound = (): Promise<Scanning> =>
@@ -30,7 +37,7 @@ const bound = (): Promise<Scanning> =>
     const recorded = [
       bindRecordedCircuit({ adapterBytes: twitterAdapter, lock: JSON.parse(new TextDecoder().decode(twitterLock)) as AdapterLock, registry, verifier: snarkjsSuppliedKeyEngine.identity }),
     ];
-    return { semaphoreV4: bindSemaphoreV4({ adapterBytes, lock, keyBytes, engine: snarkjsEngine }), suppliedKey: snarkjsSuppliedKeyEngine, registry, recorded, riscZero: { parameters: loadRiscZeroParameters(riscZeroBytes), engine: snarkjsEngine }, ultraHonk: ultraHonkEngine, cairo: cairoEngine(onPage) };
+    return { semaphoreV4: bindSemaphoreV4({ adapterBytes, lock, keyBytes, engine: groth16Engine }), suppliedKey: suppliedKeyEngine, registry, recorded, riscZero: { parameters: loadRiscZeroParameters(riscZeroBytes), engine: groth16Engine }, ultraHonk: ultraHonkEngine, cairo: cairoEngine(onPage) };
   })());
 
 const scope = self as unknown as { onmessage: ((event: MessageEvent<ToWorker>) => void) | null; postMessage(message: ToPage): void };

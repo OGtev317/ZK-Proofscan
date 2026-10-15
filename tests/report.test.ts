@@ -18,7 +18,7 @@ describe('evidence report', () => {
     if (report.outcome !== 'valid' || report.basis !== 'bundled-circuit') throw new Error(report.outcome);
     expect(report.claim).toBe(claim);
     expect(report.public.map((field) => field.name)).toEqual(['group root', 'nullifier', 'hashed message', 'hashed scope']);
-    expect(report.verification).toEqual({ result: 'passed', verifier: { name: 'snarkjs', version: '0.7.6' }, verificationKeysSha256: bound.keys.sha256 });
+    expect(report.verification).toEqual({ result: 'passed', verifier: { name: 'snarkjs', version: '0.7.6', alsoCheckedBy: { name: 'ark-groth16', version: '0.6.0' } }, verificationKeysSha256: bound.keys.sha256 });
     expect(report.explanation.adapter).toEqual({ id: 'semaphore-v4', revision: bound.adapter.manifest.revision, sha256: bound.adapter.sha256 });
     expect(report.proofFile).toMatchObject({ messageIfText: 'fixture message', scopeIfText: 'fixture scope', merkleTreeDepth: 3 });
     const shown = renderReport(report);

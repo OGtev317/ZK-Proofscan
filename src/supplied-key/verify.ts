@@ -7,6 +7,8 @@ import { importSuppliedKey, type Curve, type Protocol, type SnarkjsProtocol } fr
 /** A verifier for the proof systems snarkjs implements, called with a caller-supplied key. */
 export interface SuppliedKeyEngine {
   identity: VerifierIdentity;
+  /** The verifiers that check proofs of one system, if not `identity` for all. */
+  identityFor?(protocol: string): VerifierIdentity;
   verify(protocol: SnarkjsProtocol, key: unknown, publicSignals: string[], proof: unknown): Promise<boolean>;
 }
 
@@ -45,7 +47,7 @@ export async function verifySuppliedKey(inputs: Required<ProofInputs>, engine: S
     const checked: SuppliedChecked = {
       protocol,
       curve,
-      verifier: engine.identity,
+      verifier: engine.identityFor?.(protocol) ?? engine.identity,
       verificationKeySha256: sha256Hex(partBytes(inputs.verificationKey)),
       verificationKeyContentSha256: keyContentSha256(key),
       publicInputsSha256: sha256Hex(partBytes(inputs.publicInputs)),

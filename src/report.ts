@@ -5,7 +5,7 @@ import type { CairoParameters, CairoResult } from './cairo/verify.js';
 import type { RecognisedKey } from './registry.js';
 import { RISC_ZERO } from './risc-zero/explanation.js';
 import type { RiscZeroResult } from './risc-zero/verify.js';
-import type { VerificationResult } from './result.js';
+import { verifierText, type VerificationResult, type VerifierIdentity } from './result.js';
 import { asPaddedAscii } from './semaphore-v4/text.js';
 import { partBytes } from './inputs.js';
 import { sha256Hex } from './sha256.js';
@@ -28,7 +28,7 @@ interface Common {
 }
 
 interface SuppliedKeyVerification {
-  verifier: { name: string; version: string };
+  verifier: VerifierIdentity;
   proofSystem: { protocol: Protocol; curve: Curve; variant?: string };
   verificationKeySha256: string;
   verificationKeyContentSha256: string;
@@ -36,13 +36,13 @@ interface SuppliedKeyVerification {
 }
 
 interface CairoVerification {
-  verifier: { name: string; version: string };
+  verifier: VerifierIdentity;
   /** `proverFormat` is the Stone layout the proof verified under, when it did. */
   proofSystem: { name: 'cairo-stark'; proverFormat?: string } & CairoParameters;
 }
 
 interface RiscZeroVerification {
-  verifier: { name: string; version: string };
+  verifier: VerifierIdentity;
   /** The pinned verifier parameters the seal was checked against. */
   proofSystem: { name: 'risc-zero-groth16'; parametersVersion: string; selector: string; parametersSha256: string };
 }
@@ -87,7 +87,7 @@ export type Report =
       hidden: string[];
       public: { name: string; meaning: string; value: string }[];
       proofFile: { message: string; messageIfText?: string; scope: string; scopeIfText?: string; merkleTreeDepth: number };
-      verification: { result: 'passed'; verifier: { name: string; version: string }; verificationKeysSha256: string };
+      verification: { result: 'passed'; verifier: VerifierIdentity; verificationKeysSha256: string };
       explanation: ReportExplanation;
       /** Stated in every format, so a program reading the report sees the same boundary a person does. */
       applicationChecks: { id: string; status: 'not-performed'; description: string }[];
@@ -125,7 +125,7 @@ export type Report =
       outcome: 'invalid';
       basis: 'bundled-circuit';
       public: { name: string; value: string }[];
-      verification: { result: 'failed'; verifier: { name: string; version: string }; verificationKeysSha256: string };
+      verification: { result: 'failed'; verifier: VerifierIdentity; verificationKeysSha256: string };
     })
   | (Common & {
       outcome: 'valid';
@@ -332,14 +332,14 @@ const NOTHING = 'This says nothing about whether a proof is valid.';
 const asText = (text: string | undefined): string => (text === undefined ? '' : ` (if this number encodes text, it reads: ${JSON.stringify(text)})`);
 
 const usingCairo = (verification: CairoVerification): string =>
-  `using ${verification.verifier.name} ${verification.verifier.version} (Cairo STARK proof, layout ${verification.proofSystem.layout}${verification.proofSystem.proverFormat === undefined ? '' : `, ${verification.proofSystem.proverFormat === 'stone6' ? 'Stone 6' : 'Stone 5'} format`}).`;
+  `using ${verifierText(verification.verifier)} (Cairo STARK proof, layout ${verification.proofSystem.layout}${verification.proofSystem.proverFormat === undefined ? '' : `, ${verification.proofSystem.proverFormat === 'stone6' ? 'Stone 6' : 'Stone 5'} format`}).`;
 const securityLine = (system: CairoVerification['proofSystem']): string =>
   `Security the proof declares: ${system.securityBits} bits (${system.queries} queries × ${system.logCosets} + ${system.proofOfWorkBits} proof-of-work bits). This tool requires at least 80.`;
 const usingRiscZero = (verification: RiscZeroVerification): string =>
-  `using ${verification.verifier.name} ${verification.verifier.version} (RISC Zero Groth16 receipt, verifier parameters version ${verification.proofSystem.parametersVersion}).`;
+  `using ${verifierText(verification.verifier)} (RISC Zero Groth16 receipt, verifier parameters version ${verification.proofSystem.parametersVersion}).`;
 const riscZeroParameters = (system: RiscZeroVerification['proofSystem']): string[] => [`Verifier parameters (SHA-256): ${system.parametersSha256}`, `Seal selector: ${system.selector}`];
 const using = (verification: SuppliedKeyVerification): string =>
-  `using ${verification.verifier.name} ${verification.verifier.version}, against the verification key supplied with the proof (${SYSTEM_NAME[verification.proofSystem.protocol]} on ${CURVE_NAME[verification.proofSystem.curve]}${verification.proofSystem.variant === undefined ? '' : `, variant ${verification.proofSystem.variant}`}).`;
+  `using ${verifierText(verification.verifier)}, against the verification key supplied with the proof (${SYSTEM_NAME[verification.proofSystem.protocol]} on ${CURVE_NAME[verification.proofSystem.curve]}${verification.proofSystem.variant === undefined ? '' : `, variant ${verification.proofSystem.variant}`}).`;
 const suppliedFiles = (verification: SuppliedKeyVerification): string[] => [
   `Verification key file (SHA-256): ${verification.verificationKeySha256}`,
   `Public inputs file (SHA-256): ${verification.publicInputsSha256}`,
@@ -422,7 +422,7 @@ export function reportSections(report: Report): ReportSection[] {
         { heading: 'Claim', summary: 'None. The verifier rejected this proof, so it establishes nothing.', items: [], tone: 'fail' },
         {
           heading: 'Cryptographic verification',
-          summary: `FAILED using ${report.verification.verifier.name} ${report.verification.verifier.version}.`,
+          summary: `FAILED using ${verifierText(report.verification.verifier)}.`,
           items: [`Verification keys (SHA-256): ${report.verification.verificationKeysSha256}`],
           tone: 'fail',
         },
@@ -518,7 +518,7 @@ export function reportSections(report: Report): ReportSection[] {
         },
         {
           heading: 'Cryptographic verification',
-          summary: `PASSED using ${verification.verifier.name} ${verification.verifier.version}.`,
+          summary: `PASSED using ${verifierText(verification.verifier)}.`,
           items: [`Verification keys (SHA-256): ${verification.verificationKeysSha256}`],
           tone: 'pass',
         },

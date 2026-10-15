@@ -15,6 +15,9 @@ server for AI agents check proofs and show the report above. The page is publish
 passes the tests. The code is
 unaudited and there is no versioned release.
 
+Every Groth16 proof is checked by two independent verifiers, snarkjs and
+arkworks, and a result stands only when they agree.
+
 | Proof | Checked against | Explained | Where |
 | --- | --- | --- | --- |
 | Semaphore v4 membership | Keys bundled with this tool | Yes, draft wording | Command line, page, tool server |

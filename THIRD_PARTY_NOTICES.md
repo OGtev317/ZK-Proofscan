@@ -10,6 +10,11 @@ checked against the package's files.
 The verification keys in `artifacts/semaphore-v4/` are copied from
 `@semaphore-protocol/proof` 4.14.3 (MIT); its licence is kept beside them.
 
+The Rust crates compiled into `artifacts/ark-groth16/ark-groth16.wasm`,
+arkworks' Groth16 verifier, are listed with their licences in
+`artifacts/ark-groth16/README.md`: MIT, Apache-2.0, Zlib or Unlicense, as
+each declares; arkworks' own licence files are beside it.
+
 | Package | Version | Declared licence |
 | --- | --- | --- |
 | @aztec/bb.js | 5.2.1 | MIT |

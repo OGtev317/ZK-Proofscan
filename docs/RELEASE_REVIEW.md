@@ -28,7 +28,9 @@ the blockers below were cleared; the page says it is an unaudited prototype.
    are not independent of each other.
 3. **The audit status of snarkjs 0.7.6 is not confirmed.** Semaphore's
    published audit covers a named Semaphore v4 beta, not this verifier
-   version and not this tool.
+   version and not this tool. Since 2026-10-14 every Groth16 result must
+   also be given by arkworks' `ark-groth16` 0.6.0, which lessens but does
+   not remove this: no audit of that version was found either.
 4. **Proving keys are not tied to the circuit source or the trusted setup.**
 5. **Not opened in real Safari** on a Mac or iPhone, in Firefox, or on Windows.
 6. **The name has not been checked** against existing products.

@@ -35,10 +35,18 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:e2e
-  # Publishes the page only from a commit on main that passed both jobs above.
+  # The committed arkworks module must be exactly what its pinned source builds.
+  ark-groth16:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - run: rustup toolchain install 1.97.1 --profile minimal --target wasm32-unknown-unknown
+      - run: scripts/build-ark-groth16.sh --check
+  # Publishes the page only from a commit on main that passed the jobs above.
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [test, browser]
+    needs: [test, browser, ark-groth16]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:

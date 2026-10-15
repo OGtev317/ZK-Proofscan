@@ -63,7 +63,7 @@ describe('RISC Zero Groth16 receipts', () => {
     expect(report.journal).toEqual({ sha256: journalSha256 });
     expect(report.verification).toEqual({
       result: 'passed',
-      verifier: { name: 'snarkjs', version: '0.7.6' },
+      verifier: { name: 'snarkjs', version: '0.7.6', alsoCheckedBy: { name: 'ark-groth16', version: '0.6.0' } },
       proofSystem: { name: 'risc-zero-groth16', parametersVersion: '3.0.0', selector: '73c457ba', parametersSha256: RISC_ZERO_PARAMETERS_SHA256 },
     });
     expect(report.input.sha256).toBe(createHash('sha256').update(readFileSync(receiptPath)).digest('hex'));
@@ -72,7 +72,7 @@ describe('RISC Zero Groth16 receipts', () => {
       'Claim: A program with the image ID shown ran in the RISC Zero virtual machine, stopped normally, and wrote a journal with the SHA-256 shown. This tool does not know what that program does.',
       `  - image ID of the program: ${imageId}`,
       `  - SHA-256 of the journal: ${journalSha256}`,
-      'PASSED using snarkjs 0.7.6 (RISC Zero Groth16 receipt, verifier parameters version 3.0.0).',
+      'PASSED using snarkjs 0.7.6 and ark-groth16 0.6.0, two independent verifiers that agree (RISC Zero Groth16 receipt, verifier parameters version 3.0.0).',
       'NOT REVIEWED',
       'This tool did not see the journal.',
       'This is not a statement about Stellar or any other network.',

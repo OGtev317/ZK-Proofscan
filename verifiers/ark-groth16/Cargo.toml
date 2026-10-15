@@ -1,0 +1,24 @@
+[package]
+name = "zk-proofscan-ark-groth16"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "Exposes arkworks' Groth16 verifier to ZK-Proofscan as WebAssembly. No cryptography is written here."
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+ark-groth16 = { version = "=0.6.0", default-features = false }
+ark-bn254 = { version = "=0.6.0", default-features = false, features = ["curve"] }
+ark-bls12-381 = { version = "=0.6.0", default-features = false, features = ["curve"] }
+ark-ec = { version = "=0.6.0", default-features = false }
+ark-ff = { version = "=0.6.0", default-features = false }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

@@ -1,7 +1,13 @@
 export interface VerifierIdentity {
   name: string;
   version: string;
+  /** A second, independent verifier that gave the same answer. */
+  alsoCheckedBy?: { name: string; version: string };
 }
+
+/** How a report names the verifier: both, when a second one agreed. */
+export const verifierText = (verifier: VerifierIdentity): string =>
+  verifier.alsoCheckedBy === undefined ? `${verifier.name} ${verifier.version}` : `${verifier.name} ${verifier.version} and ${verifier.alsoCheckedBy.name} ${verifier.alsoCheckedBy.version}, two independent verifiers that agree`;
 
 export interface Checked {
   format: 'semaphore-v4';
