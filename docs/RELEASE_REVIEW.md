@@ -56,10 +56,10 @@ the blockers below were cleared; the page says it is an unaudited prototype.
     checked real proofs on the test network only (the main network is read
     but no proof was found there), and trusts the provider for the
     contracts' storage.
-11. **The browser page does not check Noir proofs from Barretenberg
-    0.87.0** (5.2.1 Noir proofs and Cairo proofs are checked there since
-    2026-10-14). It has also not been tried on real Safari, Firefox or a
-    phone; Playwright's WebKit is the nearest tested.
+11. **The browser page has not been tried on real Safari, Firefox or a
+    phone**; Playwright's WebKit is the nearest tested. (It checks Noir
+    proofs from both Barretenberg versions and Cairo proofs since
+    2026-10-14 and 2026-10-15.)
 12. **Barretenberg 0.87.0 (added after this review)** is an old verifier
     with no confirmed audit status. Testing found it accepts an all-zero
     proof under an all-zero key and several rewritten forms of a proof.

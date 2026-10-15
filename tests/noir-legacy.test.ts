@@ -10,6 +10,7 @@ import { binaryBytes, binaryPart, type ProofInputs } from '../src/inputs.js';
 import { bundledScanning } from '../src/node/bundled.js';
 import { BB_JS_LEGACY_PACKAGE, BB_JS_LEGACY_VERSION, bbJsLegacyEngine } from '../src/node/noir-legacy-engine.js';
 import { stopEngines } from '../src/node/stop.js';
+import { bbJsLegacyEngine as makeLegacyEngine, type LegacyModule } from '../src/noir/legacy-engine.js';
 import { LEGACY_ULTRAHONK_VARIANTS, looksLikeLegacyKey, verifyLegacyUltraHonk, type LegacyUltraHonkVariant } from '../src/noir/legacy.js';
 import { renderReport, type Report } from '../src/report.js';
 import { scan } from '../src/scan.js';
@@ -161,6 +162,24 @@ describe('UltraHonk proofs from Barretenberg 0.87.0 (the version the Stellar ver
     expect(await raw(variant, good, early)).toBe(false);
     expect((await check({ ...good, proof: binaryPart(early) })).outcome).toBe('invalid');
   }, 240_000);
+
+  it('reports a verifier that cannot start as not checked, and reads the setup point again after a failure', async () => {
+    const good = load('keccak');
+    const real = async () => (await import(BB_JS_LEGACY_PACKAGE)) as unknown as LegacyModule;
+    const g2 = () => Promise.resolve(new Uint8Array(readFileSync(join(root, 'artifacts/aztec-crs/bn254_g2.dat'))));
+    for (const engine of [
+      makeLegacyEngine(real, () => Promise.reject(new Error('cannot read'))),
+      makeLegacyEngine(real, () => Promise.resolve(new Uint8Array(128))),
+      makeLegacyEngine(() => Promise.reject(new Error('cannot load')), g2),
+      makeLegacyEngine(async () => ({ ...(await real()), BarretenbergSync: { new: () => Promise.reject(new Error('no WebAssembly')) } }) as unknown as LegacyModule, g2),
+    ]) {
+      expect(await verifyLegacyUltraHonk(good, engine)).toMatchObject({ status: 'error' });
+    }
+    let reads = 0;
+    const flaky = makeLegacyEngine(real, () => (++reads === 1 ? Promise.reject(new Error('cannot read')) : g2()));
+    expect(await verifyLegacyUltraHonk(good, flaky)).toMatchObject({ status: 'error' });
+    expect(await verifyLegacyUltraHonk(good, flaky)).toMatchObject({ status: 'valid', variant: 'keccak' });
+  });
 
   it('refuses what it does not check, without calling it invalid', async () => {
     const good = load('keccak');

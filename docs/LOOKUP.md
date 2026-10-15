@@ -228,10 +228,9 @@ The command line and the agent tool also take a pasted explorer link:
 and a link that names a different network from `--chain` is refused. A
 bare hash still needs the network named.
 
-Not done: a Stellar Noir proof from Barretenberg 0.87.0, the kind
-Nethermind's UltraHonk verifier contract checks, is found by a lookup on
-the page but not checked there; the page says so and points to the
-command line.
+A Stellar Noir proof from Barretenberg 0.87.0, the kind Nethermind's
+UltraHonk verifier contract checks, is checked on the page too since
+2026-10-15.
 
 ## Transactions with no proof, and the reader's view
 

@@ -4,6 +4,9 @@
 // state of one verifier instance carries over to another check.
 import g2Url from '../artifacts/aztec-crs/bn254_g2.dat?url';
 import barretenbergWasmUrl from 'virtual:barretenberg-wasm';
+import barretenbergLegacyWasmUrl from 'virtual:barretenberg-legacy-wasm';
+import { bbJsLegacyEngine, type LegacyModule } from '../src/noir/legacy-engine.js';
+import type { LegacyUltraHonkEngine } from '../src/noir/legacy.js';
 import { SWIFTNESS_VERSION, swiftnessBuild, swiftnessFailure, swiftnessResult } from '../src/cairo/swiftness.js';
 import type { CairoEngine } from '../src/cairo/verify.js';
 import { bbJsEngine, type BbJsModule } from '../src/noir/bb-engine.js';
@@ -28,6 +31,18 @@ export const ultraHonkEngine: UltraHonkEngine = bbJsEngine(
  * stack is too small for some proofs, while the page's own thread is not, so
  * a run that exhausts the stack is repeated there by `onPage`.
  */
+/**
+ * Barretenberg 0.87.0, the version Nethermind's UltraHonk verifier for
+ * Stellar is built for, through its in-thread API as on the command line.
+ * Its library and WebAssembly are loaded only when a proof of that version
+ * is checked.
+ */
+export const legacyUltraHonkEngine: LegacyUltraHonkEngine = bbJsLegacyEngine(
+  async () => (await import('aztec-bb-js-0-87-0')) as unknown as LegacyModule,
+  () => bytes(g2Url),
+  barretenbergLegacyWasmUrl,
+);
+
 export function cairoEngine(onPage: (build: string, text: string) => Promise<SwiftnessOutcome>): CairoEngine {
   return {
     identity: { name: 'swiftness', version: SWIFTNESS_VERSION },

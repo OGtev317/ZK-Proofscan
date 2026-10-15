@@ -27,7 +27,7 @@ arkworks, and a result stands only when they agree.
 | --- | --- | --- | --- |
 | Semaphore v4 membership | Keys bundled with this tool | Yes, draft wording | Command line, page, tool server |
 | Groth16, PLONK, FFLONK written by snarkjs | A key the user supplies | Only ZK Email's Proof of Twitter demonstration, draft wording | Command line, page, tool server |
-| UltraHonk written by Barretenberg for a Noir program (5.2.1, or 0.87.0 with the Keccak transcript) | A key the user supplies | No | Command line, tool server; the page checks 5.2.1 proofs only |
+| UltraHonk written by Barretenberg for a Noir program (5.2.1, or 0.87.0 with the Keccak transcript) | A key the user supplies | No | Command line, page, tool server |
 | RISC Zero Groth16 receipt | RISC Zero's version 3.0.0 verifier parameters, pinned in this tool | No; the program is known by its image ID | Command line, page, tool server |
 | Cairo STARK, the kind Starknet uses, in the Stone prover's layout | No key; the program is known by its hash | No | Command line, page, tool server |
 

@@ -82,9 +82,10 @@ given only Aztec's pinned G2 point and the curve's generator: measured on
 both Barretenberg versions, verifying needs no other setup point, so the
 command line no longer copies 8 MB of setup files for each run either. In
 WebKit the Cairo verifier can run out of stack in a worker; the page then
-runs it on its own thread (see the formats document). The page does not
-check Noir proofs from Barretenberg 0.87.0 and has no transaction lookup;
-given either, it says the proof was not checked.
+runs it on its own thread (see the formats document). Since 2026-10-15 the
+page also checks Noir proofs from Barretenberg 0.87.0, the version
+Stellar's UltraHonk verifier checks, through the same code as the command
+line.
 
 Since 2026-10-12 the page is published with GitHub Pages. The `deploy` job
 in the CI workflow builds it from each commit on `main`, after the unit and
@@ -271,7 +272,7 @@ the committed file. A build on macOS gives different bytes; see
 
 ## Tested
 
-238 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
+239 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
 registry, Proof of Twitter, lookup, Noir, Cairo, RISC Zero and the Stellar
 keys are described in
 [the formats](FORMATS.md) and [the lookup notes](LOOKUP.md). The rest:

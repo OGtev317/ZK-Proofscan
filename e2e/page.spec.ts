@@ -268,13 +268,30 @@ test('checks a Noir proof from its three binary files, the same as the command l
   await page.setInputFiles('#public-file', temp('altered.public_inputs', altered));
   await expect(outcome(page)).toHaveAttribute('data-outcome', 'invalid');
 
-  // A proof from Barretenberg 0.87.0 is left to the command line, and says so.
-  const legacy = (kind: string): string => fixture(`noir-legacy/multiplier-keccak.${kind}`);
-  await page.setInputFiles('#public-file', legacy('public_inputs'));
-  await page.setInputFiles('#key-file', legacy('vk'));
-  await page.setInputFiles('#proof-file', legacy('proof'));
-  await expect(page.locator('#sections')).toContainText('this proof was written by Barretenberg 0.87.0, which this build cannot check; use the command line');
-  await expect(outcome(page)).toHaveAttribute('data-outcome', 'unsupported');
+  // A proof from Barretenberg 0.87.0, the version Stellar's UltraHonk verifier checks, is checked here too, with and without hiding.
+  for (const variant of ['keccak', 'keccak-zk']) {
+    const legacy = (kind: string): string => fixture(`noir-legacy/multiplier-${variant}.${kind}`);
+    await page.setInputFiles('#public-file', legacy('public_inputs'));
+    await page.setInputFiles('#key-file', legacy('vk'));
+    await page.setInputFiles('#proof-file', legacy('proof'));
+    await expect(page.locator('#sections')).toContainText(`PASSED using @aztec/bb.js 0.87.0, against the verification key supplied with the proof (UltraHonk on BN254, variant ${variant}).`);
+    await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+    await expect(page.locator('#unknown')).toContainText('This proof was checked with Barretenberg 0.87.0, an older version');
+  }
+  // The same proof with one public input changed is rejected.
+  const legacyAltered = readFileSync(fixture('noir-legacy/multiplier-keccak.public_inputs'));
+  legacyAltered[31] = legacyAltered[31]! ^ 1;
+  await page.setInputFiles('#key-file', fixture('noir-legacy/multiplier-keccak.vk'));
+  await page.setInputFiles('#proof-file', fixture('noir-legacy/multiplier-keccak.proof'));
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  await page.setInputFiles('#public-file', temp('legacy-altered.public_inputs', legacyAltered));
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'invalid');
+  await expect(page.locator('#fact-proof')).toHaveText('Failed: the verifier rejected the proof');
+  // A poseidon-transcript key of this version is not one this tool reads, and is left unchecked rather than failed.
+  await page.setInputFiles('#public-file', fixture('noir-legacy/multiplier-poseidon.public_inputs'));
+  await page.setInputFiles('#key-file', fixture('noir-legacy/multiplier-poseidon.vk'));
+  await page.setInputFiles('#proof-file', fixture('noir-legacy/multiplier-poseidon.proof'));
+  await expect(outcome(page)).not.toHaveAttribute('data-outcome', 'valid');
 
   // Typing replaces a binary proof that was chosen.
   await page.fill('#proof-text', '{}');
@@ -456,6 +473,12 @@ test('replays a saved example without contacting any network, and says so', asyn
   await expect(page.locator('#fact-proof')).toHaveText('Passed: two independent verifiers agree');
   await expect(page.locator('#unknown li').first()).toContainText('About the key:');
   expect(new URL(page.url()).search).toBe('?example=stellar-private-payment');
+
+  // The Stellar Noir proof, checked with Barretenberg 0.87.0 in the page.
+  await page.click('#saved-stellar-noir');
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
+  await expect(page.locator('#sections')).toContainText('PASSED using @aztec/bb.js 0.87.0');
+  await expect(page.locator('#source')).toContainText('nethermind-ultrahonk.verify-proof');
 
   await page.click('#saved-stellar-no-proof');
   await expect(outcome(page)).toHaveAttribute('data-outcome', 'no-proof');

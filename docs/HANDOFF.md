@@ -6,7 +6,7 @@ Build steps 1 to 3 are written: strict import and verification, explanation
 binding, and the readable report with export and rerun, on the command line
 and in a browser page. Read
 [the prototype notes](VERIFICATION_PROTOTYPE.md) for what exists, what was
-measured and what is untested. 238 unit tests and 46 browser tests pass.
+measured and what is untested. 239 unit tests and 46 browser tests pass.
 
 Owner decisions taken: GPL-3.0-or-later; TypeScript, Semaphore v4 and snarkjs
 for the first version. The main checkout holds the core, command line and
@@ -103,6 +103,10 @@ a registry entry, an adapter and fixtures, not new code.
   an RPC the operator names in `STELLAR_MAINNET_RPC_URL` (there is no
   public one from the Stellar Development Foundation, and the tool picks
   none). Tested on the main network; no proof has been found there.
+- 2026-10-15: Barretenberg 0.87.0 stays, now in the page as well, as part
+  of a plan the owner approved: it is the version Nethermind's UltraHonk
+  verifier for Stellar checks. It is still the verifier with the most
+  faults found; each is refused before it runs.
 - 2026-10-15: transaction lookup on the page, for Ethereum and Stellar,
   through public RPCs the page names (dRPC, PublicNode, the Stellar
   Development Foundation's testnet RPC and sorobanrpc.com), with links that
@@ -151,8 +155,6 @@ mistake. The lost part was restored from `01d2144` in the next change.
   should get an explanation. Today those formats verify and are not
   explained. Stellar Private Payments now has real testnet proofs to test
   an explanation with (see the lookup notes).
-- Decide whether Barretenberg 0.87.0 stays. It is there for one Stellar
-  verifier, and it is the verifier in this tool with the most faults found.
 - Decide whether to send the request to ZK Email's maintainers drafted in
   the formats document. It has not been sent.
 - The release questions in [the release review](RELEASE_REVIEW.md),

@@ -23,7 +23,7 @@ import { PAGE_RPCS } from '../src/chain/reference.js';
 import { recordedRpc } from '../src/chain/recorded.js';
 import { httpRpc, type RpcClient } from '../src/chain/rpc.js';
 import { SAVED_EXAMPLES } from './saved.js';
-import { bytes, cairoEngine, ultraHonkEngine } from './engines.js';
+import { bytes, cairoEngine, legacyUltraHonkEngine, ultraHonkEngine } from './engines.js';
 import type { CairoDone, Request, ToPage, ToWorker } from './protocol.js';
 import type { SwiftnessOutcome } from './swiftness.js';
 
@@ -43,7 +43,7 @@ const bound = (): Promise<Scanning> =>
     const recorded = [
       bindRecordedCircuit({ adapterBytes: twitterAdapter, lock: JSON.parse(new TextDecoder().decode(twitterLock)) as AdapterLock, registry, verifier: snarkjsSuppliedKeyEngine.identity }),
     ];
-    return { semaphoreV4: bindSemaphoreV4({ adapterBytes, lock, keyBytes, engine: groth16Engine }), suppliedKey: suppliedKeyEngine, registry, recorded, riscZero: { parameters: loadRiscZeroParameters(riscZeroBytes), engine: groth16Engine }, ultraHonk: ultraHonkEngine, cairo: cairoEngine(onPage) };
+    return { semaphoreV4: bindSemaphoreV4({ adapterBytes, lock, keyBytes, engine: groth16Engine }), suppliedKey: suppliedKeyEngine, registry, recorded, riscZero: { parameters: loadRiscZeroParameters(riscZeroBytes), engine: groth16Engine }, ultraHonk: ultraHonkEngine, ultraHonkLegacy: legacyUltraHonkEngine, cairo: cairoEngine(onPage) };
   })());
 
 // The recorded key files a lookup may use, fetched only when it does.

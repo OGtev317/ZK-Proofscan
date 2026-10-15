@@ -32,7 +32,7 @@ treating `valid` as a statement about any claim.
 | snarkjs FFLONK on BN254 | `supplied-key` | Proof, public inputs, verification key | snarkjs 0.7.6 |
 | Cairo STARK proof (Stone prover layout) | `cairo-program` | Proof | `swiftness` 1.0.0 |
 | Noir (UltraHonk on BN254, written by Barretenberg) | `supplied-key` | `proof`, `public_inputs`, `vk`, all binary | `@aztec/bb.js` 5.2.1 |
-| Noir, as Barretenberg 0.87.0 wrote it with the Keccak transcript | `supplied-key` | The same three files | `@aztec/bb.js` 0.87.0. Command line and tool server; the page says it cannot check these |
+| Noir, as Barretenberg 0.87.0 wrote it with the Keccak transcript | `supplied-key` | The same three files | `@aztec/bb.js` 0.87.0 |
 | RISC Zero Groth16 receipt, verifier parameters 3.0.0 | `risc-zero-program` | One file: three lines of hex | snarkjs 0.7.6 and `ark-groth16` 0.6.0, Groth16 on BN254 |
 
 **Every Groth16 proof is checked twice, since 2026-10-14:** by snarkjs and
@@ -192,8 +192,16 @@ another version may fail here without being wrong; the `starknet` and
 rollup variants are not checked (this build of the library refused to make
 a `starknet` proof); no audit status is confirmed for this version. The
 browser page checks 5.2.1 proofs with the library's browser build, given
-its WebAssembly as a file of the page's own; it does not check 0.87.0
-proofs, and says so.
+its WebAssembly as a file of the page's own. Since 2026-10-15 it checks
+0.87.0 proofs the same way: both the page and the command line call
+0.87.0 through its in-thread API, which starts no workers of its own. That
+API offers the Keccak verifier with hiding but not without, so both are
+called by their entry point in the library's WebAssembly
+(`acir_verify_ultra_keccak_honk`, `acir_verify_ultra_keccak_zk_honk`), with
+the arguments laid out as the library lays them out. Every measured fault
+of that version is still refused before it runs, and its tests pass
+unchanged through this path. Its 2.5 MB of compressed WebAssembly is
+fetched only when a proof of that version is checked.
 
 ### Cairo proofs (the Starknet proof system)
 

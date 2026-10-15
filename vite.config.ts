@@ -3,23 +3,28 @@ import { createRequire } from 'node:module';
 import { defineConfig, type Plugin } from 'vite';
 
 /**
- * Barretenberg's browser build carries its WebAssembly inlined as a data:
- * address, which the page's content security policy does not let it fetch.
- * This emits the same bytes as a file of the page's own and exports its
- * address, which the verifier is then given.
+ * Barretenberg's browser builds carry their WebAssembly inlined as a data:
+ * address, which the page's content security policy does not let them
+ * fetch. This emits the same bytes as a file of the page's own and exports
+ * its address, which the verifier is then given: `virtual:barretenberg-wasm`
+ * for 5.2.1 and `virtual:barretenberg-legacy-wasm` for 0.87.0.
  */
 function barretenbergWasm(): Plugin {
-  const id = 'virtual:barretenberg-wasm';
+  const sources: Record<string, { pkg: string; file: string; name: string }> = {
+    'virtual:barretenberg-wasm': { pkg: '@aztec/bb.js', file: 'barretenberg_wasm/fetch_code/browser/barretenberg.js', name: 'barretenberg.wasm.gz' },
+    'virtual:barretenberg-legacy-wasm': { pkg: 'aztec-bb-js-0-87-0', file: 'barretenberg.js', name: 'barretenberg-legacy.wasm.gz' },
+  };
   return {
     name: 'barretenberg-wasm',
-    resolveId: (source) => (source === id ? `\0${id}` : undefined),
+    resolveId: (source) => (source in sources ? `\0${source}` : undefined),
     load(resolved) {
-      if (resolved !== `\0${id}`) return undefined;
-      const browserIndex = createRequire(import.meta.url).resolve('@aztec/bb.js').replace(/dest\/node(-cjs)?\/index\.js$/, 'dest/browser/index.js');
-      const inlined = readFileSync(browserIndex.replace(/index\.js$/, 'barretenberg_wasm/fetch_code/browser/barretenberg.js'), 'utf8');
+      const source = sources[resolved.replace(/^\0/, '')];
+      if (!resolved.startsWith('\0') || source === undefined) return undefined;
+      const browserDir = createRequire(import.meta.url).resolve(source.pkg).replace(/dest\/node(-cjs)?\/index\.js$/, 'dest/browser/');
+      const inlined = readFileSync(browserDir + source.file, 'utf8');
       const match = /"data:application\/gzip;base64,([A-Za-z0-9+/=]+)"/.exec(inlined);
-      if (match === null) throw new Error('could not find the WebAssembly inlined in @aztec/bb.js');
-      const reference = this.emitFile({ type: 'asset', name: 'barretenberg.wasm.gz', source: Buffer.from(match[1]!, 'base64') });
+      if (match === null) throw new Error(`could not find the WebAssembly inlined in ${source.pkg}`);
+      const reference = this.emitFile({ type: 'asset', name: source.name, source: Buffer.from(match[1]!, 'base64') });
       return `export default import.meta.ROLLUP_FILE_URL_${reference};`;
     },
   };
