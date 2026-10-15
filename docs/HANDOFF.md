@@ -158,17 +158,22 @@ mistake. The lost part was restored from `01d2144` in the next change.
   library entry point, a `stellar-zk-proofscan` binary that the Stellar
   CLI runs as `stellar zk-proofscan` (tested with stellar-cli 28.0.0), and
   [the developer guide](DEVELOPERS.md). A packed tarball installed into a
-  fresh project worked as a library and as a command. The package is
-  still marked private; publishing to npm needs the owner's go-ahead.
+  fresh project worked as a library and as a command. The owner approved
+  publishing it as an experimental release; `npm run release:check`
+  (also run in CI) checks the package before that.
 - Mainnet RISC Zero, left open: no mainnet contract address is published
   by Boundless (`boundless-xyz/stellar-risc0-verifier`, its deployment
   notes) or Nethermind (`deployment.toml` has blank addresses), and the
   testnet verifier named in the Stellar Foundation's article
   (`CBY3GOBG…`) no longer exists on testnet. No reader was built without a
   real transaction to check it against.
-- A local network (Quickstart) for test transactions was set aside: it
-  means deploying contracts and signing transactions, which needs the
-  owner's approval even locally.
+- Local regression transactions, with the owner's approval for a local
+  network only: six transactions on a Quickstart network with throwaway
+  keys, recorded and replayed in `tests/stellar-local.test.ts`. They found
+  that the asset contract's `approve` names its last parameter
+  `live_until_ledger`, now fixed. Nothing was sent to testnet or mainnet.
+- A review packet for the Stellar Private Payments explanation is in
+  [docs/review](review/stellar-private-payments.md), not yet sent.
 
 ## Next, for the owner
 
