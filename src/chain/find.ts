@@ -1,3 +1,4 @@
+import type { ContractAbi } from './abi.js';
 import { lookupTransaction, type Lookup } from './lookup.js';
 import { readTransactionReference } from './reference.js';
 import { CHAINS, type RpcClient } from './rpc.js';
@@ -9,6 +10,8 @@ export interface RecordedFiles {
   keyText(artifactId: string): Promise<string>;
   /** The recorded Stellar Private Payments keys, looked for in a verifier's code. */
   stellarPrivatePaymentsKeys(): Promise<RecordedKey[]>;
+  /** Where to find a contract's interface, to name an ordinary call; absent to ask no one. */
+  contractAbi?: ContractAbi;
 }
 
 /**
@@ -32,7 +35,7 @@ export function resolveTransaction(pasted: string, network: string | undefined):
  */
 export async function findProof(network: string, hash: string, rpc: RpcClient, files: RecordedFiles): Promise<Lookup> {
   const chain = CHAINS.find((known) => known.name === network);
-  if (chain !== undefined) return lookupTransaction({ chain, transaction: hash, rpc, keyText: (id) => files.keyText(id) });
+  if (chain !== undefined) return lookupTransaction({ chain, transaction: hash, rpc, keyText: (id) => files.keyText(id), ...(files.contractAbi === undefined ? {} : { contractAbi: files.contractAbi }) });
   // The Stellar reader and its library are loaded only when a Stellar transaction is asked for.
   const { lookupStellarTransaction, STELLAR_NETWORKS } = await import('./stellar.js');
   const stellar = STELLAR_NETWORKS.find((known) => known.name === network);

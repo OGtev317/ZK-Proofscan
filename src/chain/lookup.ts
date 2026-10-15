@@ -2,6 +2,7 @@ import type { ProofInputs } from '../inputs.js';
 import { readCall } from './calls.js';
 import { RpcError, type Chain, type RpcClient } from './rpc.js';
 import type { TransactionFacts } from './facts.js';
+import { describeCallWithAbi, type ContractAbi } from './abi.js';
 import { describeTokenEvent, labelTokens, readTokenEvents, TOKEN_FUNCTIONS } from './tokens.js';
 import type { ChainSource } from './source.js';
 
@@ -33,7 +34,7 @@ const lower = (value: unknown, pattern: RegExp): string | undefined => {
  * file when the call needs one. Nothing returned here is verified; the
  * caller checks the proof.
  */
-export async function lookupTransaction(parts: { chain: Chain; transaction: string; rpc: RpcClient; keyText: (artifactId: string) => Promise<string> }): Promise<Lookup> {
+export async function lookupTransaction(parts: { chain: Chain; transaction: string; rpc: RpcClient; keyText: (artifactId: string) => Promise<string>; contractAbi?: ContractAbi }): Promise<Lookup> {
   const { chain, rpc } = parts;
   const no = (reason: string): Lookup => ({ found: false, reason });
   const hash = lower(parts.transaction, HASH);
@@ -68,6 +69,14 @@ export async function lookupTransaction(parts: { chain: Chain; transaction: stri
     const labels = await labelTokens(rpc, events.map((event) => event.token));
     return { tokens: events.map((event) => describeTokenEvent(event, labels)), ...(more ? { moreTokens: true } : {}) };
   };
+  // A call to a function this tool does not name is named from the contract's published interface, if there is one.
+  const nameCall = async (described: string): Promise<string> => {
+    const selector = /^0x[0-9a-f]{8}/.exec(input)?.[0];
+    if (to === undefined || parts.contractAbi === undefined || selector === undefined || TOKEN_FUNCTIONS[selector] !== undefined) return described;
+    const abi = await parts.contractAbi(chain.chainId, to).catch(() => undefined);
+    const named = abi === undefined ? undefined : describeCallWithAbi(abi, input);
+    return named === undefined ? described : described.replace(`a call to contract ${to}, function ${selector}`, `a call to ${named} on contract ${to}, named from the contract's verified source on Sourcify`);
+  };
   const facts = async (): Promise<TransactionFacts> => ({
     family: 'ethereum',
     provider: rpc.provider,
@@ -76,7 +85,7 @@ export async function lookupTransaction(parts: { chain: Chain; transaction: stri
     position: Number(BigInt(blockNumber)),
     status: status === '0x1' ? 'succeeded' : 'reverted',
     from,
-    action: describeCall(to, input, transaction.value, chain.name),
+    action: await nameCall(describeCall(to, input, transaction.value, chain.name)),
     ...(await tokenActivity()),
     ...(to === undefined ? {} : { to }),
   });

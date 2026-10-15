@@ -133,8 +133,8 @@ network. Step 1 of the agent work; the agent itself is described in [the agent n
   reduce a risk and do not remove it.
 - The protocol handling is written here, about 150 lines, instead of using
   the official library, which would add about 95 packages, a web server among
-  them, to a tool that then shipped 27 (86 now, with the Noir and Cairo
-  verifiers and the Stellar library). The official client library is a
+  them, to a tool that then shipped 27 (120 now, with the Noir and Cairo
+  verifiers, the Stellar library and viem). The official client library is a
   development dependency, and the tests drive the server through it.
 
 - **Checking uses no network; the agent calling the server usually does.** A
@@ -272,7 +272,7 @@ the committed file. A build on macOS gives different bytes; see
 
 ## Tested
 
-241 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
+244 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
 registry, Proof of Twitter, lookup, Noir, Cairo, RISC Zero and the Stellar
 keys are described in
 [the formats](FORMATS.md) and [the lookup notes](LOOKUP.md). The rest:

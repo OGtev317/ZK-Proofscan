@@ -17,6 +17,7 @@ each declares; arkworks' own licence files are beside it.
 
 | Package | Version | Declared licence |
 | --- | --- | --- |
+| @adraffy/ens-normalize | 1.11.1 | MIT |
 | @aztec/bb.js | 5.2.1 | MIT |
 | @iden3/bigarray | 0.0.2 | GPL-3.0 |
 | @iden3/binfileutils | 0.0.12 | GPL-3.0 |
@@ -26,11 +27,37 @@ each declares; arkworks' own licence files are beside it.
 | @msgpackr-extract/msgpackr-extract-linux-arm64 | 3.0.4 | MIT |
 | @msgpackr-extract/msgpackr-extract-linux-x64 | 3.0.4 | MIT |
 | @msgpackr-extract/msgpackr-extract-win32-x64 | 3.0.4 | MIT |
+| @noble/ciphers | 1.3.0 | MIT |
+| @noble/curves | 1.9.1 | MIT |
 | @noble/curves | 1.9.7 | MIT |
 | @noble/hashes | 1.8.0 | MIT |
 | @noble/hashes | 2.4.0 | MIT |
+| @scure/base | 1.2.6 | MIT |
+| @scure/bip32 | 1.7.0 | MIT |
+| @scure/bip39 | 1.6.0 | MIT |
 | @stellar/js-xdr | 4.0.0 | Apache-2.0 |
 | @stellar/stellar-base | 15.0.0 | Apache-2.0 |
+| @typescript/typescript-aix-ppc64 | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-darwin-arm64 | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-darwin-x64 | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-freebsd-arm64 | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-freebsd-x64 | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-linux-arm | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-linux-arm64 | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-linux-loong64 | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-linux-mips64el | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-linux-ppc64 | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-linux-riscv64 | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-linux-s390x | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-linux-x64 | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-netbsd-arm64 | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-netbsd-x64 | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-openbsd-arm64 | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-openbsd-x64 | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-sunos-x64 | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-win32-arm64 | 7.0.2 | Apache-2.0 |
+| @typescript/typescript-win32-x64 | 7.0.2 | Apache-2.0 |
+| abitype | 1.2.3 | MIT |
 | async | 3.2.6 | MIT |
 | available-typed-arrays | 1.0.7 | MIT |
 | aztec-bb-js-0-87-0 | 0.87.0 | MIT |
@@ -57,6 +84,7 @@ each declares; arkworks' own licence files are beside it.
 | es-define-property | 1.0.1 | MIT |
 | es-errors | 1.3.0 | MIT |
 | es-object-atoms | 1.1.2 | MIT |
+| eventemitter3 | 5.0.1 | MIT |
 | fastfile | 0.0.20 | GPL-3.0 |
 | ffjavascript | 0.3.0 | GPL-3.0 |
 | ffjavascript | 0.3.1 | GPL-3.0 |
@@ -78,6 +106,7 @@ each declares; arkworks' own licence files are beside it.
 | is-callable | 1.2.7 | MIT |
 | is-typed-array | 1.1.15 | MIT |
 | isarray | 2.0.5 | MIT |
+| isows | 1.0.7 | MIT |
 | jake | 10.9.4 | Apache-2.0 |
 | logplease | 1.2.15 | MIT |
 | math-intrinsics | 1.1.0 | MIT |
@@ -86,6 +115,7 @@ each declares; arkworks' own licence files are beside it.
 | msgpackr | 1.12.1 | MIT |
 | msgpackr-extract | 3.0.4 | MIT |
 | node-gyp-build-optional-packages | 5.2.2 | MIT |
+| ox | 0.14.45 | MIT |
 | pako | 2.2.0 | (MIT AND Zlib) |
 | picocolors | 1.1.1 | ISC |
 | possible-typed-array-names | 1.1.0 | MIT |
@@ -99,7 +129,11 @@ each declares; arkworks' own licence files are beside it.
 | tryer | 1.0.1 | MIT |
 | tslib | 2.7.0 | 0BSD |
 | typed-array-buffer | 1.0.3 | MIT |
+| typescript | 7.0.2 | Apache-2.0 |
+| viem | 2.57.1 | MIT |
 | wasmbuilder | 0.0.16 | GPL-3.0 |
 | wasmcurves | 0.2.2 | GPL-3.0 |
 | web-worker | 1.2.0 | Apache-2.0 |
 | which-typed-array | 1.1.24 | MIT |
+| ws | 8.21.0 | MIT |
+| zod | 4.6.6 | MIT |

@@ -317,7 +317,8 @@ function describeProvider(): void {
   const names = candidates();
   networkSummary.textContent = names.length > 1 ? 'Stellar testnet, then mainnet' : (NETWORK_LABELS[names[0]!] ?? names[0]!);
   const to = names.length > 1 ? `${host(names[0]!)}, then, if it is not found there, to ${host(names[1]!)}` : host(names[0]!);
-  lookupNote.textContent = `Checking sends the transaction hash to ${to}, a public RPC that can see someone asked about it. Any proof found is checked on this device.`;
+  const sourcify = familyOf(names[0]!) === 'ethereum' ? ' If it holds no proof and calls an unfamiliar function, the contract\'s address is also sent to sourcify.dev to name that function.' : '';
+  lookupNote.textContent = `Checking sends the transaction hash to ${to}, a public RPC that can see someone asked about it. Any proof found is checked on this device.${sourcify}`;
 }
 for (const choice of familyChoices)
   choice.addEventListener('change', () => {

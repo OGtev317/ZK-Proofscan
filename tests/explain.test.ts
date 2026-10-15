@@ -146,3 +146,52 @@ describe('token movements and permissions', async () => {
     expect(await labelTokens(silent, [TOKEN])).toEqual({ [TOKEN]: {} });
   });
 });
+
+describe('naming a call from a contract\'s published interface', async () => {
+  const { describeCallWithAbi, sourcifyAbi } = await import('../src/chain/abi.js');
+  const { encodeFunctionData } = await import('viem');
+  const abi = [
+    { type: 'function', name: 'withdraw', stateMutability: 'nonpayable', inputs: [{ name: 'wad', type: 'uint256' }], outputs: [] },
+    { type: 'function', name: 'swap', stateMutability: 'nonpayable', inputs: [{ name: 'path', type: 'address[]' }, { name: '', type: 'bytes' }], outputs: [] },
+    { type: 'function', name: 'bad<name>', stateMutability: 'nonpayable', inputs: [], outputs: [] },
+  ] as const;
+
+  it('labels each argument, and shortens long ones', () => {
+    expect(describeCallWithAbi(abi, encodeFunctionData({ abi, functionName: 'withdraw', args: [198000000000000n] }))).toBe('withdraw(wad: 198000000000000)');
+    const path = Array.from({ length: 6 }, (_, i) => `0x${String(i).repeat(40)}` as `0x${string}`);
+    const text = describeCallWithAbi(abi, encodeFunctionData({ abi, functionName: 'swap', args: [path, `0x${'ab'.repeat(100)}`] }));
+    expect(text).toBe(`swap(path: [${path.slice(0, 4).join(', ')}, … 6 in all], argument 2: 0xabababababababab… (100 bytes))`);
+  });
+
+  it('names nothing it cannot read, or whose name is not a plain identifier', () => {
+    expect(describeCallWithAbi(abi, '0x12345678')).toBeUndefined();
+    expect(describeCallWithAbi(abi, encodeFunctionData({ abi: [abi[2]], functionName: 'bad<name>' }))).toBeUndefined();
+  });
+
+  it('takes an interface from Sourcify only when its source is verified, and treats any failure as no answer', async () => {
+    const asked: string[] = [];
+    const answer = (body: unknown, status = 200) => async (url: string | URL | Request) => {
+      asked.push(String(url));
+      return new Response(JSON.stringify(body), { status });
+    };
+    const real = globalThis.fetch;
+    try {
+      globalThis.fetch = answer({ match: 'exact_match', abi }) as typeof fetch;
+      expect(await sourcifyAbi()(1, `0x${'ab'.repeat(20)}`)).toEqual(abi);
+      expect(asked).toEqual([`https://sourcify.dev/server/v2/contract/1/0x${'ab'.repeat(20)}?fields=abi`]);
+      globalThis.fetch = answer({ match: null, abi }) as typeof fetch;
+      expect(await sourcifyAbi()(1, `0x${'ab'.repeat(20)}`)).toBeUndefined();
+      globalThis.fetch = answer({ error: 'not found' }, 404) as typeof fetch;
+      expect(await sourcifyAbi()(1, `0x${'ab'.repeat(20)}`)).toBeUndefined();
+      globalThis.fetch = (async () => Promise.reject(new Error('offline'))) as typeof fetch;
+      expect(await sourcifyAbi()(1, `0x${'ab'.repeat(20)}`)).toBeUndefined();
+      // Nothing is asked about an address that is not one.
+      asked.length = 0;
+      globalThis.fetch = answer({ match: 'match', abi }) as typeof fetch;
+      expect(await sourcifyAbi()(1, 'not an address')).toBeUndefined();
+      expect(asked).toEqual([]);
+    } finally {
+      globalThis.fetch = real;
+    }
+  });
+});

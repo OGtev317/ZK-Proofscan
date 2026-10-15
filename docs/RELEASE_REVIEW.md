@@ -10,7 +10,7 @@ the blockers below were cleared; the page says it is an unaudited prototype.
 | Item | Result |
 | --- | --- |
 | Licence | GPL-3.0-or-later, decided by the owner. `LICENSE` holds the text. |
-| Dependency licences | 86 production packages (38 of them came with the Stellar library on 2026-10-14): MIT, GPL-3.0, Apache-2.0, ISC, BSD-3-Clause, 0BSD, "MIT AND Zlib" and "MIT AND BSD-3-Clause", as each declares; `swiftness` declares only "see LICENSE", and its licence file is Apache-2.0. Listed in `THIRD_PARTY_NOTICES.md`; CI fails if the list is out of date. |
+| Dependency licences | 120 production packages (38 came with the Stellar library on 2026-10-14, 34 with viem on 2026-10-15): MIT, GPL-3.0, Apache-2.0, ISC, BSD-3-Clause, 0BSD, "MIT AND Zlib" and "MIT AND BSD-3-Clause", as each declares; `swiftness` declares only "see LICENSE", and its licence file is Apache-2.0. Listed in `THIRD_PARTY_NOTICES.md`; CI fails if the list is out of date. |
 | Known vulnerabilities | `npm audit --omit=dev` reports none; CI runs it on every push. |
 | Verifier version | snarkjs 0.7.6, pinned exactly. Compared with 0.7.5 on aliased public inputs: no difference found for Groth16. |
 | Keys and proving keys | All 32 bundled verification keys equal those inside Semaphore's published proving keys. See `artifacts/semaphore-v4/README.md`. |

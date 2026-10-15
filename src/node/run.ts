@@ -1,5 +1,6 @@
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import type { TransactionFacts } from '../chain/facts.js';
+import { sourcifyAbi } from '../chain/abi.js';
 import { findProof, resolveTransaction } from '../chain/find.js';
 import { CHAINS, httpRpc, rpcUrlFromEnvironment } from '../chain/rpc.js';
 import { renderChainSource, type ChainSource } from '../chain/source.js';
@@ -103,7 +104,9 @@ export async function lookupAndCheck(chainName: string | undefined, pasted: stri
   }
   let found;
   try {
-    found = await findProof(resolved.network, resolved.hash, httpRpc(address), { keyText: recordedKeyText, stellarPrivatePaymentsKeys });
+    // Sourcify names an ordinary call's function; ZK_PROOFSCAN_SOURCIFY=off asks it nothing.
+    const contractAbi = env.ZK_PROOFSCAN_SOURCIFY === 'off' ? {} : { contractAbi: sourcifyAbi() };
+    found = await findProof(resolved.network, resolved.hash, httpRpc(address), { keyText: recordedKeyText, stellarPrivatePaymentsKeys, ...contractAbi });
   } catch (error) {
     return { kind: 'not-checked', reason: message(error) };
   }

@@ -307,3 +307,23 @@ side, each of which can be "not checked" or "not applicable":
   set aside: for most rollups this tool could only repeat what the
   settlement contract reported, not check the batch proof itself.
 
+## viem and Sourcify
+
+Added 2026-10-15 at the owner's request. Token events, and token symbols
+and decimals, are now decoded with viem 2.57.1 (MIT), pinned two weeks
+behind its latest release; its WebSocket dependency `ws` is held at 8.21.0
+by an override, since the version viem asks for has a published advisory
+and this tool never opens a WebSocket. One check stays this tool's own: an
+address in an event must be padded with zeros, as every real contract pads
+it, because viem would read the last 20 bytes of anything.
+
+For an ordinary call to a function this tool does not name, the lookup
+asks Sourcify (`https://sourcify.dev/server/v2/contract/<chain id>/<address>`)
+for the contract's interface, sending only the chain id and the contract's
+address, and names the function and its arguments when Sourcify has
+verified source for it, saying so ("named from the contract's verified
+source on Sourcify"). A saved example asks no one; the page names
+Sourcify in the note beside the button; the command line skips it with
+`ZK_PROOFSCAN_SOURCIFY=off`. Tested on a real mainnet WETH withdrawal.
+Production dependencies are now 120 packages.
+

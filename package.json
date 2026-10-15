@@ -26,7 +26,8 @@
     "@stellar/stellar-base": "15.0.0",
     "aztec-bb-js-0-87-0": "npm:@aztec/bb.js@0.87.0",
     "snarkjs": "0.7.6",
-    "swiftness": "1.0.0"
+    "swiftness": "1.0.0",
+    "viem": "2.57.1"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "1.32.1",
@@ -43,5 +44,8 @@
     "typescript": "7.0.2",
     "vite": "8.3.4",
     "vitest": "5.0.3"
+  },
+  "overrides": {
+    "ws": "8.21.0"
   }
 }
