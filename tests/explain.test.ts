@@ -32,7 +32,8 @@ describe('what an ordinary transaction was', () => {
   it('describes transfers, calls and contract creation on an Ethereum chain', async () => {
     expect(await facts({ value: '0xde0b6b3a7640000' })).toMatchObject({ action: `a transfer of 1 ETH to ${TO}`, status: 'succeeded', from: FROM, to: TO, position: 16 });
     expect(await facts({ value: '0x6f05b59d3b20000' })).toMatchObject({ action: `a transfer of 0.5 ETH to ${TO}` });
-    expect(await facts({ input: '0xa9059cbb' + '00'.repeat(64) })).toMatchObject({ action: `a call to contract ${TO}, function 0xa9059cbb` });
+    expect(await facts({ input: '0xa9059cbb' + '00'.repeat(64) })).toMatchObject({ action: `a call to transfer on contract ${TO}` });
+    expect(await facts({ input: '0x12345678' + '00'.repeat(64) })).toMatchObject({ action: `a call to contract ${TO}, function 0x12345678` });
     expect(await facts({ to: null, input: '0x6080' })).toMatchObject({ action: 'the creation of a contract' });
     expect((await facts({ to: null, input: '0x6080' }))?.to).toBeUndefined();
     expect(await facts({ value: '0x1' }, '0x0')).toMatchObject({ action: `a transfer of 0 ETH to ${TO}`, status: 'reverted' });
@@ -83,5 +84,61 @@ describe('a saved example\'s recorded answers', () => {
     expect(await rpc.call('getLedgerEntries', { keys: ['keyA'] })).toEqual({ entries: [] });
     await expect(rpc.call('getLedgerEntries', { keys: ['keyB'] })).rejects.toThrow('the saved example holds no answer for this request');
     await expect(rpc.call('getTransaction', { hash: 'x' })).rejects.toThrow('the saved example holds no answer for this request');
+  });
+});
+
+describe('token movements and permissions', async () => {
+  const { describeTokenEvent, labelTokens, readTokenEvents } = await import('../src/chain/tokens.js');
+  const { keccak_256 } = await import('@noble/hashes/sha3.js');
+  const topic = (signature: string): string => `0x${Buffer.from(keccak_256(new TextEncoder().encode(signature))).toString('hex')}`;
+  const word = (value: bigint | string): string => `0x${BigInt(value).toString(16).padStart(64, '0')}`;
+  const TOKEN = `0x${'aa'.repeat(20)}`;
+  const A = `0x${'0a'.repeat(20)}`;
+  const B = `0x${'0b'.repeat(20)}`;
+  const log = (signature: string, indexed: string[], data: string) => ({ address: TOKEN.toUpperCase().replace('0X', '0x'), topics: [topic(signature), ...indexed], data });
+  const MAX = (1n << 256n) - 1n;
+
+  it('reads the standard events, and only those', () => {
+    const { events } = readTokenEvents([
+      log('Transfer(address,address,uint256)', [word(A), word(B)], word(25n * 10n ** 6n)),
+      log('Transfer(address,address,uint256)', [word(A), word(B), word(7n)], '0x'),
+      log('Approval(address,address,uint256)', [word(A), word(B)], word(MAX)),
+      log('Approval(address,address,uint256)', [word(A), word(B)], word(5n)),
+      log('ApprovalForAll(address,address,bool)', [word(A), word(B)], word(1n)),
+      log('Swap(address,uint256)', [word(A)], word(1n)),
+      log('Transfer(address,address,uint256)', [word(`0x${'ff'.repeat(32)}`), word(B)], word(1n)),
+      { address: 'not an address', topics: [], data: '0x' },
+    ]);
+    expect(events).toEqual([
+      { kind: 'transfer', token: TOKEN, from: A, to: B, amount: '25000000' },
+      { kind: 'nft-transfer', token: TOKEN, from: A, to: B, tokenId: '7' },
+      { kind: 'approval', token: TOKEN, owner: A, spender: B, amount: MAX.toString(), unlimited: true },
+      { kind: 'approval', token: TOKEN, owner: A, spender: B, amount: '5', unlimited: false },
+      { kind: 'approval-for-all', token: TOKEN, owner: A, operator: B, approved: true },
+    ]);
+    expect(readTokenEvents(Array.from({ length: 25 }, () => log('Transfer(address,address,uint256)', [word(A), word(B)], word(1n))))).toMatchObject({ more: true });
+    expect(readTokenEvents('nonsense')).toEqual({ events: [], more: false });
+  });
+
+  it('names a token only by what its contract claims, and only if the claim is short, plain text', async () => {
+    const abiString = (text: string): string => `0x${word(32n).slice(2)}${word(BigInt(text.length)).slice(2)}${Buffer.from(text).toString('hex').padEnd(64, '0')}`;
+    const answers: Record<string, unknown> = { '0x95d89b41': abiString('USDC'), '0x313ce567': word(6n) };
+    const rpc = { provider: 'p', call: async (_method: string, params: unknown) => answers[((params as [{ data: string }])[0]).data] };
+    const labels = await labelTokens(rpc, [TOKEN]);
+    expect(labels).toEqual({ [TOKEN]: { symbol: 'USDC', decimals: 6 } });
+    const transfer = { kind: 'transfer' as const, token: TOKEN, from: A, to: B, amount: '25500000' };
+    expect(describeTokenEvent(transfer, labels)).toBe(`moved 25.5 of a token calling itself USDC (${TOKEN}) from ${A} to ${B}`);
+    expect(describeTokenEvent(transfer, {})).toBe(`moved 25500000 of the smallest units of the token at ${TOKEN} from ${A} to ${B}`);
+    expect(describeTokenEvent({ kind: 'approval', token: TOKEN, owner: A, spender: B, amount: MAX.toString(), unlimited: true }, labels)).toContain('UNLIMITED amount of a token calling itself USDC');
+    for (const bad of [abiString('<script>'), abiString('x'.repeat(40)), '0x1234', 42]) {
+      answers['0x95d89b41'] = bad;
+      expect((await labelTokens(rpc, [TOKEN]))[TOKEN]?.symbol, String(bad)).toBeUndefined();
+    }
+    // A 32-byte name, as some older tokens write it.
+    answers['0x95d89b41'] = `0x${Buffer.from('MKR').toString('hex').padEnd(64, '0')}`;
+    expect((await labelTokens(rpc, [TOKEN]))[TOKEN]?.symbol).toBe('MKR');
+    // A token that does not answer is described by its address.
+    const silent = { provider: 'p', call: async () => Promise.reject(new Error('no')) };
+    expect(await labelTokens(silent, [TOKEN])).toEqual({ [TOKEN]: {} });
   });
 });

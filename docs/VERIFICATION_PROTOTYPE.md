@@ -272,7 +272,7 @@ the committed file. A build on macOS gives different bytes; see
 
 ## Tested
 
-239 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
+241 automated tests on macOS with Node 26.3.0. Those for supplied keys, the
 registry, Proof of Twitter, lookup, Noir, Cairo, RISC Zero and the Stellar
 keys are described in
 [the formats](FORMATS.md) and [the lookup notes](LOOKUP.md). The rest:
@@ -294,7 +294,7 @@ keys are described in
   refused arguments, exports that the command line reproduces, a forged
   export, malformed and oversized protocol messages.
 
-46 browser tests (twenty-three scenarios, each in Chromium and WebKit, run headless
+48 browser tests (twenty-four scenarios, each in Chromium and WebKit, run headless
 through Playwright on macOS): a valid proof, a rejected proof, an unsupported
 file containing markup, recovery after a file that is not text, identical
 exports and cross-reruns between page and command line, a forged export, a
@@ -309,8 +309,9 @@ link that switches the page to Stellar and checks a private payment; and a
 shared link looked up as the page opens, with unreadable input refused
 before anything is sent; a transaction with no proof described rather than
 reported as an error, checked by pressing Enter; a bare Stellar hash
-tried on testnet, then mainnet; and saved examples replayed, and opened
-from a shared link, with no request outside the page.
+tried on testnet, then mainnet; saved examples replayed, and opened
+from a shared link, with no request outside the page; and a real unlimited
+token allowance on Ethereum described as one.
 
 ## Not tested or not done
 

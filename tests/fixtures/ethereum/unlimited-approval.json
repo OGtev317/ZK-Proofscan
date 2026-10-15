@@ -1,0 +1,35 @@
+{
+  "recorded": "2026-10-15",
+  "provider": "https://eth-mainnet.g.alchemy.com",
+  "eth_chainId": "0x1",
+  "eth_getTransactionByHash": {
+    "hash": "0x0bea91f4e8de791ce3a0e77596a35df1bcfe28f88d3086c90b4fa50b42038428",
+    "blockHash": "0xacc90f257923124ee2f9770d5ea531a6103554540b15f09fce1682657385fbf7",
+    "blockNumber": "0x18fb393",
+    "from": "0xa3a55c85439bafdf0608daaafb114d79e716db32",
+    "to": "0xe7802782ac7679b4ff0e7106b3230adfef251688",
+    "input": "0x095ea7b300000000000000000000000000000000e91fc5bad977c0cc4ad60557c06886a2ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "value": "0x0"
+  },
+  "eth_getTransactionReceipt": {
+    "transactionHash": "0x0bea91f4e8de791ce3a0e77596a35df1bcfe28f88d3086c90b4fa50b42038428",
+    "blockHash": "0xacc90f257923124ee2f9770d5ea531a6103554540b15f09fce1682657385fbf7",
+    "blockNumber": "0x18fb393",
+    "status": "0x1",
+    "logs": [
+      {
+        "address": "0xe7802782ac7679b4ff0e7106b3230adfef251688",
+        "topics": [
+          "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925",
+          "0x000000000000000000000000a3a55c85439bafdf0608daaafb114d79e716db32",
+          "0x00000000000000000000000000000000e91fc5bad977c0cc4ad60557c06886a2"
+        ],
+        "data": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      }
+    ]
+  },
+  "eth_call": {
+    "0x95d89b41": "0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000044841534800000000000000000000000000000000000000000000000000000000",
+    "0x313ce567": "0x0000000000000000000000000000000000000000000000000000000000000012"
+  }
+}

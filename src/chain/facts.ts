@@ -18,6 +18,10 @@ export interface TransactionFacts {
   action: string;
   /** The contract called or the account paid, when there is one. */
   to?: string;
+  /** Token movements and permissions the transaction recorded, one sentence each. */
+  tokens?: string[];
+  /** More token events were recorded than are listed. */
+  moreTokens?: boolean;
 }
 
 const NETWORK_NAMES: Record<string, string> = {
@@ -37,7 +41,12 @@ const STATUS: Record<TransactionFacts['status'], string> = { succeeded: 'accepte
 
 /** One or two sentences for a reader. */
 export function plainFacts(facts: TransactionFacts): string {
-  return `This is a transaction on ${networkName(facts.network)}: ${facts.action}. According to ${facts.provider}, the network ${STATUS[facts.status]} it. No zero-knowledge proof that this tool can read was found in it, so there is no proof to check.`;
+  const tokens = facts.tokens ?? [];
+  const activity =
+    tokens.length === 0
+      ? ''
+      : ` It ${tokens.slice(0, 3).join('; it ')}${tokens.length > 3 || facts.moreTokens === true ? '; and more, listed in the technical details' : ''}. A token's name is what its own contract claims.`;
+  return `This is a transaction on ${networkName(facts.network)}: ${facts.action}. According to ${facts.provider}, the network ${STATUS[facts.status]} it.${activity} No zero-knowledge proof that this tool can read was found in it, so there is no proof to check.`;
 }
 
 /** The facts as labelled lines, for technical details and the command line. */
@@ -50,6 +59,8 @@ export function factLines(facts: TransactionFacts): [string, string][] {
     ['Sent by', facts.from],
     ['What it did', facts.action],
     ...(facts.to === undefined ? [] : ([[facts.family === 'stellar' ? 'Contract or account' : 'To', facts.to]] as [string, string][])),
+    ...(facts.tokens ?? []).map((line): [string, string] => ['Token activity', `It ${line}`]),
+    ...(facts.moreTokens === true ? ([['Token activity', 'More token events were recorded than are listed here.']] as [string, string][]) : []),
   ];
 }
 

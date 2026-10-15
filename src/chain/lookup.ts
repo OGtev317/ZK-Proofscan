@@ -2,6 +2,7 @@ import type { ProofInputs } from '../inputs.js';
 import { readCall } from './calls.js';
 import { RpcError, type Chain, type RpcClient } from './rpc.js';
 import type { TransactionFacts } from './facts.js';
+import { describeTokenEvent, labelTokens, readTokenEvents, TOKEN_FUNCTIONS } from './tokens.js';
 import type { ChainSource } from './source.js';
 
 /**
@@ -60,7 +61,14 @@ export async function lookupTransaction(parts: { chain: Chain; transaction: stri
 
   // Read but holding no proof this tool reads: say what the transaction was.
   const input = typeof transaction.input === 'string' ? transaction.input.toLowerCase() : '';
-  const facts = (): TransactionFacts => ({
+  // Token movements and permissions recorded in the receipt, with each token's own claim about its name.
+  const tokenActivity = async (): Promise<Pick<TransactionFacts, 'tokens' | 'moreTokens'>> => {
+    const { events, more } = readTokenEvents(receipt.logs);
+    if (events.length === 0) return {};
+    const labels = await labelTokens(rpc, events.map((event) => event.token));
+    return { tokens: events.map((event) => describeTokenEvent(event, labels)), ...(more ? { moreTokens: true } : {}) };
+  };
+  const facts = async (): Promise<TransactionFacts> => ({
     family: 'ethereum',
     provider: rpc.provider,
     network: chain.name,
@@ -69,9 +77,10 @@ export async function lookupTransaction(parts: { chain: Chain; transaction: stri
     status: status === '0x1' ? 'succeeded' : 'reverted',
     from,
     action: describeCall(to, input, transaction.value, chain.name),
+    ...(await tokenActivity()),
     ...(to === undefined ? {} : { to }),
   });
-  const notRead = (reason: string): Lookup => ({ found: false, reason, facts: facts() });
+  const notRead = async (reason: string): Promise<Lookup> => ({ found: false, reason, facts: await facts() });
   if (to === undefined) return notRead('the transaction creates a contract and calls none');
   if (input.length > MAX_INPUT_CHARACTERS) return notRead('the transaction is not a call this tool reads a proof from');
   const read = readCall(input);
@@ -114,5 +123,6 @@ function describeCall(to: string | undefined, input: string, value: unknown, cha
   }
   if (input === '0x' || input === '') return amount === '' ? `an empty transaction to ${to}` : `a transfer of ${amount} to ${to}`;
   const selector = /^0x[0-9a-f]{8}/.exec(input)?.[0];
-  return `a call to contract ${to}${selector === undefined ? '' : `, function ${selector}`}${amount === '' ? '' : `, sending ${amount}`}`;
+  const named = selector === undefined ? undefined : TOKEN_FUNCTIONS[selector];
+  return `${named === undefined ? `a call to contract ${to}${selector === undefined ? '' : `, function ${selector}`}` : `a call to ${named} on contract ${to}`}${amount === '' ? '' : `, sending ${amount}`}`;
 }

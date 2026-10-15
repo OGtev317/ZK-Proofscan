@@ -266,3 +266,25 @@ recording date, and says that whether the transaction can still be fetched
 was not checked. Each has a share link (`?example=…`). The Sepolia example
 stays live: Ethereum providers keep old transactions.
 
+## Token transfers and allowances
+
+Added 2026-10-15. For an Ethereum-family transaction with no proof, the
+facts now include its token activity, read from the standard ERC-20 and
+ERC-721 events in the receipt already fetched: tokens moved, items moved,
+allowances granted (an unlimited one is named UNLIMITED, with what that
+lets the spender do) and permissions over a whole collection. Calls to
+`transfer`, `approve`, `transferFrom`, `setApprovalForAll` and
+`safeTransferFrom` are named. A token's symbol and decimal places are
+asked of the token's own contract (two `eth_call` requests per token, at
+most five tokens) and given only as that contract's claim, beside its
+address, since anyone can deploy a token that calls itself USDC; a symbol
+that is not short, plain text is not shown. Up to 20 events are listed.
+
+Found while building it: an event identifier written from memory was
+wrong, so allowances silently went unread. Every identifier and selector
+is now computed from its signature when the tool starts, and the result
+was checked against a real mainnet allowance (the test fixture).
+
+Not done: swaps. Token movements alone do not show that a trade happened
+or what was asked for; each exchange would need its own decoder.
+

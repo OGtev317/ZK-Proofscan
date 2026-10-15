@@ -17,7 +17,8 @@ link from Ethereum or Stellar and press Enter: it finds the proof, checks it
 on your device, and says what happened, whether the proof passed, what it
 proves and what remains unknown, with a link to share the result. A
 transaction with no proof the tool can read is described instead (who sent
-it, what it did, whether it succeeded). The code is
+it, what it did, whether it succeeded, and on Ethereum chains the tokens it
+moved and any allowance it granted, flagging unlimited ones). The code is
 unaudited and there is no versioned release.
 
 Every Groth16 proof is checked by two independent verifiers, snarkjs and

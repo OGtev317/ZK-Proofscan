@@ -342,6 +342,7 @@ async function providers(page: Page, asked: string[]): Promise<void> {
   const sepolia = JSON.parse(readFileSync(fixture('sepolia/proof-of-twitter-mint.json'), 'utf8')) as Record<string, unknown>;
   const pool = JSON.parse(readFileSync(fixture('stellar-testnet/private-payments/answers.json'), 'utf8')) as Record<string, unknown>;
   const plainTransaction = JSON.parse(readFileSync(fixture('stellar-testnet/not-a-proof/answers.json'), 'utf8')) as Record<string, unknown>;
+  const approval = JSON.parse(readFileSync(fixture('ethereum/unlimited-approval.json'), 'utf8')) as Record<string, unknown>;
   const mainnet: Record<string, unknown> = { getNetwork: { passphrase: 'Public Global Stellar Network ; September 2015' }, getTransaction: { status: 'NOT_FOUND' } };
   const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type', 'access-control-allow-methods': 'POST' };
   await page.context().route(/^https:\/\//, async (route) => {
@@ -351,8 +352,13 @@ async function providers(page: Page, asked: string[]): Promise<void> {
     const { id, method, params } = request.postDataJSON() as { id: number; method: string; params: { keys?: string[]; hash?: string } };
     // Stellar testnet answers for the pool transaction and the contract-creating one, and knows no other.
     const testnet = params.hash === undefined || params.hash === (pool.getTransaction as { txHash: string }).txHash ? pool : params.hash === (plainTransaction.getTransaction as { txHash: string }).txHash ? plainTransaction : { ...pool, getTransaction: { status: 'NOT_FOUND' } };
-    const answers = host === 'sepolia.drpc.org' ? sepolia : host === 'soroban-testnet.stellar.org' ? testnet : host === 'mainnet.sorobanrpc.com' ? mainnet : undefined;
+    const answers = host === 'sepolia.drpc.org' ? sepolia : host === 'soroban-testnet.stellar.org' ? testnet : host === 'mainnet.sorobanrpc.com' ? mainnet : host === 'eth.drpc.org' ? approval : undefined;
     if (answers === undefined) return route.abort();
+    if (method === 'eth_call') {
+      asked.push(`${host} ${method}`);
+      const data = (params as unknown as [{ data: string }])[0].data;
+      return route.fulfill({ status: 200, headers, contentType: 'application/json', body: JSON.stringify({ jsonrpc: '2.0', id, result: (answers.eth_call as Record<string, string>)[data] }) });
+    }
     asked.push(`${host} ${method}`);
     const answer = answers[method] as Record<string, unknown> | undefined;
     const result = method === 'getLedgerEntries' && answer !== undefined && !('entries' in answer) ? answer[params.keys![0]!] : answer;
@@ -498,5 +504,19 @@ test('opens a shared link to a saved example', async ({ page }) => {
   await page.goto('/?example=stellar-private-payment');
   await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
   await expect(page.locator('#recorded-note')).toBeVisible();
+  expect(problems).toEqual([]);
+});
+
+test('describes an unlimited token allowance in an ordinary Ethereum transaction', async ({ page }) => {
+  const asked: string[] = [];
+  const problems = await openWithProviders(page, asked);
+  await page.fill('#lookup-text', 'https://etherscan.io/tx/0x0bea91f4e8de791ce3a0e77596a35df1bcfe28f88d3086c90b4fa50b42038428');
+  await page.press('#lookup-text', 'Enter');
+  await expect(outcome(page)).toHaveAttribute('data-outcome', 'no-proof');
+  await expect(page.locator('#plain')).toContainText('a call to approve on contract 0xe7802782ac7679b4ff0e7106b3230adfef251688');
+  await expect(page.locator('#plain')).toContainText('to spend an UNLIMITED amount of a token calling itself HASH (0xe7802782ac7679b4ff0e7106b3230adfef251688)');
+  await expect(page.locator('#plain')).toContainText("A token's name is what its own contract claims.");
+  await expect(page.locator('#facts')).toContainText('Token activity');
+  expect(asked).toEqual(['eth.drpc.org eth_chainId', 'eth.drpc.org eth_getTransactionByHash', 'eth.drpc.org eth_getTransactionReceipt', 'eth.drpc.org eth_call', 'eth.drpc.org eth_call']);
   expect(problems).toEqual([]);
 });
