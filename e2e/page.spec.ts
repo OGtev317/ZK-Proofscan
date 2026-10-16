@@ -390,8 +390,9 @@ test('looks up a transaction from an explorer link, explains it, and can share i
   await expect(page.locator('#lookup-note')).toContainText('Checking sends the transaction hash to sepolia.drpc.org');
   await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
   expect(asked).toEqual(['sepolia.drpc.org eth_chainId', 'sepolia.drpc.org eth_getTransactionByHash', 'sepolia.drpc.org eth_getTransactionReceipt']);
-  await expect(page.locator('#plain')).toContainText('The proof is valid: snarkjs and ark-groth16, two independent verifiers, both accept it. What it shows: Someone had an email');
-  await expect(page.locator('#plain')).toContainText('on Ethereum Sepolia (a test network), according to sepolia.drpc.org; the network accepted that transaction');
+  // A short summary; the full statement is in its own list, not repeated.
+  await expect(page.locator('#plain')).toHaveText('The proof passed on this device: snarkjs and ark-groth16, two independent verifiers, both accept it. What it shows, and what it does not, is listed below. It was found in transaction 0xca718b1f… on Ethereum Sepolia (a test network); according to sepolia.drpc.org, the network accepted it.');
+  await expect(page.locator('#proves')).toContainText('Someone had an email');
   await expect(page.locator('#source')).toContainText('Transaction 0xca718b1f6cd0eb1d4bc47cd95a73d085bd0077cfc7553de6e61ae5d80669c787 on sepolia');
   // The reader's view: both verdicts side by side, what it proves, what it does not.
   await expect(page.locator('#fact-status')).toHaveText('Succeeded');
@@ -427,7 +428,8 @@ test('switches to Stellar from a pasted link and checks a private payment', asyn
   await page.click('#lookup');
   await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
   // The blocklist pool's circuit is explained, as a mathematical statement only.
-  await expect(page.locator('#plain')).toContainText('What it shows: Mathematical statement only: whoever made this proof knew, for each of two inputs, a private key');
+  await expect(page.locator('#proves')).toContainText('Mathematical statement only: whoever made this proof knew, for each of two inputs, a private key');
+  await expect(page.locator('#plain')).not.toContainText('Mathematical statement only');
   await expect(page.locator('#unknown')).toContainText('This is the mathematical statement alone.');
   await expect(page.locator('#source')).toContainText('the verifier the called contract names');
   await expect(page.locator('#fact-settlement')).toHaveText('Final');
@@ -497,6 +499,15 @@ test('replays a saved example without contacting any network, and says so', asyn
   // What else the transaction did, from its events: the deposit into the pool.
   await expect(page.locator('#plain')).toContainText('The transaction also moved 0.1 XLM from GD27GUIFNQR74WL2GSFMDHABOTKZ66SD434U7PTGGLV6DQ6AYUSQJNBE to CA73PEBSX2GXZSMMVL46PTCXY424AIMPXKI7WWUMYJXV22AVY2DXC6DQ');
   await expect(page.locator('#facts')).toContainText('Fee charged');
+  // The summary copies as plain text, status first, with the link that reopens it.
+  if (test.info().project.name === 'chromium') {
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.click('#copy-summary');
+    await expect(page.locator('#status')).toHaveText('Summary copied as plain text.');
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    expect(copied.split('\n')[0]).toBe('LumenLenz result (experimental, unaudited; the wording has not been reviewed by a qualified person)');
+    for (const part of ['The proof passed on this device', 'Proof check: Passed: two independent verifiers agree.', 'What this proves:\n- Mathematical statement only', 'What remains unknown:\n- About the key:', 'Check it yourself: http://127.0.0.1:4317/?example=stellar-private-payment']) expect(copied).toContain(part);
+  }
   // The call's arguments and the pool's events, named by the pool's own interface, from the recording alone.
   await expect(page.locator('#facts')).toContainText('a call to transact(proof: {asp_membership_root: 0');
   await expect(page.locator('#facts')).toContainText('event NewCommitmentEvent(commitment:');

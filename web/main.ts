@@ -10,7 +10,7 @@ import { explorerLinks, familyOf, NETWORKS, PAGE_RPCS, readTransactionReference,
 import { renderChainSource, type ChainSource } from '../src/chain/source.js';
 import { MAX_EXPORT_CHARACTERS, writeExport } from '../src/export.js';
 import { factLines, type TransactionFacts } from '../src/chain/facts.js';
-import { explain, type Explained } from '../src/explain.js';
+import { explain, explainedText, type Explained } from '../src/explain.js';
 import { SAVED_EXAMPLES, type SavedExample } from './saved.js';
 import { binaryBytes, isBinaryPart, MAX_PROOF_PART_CHARACTERS, MAX_PUBLIC_INPUTS_CHARACTERS, MAX_VERIFICATION_KEY_CHARACTERS, partFromBytes, type ProofInputs } from '../src/inputs.js';
 import { reportSections, unreadReport, type Report } from '../src/report.js';
@@ -61,6 +61,7 @@ const explorers = $<HTMLParagraphElement>('explorer-links');
 const savedExamples = $<HTMLDivElement>('saved-examples');
 const sourceBox = $<HTMLDivElement>('source');
 const share = $<HTMLButtonElement>('share');
+const copySummary = $<HTMLButtonElement>('copy-summary');
 const examples = [$<HTMLButtonElement>('example-semaphore'), $<HTMLButtonElement>('example-tampered'), $<HTMLButtonElement>('example-risc-zero'), $<HTMLButtonElement>('example-noir'), $<HTMLButtonElement>('example-cairo')] as const;
 
 /** Longer than any supported proof takes on a phone; a check that runs past it is stopped and reported as not checked. */
@@ -117,8 +118,14 @@ let current: { inputs: ProofInputs; report: Report; source?: ChainSource; addres
 
 /** Everything shown comes through textContent: no file content is ever parsed as markup. */
 /** The reader's view: what happened, the two verdicts, what the proof shows and what it does not. */
+let shown: Explained | undefined;
+/** The address that reopens what is shown: set after a lookup or saved example, never for a checked file. */
+let shownLink: string | undefined;
 function present(explained: Explained): void {
-  plain.textContent = explained.happened;
+  shown = explained;
+  shownLink = undefined;
+  copySummary.hidden = false;
+  plain.textContent = explained.summary;
   plain.hidden = false;
   statusCell.hidden = explained.status === undefined;
   factStatus.textContent = explained.status?.text ?? '';
@@ -413,6 +420,7 @@ function presentLookup(response: Extract<Response, { kind: 'lookup' }>, address:
     share.hidden = true;
     showFacts(response.facts);
     history.replaceState(null, '', address);
+    shownLink = location.href;
     return;
   }
   if (!response.found) throw new Error(response.reason);
@@ -423,6 +431,7 @@ function presentLookup(response: Extract<Response, { kind: 'lookup' }>, address:
   share.hidden = false;
   // The address now names this result, so it can be shared or reloaded.
   history.replaceState(null, '', address);
+  shownLink = location.href;
 }
 
 /** A saved example: the recorded answers, replayed through the same lookup. Nothing is sent anywhere. */
@@ -457,6 +466,13 @@ exampleLookup.addEventListener('click', () => {
   chosenByHand = false;
   chooseFamily('ethereum', 'sepolia');
   void busy('Looking up the transaction, then checking its proof on this device…', lookUp);
+});
+copySummary.addEventListener('click', () => {
+  if (shown === undefined) return;
+  void navigator.clipboard.writeText(explainedText(shown, shownLink)).then(
+    () => (status.textContent = 'Summary copied as plain text.'),
+    () => (status.textContent = 'Your browser did not allow copying. Select the result and copy it instead.'),
+  );
 });
 share.addEventListener('click', () => {
   if (current?.address === undefined) return;
@@ -561,6 +577,7 @@ exportFile.addEventListener('change', () => {
       rerunResult.textContent = `Not rerun: ${result.reason}.`;
       sections.replaceChildren();
       plain.hidden = true;
+      copySummary.hidden = true;
       sourceBox.hidden = true;
       reportBox.hidden = false;
       reportBox.dataset.outcome = 'unreadable';

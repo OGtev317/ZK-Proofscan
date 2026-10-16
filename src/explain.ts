@@ -12,7 +12,10 @@ import { networkName } from './chain/facts.js';
  * added that they do not establish.
  */
 export interface Explained {
+  /** The full account in a few sentences, including what the proof shows: for a reader who reads only this. */
   happened: string;
+  /** One to three short sentences for a page that lists what the proof shows separately: the verdict, where it was found, and what moved. */
+  summary: string;
   /** What the network data says: absent for a proof checked from files, which has no transaction. */
   status?: { text: string; note: string };
   /** Whether the proof passed here, and which verifiers said so. */
@@ -36,12 +39,47 @@ const settlementOf = (family: 'ethereum' | 'stellar' | undefined, position: stri
       ? { text: 'Not checked', detail: `Included in ${position}. Whether that block is finalized, and for a rollup whether its batch was settled on Ethereum, was not checked.` }
       : { text: 'Not applicable', detail: 'A proof checked from files has no transaction to settle.' };
 
+const short = (hash: string): string => `${hash.slice(0, hash.startsWith('0x') ? 10 : 8)}…`;
+
+/** Whether the proof passed, in one sentence; what it shows is left to the list beside it. */
+function verdictOf(report: Report): string {
+  if (report.outcome === 'unsupported' || report.outcome === 'error') return `This proof was not checked: ${report.outcome === 'unsupported' ? report.reason : report.message}. That says nothing about whether it is valid.`;
+  if (report.outcome === 'invalid') return 'The proof failed: the verifier rejected it, so it establishes nothing.';
+  const verifier = report.verification.verifier;
+  const who = verifier.alsoCheckedBy === undefined ? `${verifier.name} accepts it` : `${verifier.name} and ${verifier.alsoCheckedBy.name}, two independent verifiers, both accept it`;
+  return `The proof passed on this device: ${who}. What it shows, and what it does not, is listed below.`;
+}
+
+/** Where the proof was found, and the network's own decision, as the provider reported them. */
+function foundIn(source: ChainSource): string {
+  const network = source.kind === 'stellar-transaction' ? source.network : source.chain;
+  const decision = source.status === 'succeeded' ? 'accepted' : source.kind === 'stellar-transaction' ? 'failed' : 'reverted';
+  return `It was found in transaction ${short(source.transaction)} on ${networkName(network)}; according to ${source.provider}, the network ${decision} it.`;
+}
+
+/**
+ * The result as plain text, for pasting into a chat or an issue: the same
+ * lines the page shows, with the tool's status first so a pasted copy never
+ * travels without it.
+ */
+export function explainedText(explained: Explained, link?: string): string {
+  const lines = ['LumenLenz result (experimental, unaudited; the wording has not been reviewed by a qualified person)', '', explained.summary, ''];
+  if (explained.status !== undefined) lines.push(`Read from the network: ${explained.status.text}. ${explained.status.note}`);
+  lines.push(`Proof check: ${explained.proofCheck.text}.${explained.proofCheck.detail === undefined ? '' : ` ${explained.proofCheck.detail}`}`);
+  lines.push(`Settlement: ${explained.settlement.text}. ${explained.settlement.detail}`);
+  if (explained.proves.length > 0) lines.push('', 'What this proves:', ...explained.proves.map((line) => `- ${line}`));
+  if (explained.unknown.length > 0) lines.push('', 'What remains unknown:', ...explained.unknown.map((line) => `- ${line}`));
+  if (link !== undefined) lines.push('', `Check it yourself: ${link}`);
+  return lines.join('\n');
+}
+
 export function explain(result: { report: Report; source?: ChainSource; facts?: TransactionFacts } | { facts: TransactionFacts }): Explained {
   if (!('report' in result)) {
     const { facts } = result;
     const position = `${facts.family === 'stellar' ? 'ledger' : 'block'} ${facts.position}`;
     return {
       happened: plainFacts(facts),
+      summary: plainFacts(facts),
       status: statusOf(facts.status, facts.provider, facts.network, position),
       proofCheck: { text: 'No supported proof found', tone: 'caution', detail: 'No proof this tool reads was in the transaction, so no verifier ran.' },
       settlement: settlementOf(facts.family, position),
@@ -61,7 +99,8 @@ export function explain(result: { report: Report; source?: ChainSource; facts?: 
         ? ` On the network: verifier contract ${source.keyContract} (code SHA-256 ${source.keyContractCode.slice(0, 16)}…).`
         : ` On the network: contract ${source.to}, ${source.contractOnRecord ? 'a deployment this tool has on record' : 'not a deployment this tool has on record'}.`;
   const activity = result.facts === undefined ? undefined : plainActivity(result.facts);
-  const base = { happened: activity === undefined ? plainWords(report, source) : `${plainWords(report, source)} ${activity}`, ...(status === undefined ? {} : { status }), settlement };
+  const summary = [verdictOf(report), ...(source === undefined ? [] : [foundIn(source)]), ...(activity === undefined ? [] : [activity])].join(' ');
+  const base = { happened: activity === undefined ? plainWords(report, source) : `${plainWords(report, source)} ${activity}`, summary, ...(status === undefined ? {} : { status }), settlement };
   if (report.outcome === 'unsupported' || report.outcome === 'error') {
     return { ...base, proofCheck: { text: 'Not checked', tone: 'caution', detail: `No verifier gave an answer.${onChain}` }, proves: ['Nothing was checked.'], unknown: ['Whether the proof is valid.'] };
   }

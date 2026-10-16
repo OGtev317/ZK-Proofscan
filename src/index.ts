@@ -38,7 +38,7 @@ export const rerun = (exportText: string): ReturnType<typeof rerunText> => rerun
 /** Stops verifier threads so the process can exit. */
 export const stop = (): Promise<void> => stopEngines();
 
-export { explain, type Explained } from './explain.js';
+export { explain, explainedText, type Explained } from './explain.js';
 export { plainWords } from './plain.js';
 export { renderReport, REPORT_VERSION, TOOL, type Report } from './report.js';
 export { writeExport, type RerunResult } from './export.js';

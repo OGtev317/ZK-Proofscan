@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { factLines, plainFacts, type TransactionFacts } from '../src/chain/facts.js';
 import { lookupTransaction } from '../src/chain/lookup.js';
 import { CHAINS, type RpcClient } from '../src/chain/rpc.js';
-import { explain } from '../src/explain.js';
+import { explain, explainedText } from '../src/explain.js';
 import type { Report } from '../src/report.js';
 import { recordedKeyText } from '../src/node/bundled.js';
 
@@ -70,12 +70,28 @@ describe('the reader\'s view of a result', () => {
     expect(explain({ report: valid({ match: 'none' }, { name: 'snarkjs', version: '0.7.6' }) }).proofCheck.text).toBe('Passed');
   });
 
+  it('summarises a result in a few sentences, leaving what the proof shows to its own list', () => {
+    const view = explain({ report: valid(recognised('unconfirmed')) });
+    expect(view.summary).toBe('The proof passed on this device: snarkjs and ark-groth16, two independent verifiers, both accept it. What it shows, and what it does not, is listed below.');
+    expect(view.happened).toContain('The proof is valid');
+    const text = explainedText(view);
+    expect(text.startsWith('LumenLenz result (experimental, unaudited; the wording has not been reviewed by a qualified person)\n\nThe proof passed')).toBe(true);
+    expect(text).toContain('Proof check: Passed: two independent verifiers agree. Checked on this device with snarkjs 0.7.6 and ark-groth16 0.6.0, two independent verifiers that agree.');
+    expect(text).toContain('Settlement: Not applicable. A proof checked from files has no transaction to settle.');
+    expect(text).toContain('What remains unknown:\n- About the key: Made with no trusted ceremony.\n- A limit.');
+    expect(text).not.toContain('Read from the network');
+    expect(text).not.toContain('Check it yourself');
+    expect(explainedText(view, 'https://example.org/?tx=1')).toMatch(/\n\nCheck it yourself: https:\/\/example\.org\/\?tx=1$/);
+  });
+
   it('never shows a pass for a proof that was rejected or not checked', () => {
     const failed = explain({ report: { ...base, outcome: 'invalid', basis: 'bundled-circuit', public: [], verification: { result: 'failed', verifier: both, verificationKeysSha256: '0' } } as unknown as Report });
     expect(failed.proofCheck).toMatchObject({ text: 'Failed: the verifier rejected the proof', tone: 'fail' });
     expect(failed.proves).toEqual(['Nothing. A rejected proof establishes nothing.']);
+    expect(failed.summary).toBe('The proof failed: the verifier rejected it, so it establishes nothing.');
     const unchecked = explain({ report: { ...base, outcome: 'unsupported', reason: 'no' } as unknown as Report });
     expect(unchecked).toMatchObject({ proofCheck: { text: 'Not checked' }, proves: ['Nothing was checked.'], unknown: ['Whether the proof is valid.'] });
+    expect(unchecked.summary).toBe('This proof was not checked: no. That says nothing about whether it is valid.');
   });
 });
 
