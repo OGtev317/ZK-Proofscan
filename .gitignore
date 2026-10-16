@@ -14,3 +14,8 @@ coverage/
 dist-web/
 test-results/
 playwright-report/
+# Local notes, kept out of the repository
+AGENTS.md
+CLAUDE.md
+.claude/
+.codex/

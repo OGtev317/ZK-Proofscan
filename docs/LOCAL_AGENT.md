@@ -152,8 +152,8 @@ show that a model follows them.
 
 ## History
 
-The instructions, presentation code and scenarios were written by the Codex
-session in its own checkout on top of `7e2cf18`, before the tool server
-existed (commit `310b529`). They were then joined to the tool server here:
+The instructions, presentation code and scenarios were written on top of
+`7e2cf18`, before the tool server existed (commit `310b529`). They were
+then joined to the tool server:
 real tool names, the server building its results from the presentation code,
 and the data-sharing rule moved from the agent to the operator.

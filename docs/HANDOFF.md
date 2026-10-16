@@ -33,8 +33,7 @@ condition that the agent never verifies and never supplies the claim wording.
 - Step 1, the local tool server (`src/mcp.ts`), is on `main`; see "Tool
   server for AI agents" in the prototype notes.
 - Step 2, the agent instructions, fixed presentation and evaluation
-  scenarios, was written by the Codex session and joined to the server here.
-  Read [the agent notes](LOCAL_AGENT.md). Nothing is installed: no client
+  scenarios, joined to the server. Read [the agent notes](LOCAL_AGENT.md). Nothing is installed: no client
   configuration is committed.
 - Step 3, scenarios against a real model: eleven were run once each on
   2026-10-11 and all behaved as required; the run also exposed a defect in

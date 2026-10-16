@@ -1,7 +1,7 @@
 # LumenLenz
 
-*Formerly ZK-Proofscan; renamed on 2026-10-15. The repository keeps its
-old address for now.*
+*Formerly ZK-Proofscan; renamed on 2026-10-15. The repository keeps the
+name ZK-Proofscan.*
 
 An open-source Stellar proof-verification tool that turns supported
 transactions into readable reports, separating what the network data says,
