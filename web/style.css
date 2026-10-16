@@ -79,10 +79,30 @@ body { margin: 0; min-height: 100vh; isolation: isolate; background: var(--bg); 
     radial-gradient(1.75px 1.75px at 142px 1108px, #fff 95%, transparent);
 }
 @keyframes star-drift { to { transform: translate3d(0, calc(-1 * var(--star-tile)), 0); } }
-body:has(#pause-stars:checked) .starfield__layer { animation-play-state: paused; }
+/*
+ * A distant spiral galaxy, tilted and slowly turning: a bright core, two arms
+ * drawn as a conic gradient, faded towards the rim by a radial mask. Gradients
+ * only, so nothing is fetched and the content security policy is unchanged.
+ */
+.galaxy { position: absolute; top: clamp(1rem, 6vh, 4rem); right: clamp(-9rem, -6vw, -2rem); width: min(70vmin, 40rem); aspect-ratio: 1; transform: rotate(-28deg) scaleY(.42); }
+.galaxy__disc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 252, 245, 1) 0, rgba(255, 244, 228, .7) 3%, rgba(220, 215, 255, .3) 12%, transparent 34%),
+    repeating-conic-gradient(from 0deg, rgba(210, 215, 255, .32) 0deg, rgba(255, 255, 255, .1) 40deg, transparent 90deg, rgba(210, 215, 255, .32) 180deg),
+    conic-gradient(from 90deg, transparent, rgba(180, 190, 255, .26) 25%, transparent 50%, rgba(180, 190, 255, .26) 75%, transparent);
+  -webkit-mask-image: radial-gradient(circle, #000 0, rgba(0, 0, 0, .7) 28%, transparent 68%);
+  mask-image: radial-gradient(circle, #000 0, rgba(0, 0, 0, .7) 28%, transparent 68%);
+  animation: galaxy-turn 240s linear infinite;
+  will-change: transform;
+}
+@keyframes galaxy-turn { to { transform: rotate(360deg); } }
+body:has(#pause-stars:checked) .starfield__layer, body:has(#pause-stars:checked) .galaxy__disc { animation-play-state: paused; }
 .motion-toggle { display: flex; align-items: center; gap: .5rem; width: fit-content; min-height: 44px; font-size: .86rem; font-weight: 400; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
-  .starfield__layer { animation: none; }
+  .starfield__layer, .galaxy__disc { animation: none; }
   .motion-toggle { display: none; }
 }
 main { max-width: 72rem; margin: 0 auto; padding: 1.75rem 2rem 2rem; }
@@ -97,7 +117,7 @@ p { overflow-wrap: anywhere; }
 .nav-links { display: flex; align-items: center; gap: 1.5rem; }
 .nav-links a { color: var(--muted); font-size: .8rem; text-decoration: none; }
 .nav-links a:hover { color: var(--fg); }
-.hero { padding: clamp(3.5rem, 8vw, 6rem) 0 2.6rem; text-align: center; background: radial-gradient(ellipse 75% 70% at 50% 50%, #000 70%, transparent 100%); }
+.hero { padding: clamp(3.5rem, 8vw, 6rem) 0 2.6rem; text-align: center; background: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%); }
 .eyebrow { margin: 0; color: var(--muted); font-size: .7rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }
 .lede { max-width: 42rem; margin: 0 auto; color: var(--muted); font-size: 1rem; line-height: 1.75; }
 .capabilities { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem 1.3rem; margin: 1.4rem 0 0; padding: 0; color: var(--muted); list-style: none; font-size: .72rem; }
