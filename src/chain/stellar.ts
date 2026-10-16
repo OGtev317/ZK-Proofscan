@@ -9,6 +9,7 @@ import type { TransactionFacts } from './facts.js';
 import { describeMovement, readStellarActivity } from './stellar-activity.js';
 import { describeBuild, describeContractEvent, describeInvocation, readContractSpec, STANDARD_TOKEN_SPEC, type ContractSpec } from './soroban-spec.js';
 import type { CheckBuild } from './sep55.js';
+import { decodeSoroswapSwap } from './swaps.js';
 
 /** A Stellar network this tool reads. Reading only: the owner approved the test network, then the main network, on 2026-10-14 and 2026-10-15. */
 export interface StellarNetwork {
@@ -328,10 +329,12 @@ export async function lookupStellarTransaction(parts: { network: StellarNetwork;
     const { asset, ...described } = describeOperations(ops);
     let action = asset === undefined ? described.action : `${described.action} issued by ${asset.issuer}${withAssetNote ? await assetNote(rpc, asset, parts.assetInfo) : ''}`;
     let build: string | undefined;
+    let swap: ReturnType<typeof decodeSoroswapSwap>;
     // A contract call's arguments, named by the contract's interface where it declares one.
     const call = singleInvocation(ops);
     if (call !== undefined) {
       const spec = await specFor(call.contract);
+      swap = decodeSoroswapSwap({ call, spec, succeeded: transaction.status === 'SUCCESS', events: activity.others, movements: activity.movements, truncated: activity.more || activity.moreOtherEvents === true });
       action = `a call to ${describeInvocation(call.name, call.args, spec)} on contract ${call.contract}${spec === undefined ? ', its arguments not named: no interface for the contract could be read' : `, named by its ${spec.origin}`}`;
       // How the called contract's code says it was built, and, when a checker is given, what GitHub's record adds.
       if (spec !== undefined) {
@@ -361,6 +364,8 @@ export async function lookupStellarTransaction(parts: { network: StellarNetwork;
       ...(activity.memo === undefined ? {} : { memo: activity.memo }),
       ...(activity.outcomes.length === 0 ? {} : { outcomes: activity.outcomes }),
       ...(activity.movements.length === 0 ? {} : { tokens: activity.movements.map(describeMovement) }),
+      ...(activity.movements.length === 0 ? {} : { movements: activity.movements.map((movement) => ({ ...movement, amount: movement.amount.toString() })) }),
+      ...(swap === undefined ? {} : { swaps: [swap] }),
       ...(activity.more ? { moreTokens: true } : {}),
       ...(events.length === 0 ? {} : { events }),
       ...(build === undefined ? {} : { build }),

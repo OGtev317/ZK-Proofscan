@@ -3,12 +3,18 @@ import { plainFacts, renderFacts } from './chain/facts.js';
 import { checkFile, lookupAndCheck, message, renderLookup, renderRerun, rerunCode, rerunFile, saveExport, type ProofPaths } from './node/run.js';
 import { stopEngines } from './node/stop.js';
 import { renderReport, type Report } from './report.js';
+import { readFile, stat } from 'node:fs/promises';
+import { inspectStellarTransaction, simulateStellarTransaction } from './chain/preview.js';
+import { httpRpc } from './chain/rpc.js';
+import { STELLAR_NETWORKS } from './chain/stellar.js';
+import { availabilityText } from './chain/availability.js';
 
 const USAGE = `Usage:
   lumenlenz check <proof.json> [--json] [--export <file>]
   lumenlenz check <proof> --public <public inputs> --key <verification key> [--json] [--export <file>]
   lumenlenz rerun <export.json>
   lumenlenz lookup <transaction hash or explorer link> [--chain <name>] [--json] [--export <file>]
+  lumenlenz inspect <unsigned-xdr-file> --chain stellar-testnet|stellar-mainnet [--json] [--simulate]
 
 The first form checks a Semaphore v4 proof against keys bundled with this
 tool; a Cairo STARK proof in the Stone prover's JSON layout, which needs no
@@ -56,18 +62,20 @@ async function check(paths: ProofPaths, json: boolean, exportPath: string | unde
 
 async function lookup(transaction: string, chain: string | undefined, json: boolean, exportPath: string | undefined): Promise<number> {
   const found = await lookupAndCheck(chain, transaction, process.env);
+  const availability = found.availability === undefined ? {} : { availability: found.availability };
+  const availabilityDetails = !json && found.availability !== undefined ? `\n\n${availabilityText(found.availability)}` : '';
   if (found.kind === 'not-checked' && found.facts !== undefined) {
     // The transaction was read; it holds no proof this tool reads.
-    console.log(json ? JSON.stringify({ lookup: 'no-supported-proof', reason: found.reason, facts: found.facts }, null, 2) : `${renderFacts(found.facts)}\n\n${plainFacts(found.facts)}`);
+    console.log(json ? JSON.stringify({ lookup: 'no-supported-proof', reason: found.reason, facts: found.facts, ...availability }, null, 2) : `${renderFacts(found.facts)}\n\n${plainFacts(found.facts)}${availabilityDetails}`);
     return EXIT.unsupported;
   }
   if (found.kind === 'not-checked') {
-    console.log(json ? JSON.stringify({ lookup: 'not-checked', reason: found.reason }, null, 2) : `Not checked: ${found.reason}.\nThis says nothing about whether a proof is valid.`);
+    console.log(json ? JSON.stringify({ lookup: 'not-checked', reason: found.reason, ...availability }, null, 2) : `Not checked: ${found.reason}.\nThis says nothing about whether a proof is valid.${availabilityDetails}`);
     return EXIT.error;
   }
   // What else the transaction did, as the provider reported it, follows the report.
   const activity = found.facts === undefined || json ? '' : `\n\n${renderFacts(found.facts).replace(/^No supported proof found\. /, '')}`;
-  console.log(json ? JSON.stringify({ source: found.source, report: found.report, ...(found.facts === undefined ? {} : { facts: found.facts }) }, null, 2) : `${renderLookup(found.source, found.report)}${activity}`);
+  console.log(json ? JSON.stringify({ source: found.source, report: found.report, ...(found.facts === undefined ? {} : { facts: found.facts }), ...availability }, null, 2) : `${renderLookup(found.source, found.report)}${activity}${availabilityDetails}`);
   if (exportPath !== undefined) {
     try {
       await saveExport(exportPath, found.inputs, found.report, found.source);
@@ -93,9 +101,11 @@ async function main(args: string[]): Promise<number> {
   let publicInputs: string | undefined;
   let verificationKey: string | undefined;
   let chain: string | undefined;
+  let simulate = false;
   for (let i = 0; i < rest.length; i++) {
     const arg = rest[i]!;
     if (arg === '--json') json = true;
+    else if (arg === '--simulate') simulate = true;
     else if (arg === '--export' && rest[i + 1] !== undefined) exportPath = rest[++i];
     else if (arg === '--public' && rest[i + 1] !== undefined) publicInputs = rest[++i];
     else if (arg === '--key' && rest[i + 1] !== undefined) verificationKey = rest[++i];
@@ -104,6 +114,23 @@ async function main(args: string[]): Promise<number> {
     else paths.push(arg);
   }
   if (paths.length !== 1) return USAGE_ERROR;
+  if (command === 'inspect') {
+    if (chain === undefined || publicInputs !== undefined || verificationKey !== undefined || exportPath !== undefined) return USAGE_ERROR;
+    if ((await stat(paths[0]!)).size > 262_144) throw new Error('the transaction XDR file is too large');
+    const text = await readFile(paths[0]!, 'utf8');
+    const preview = inspectStellarTransaction(text, chain);
+    if (preview.kind !== 'inspected' || !simulate) {
+      console.log(json ? JSON.stringify(preview, null, 2) : preview.kind === 'not-inspected' ? preview.reason : ['Local inspection - NOT submitted or verified', `Network (chosen): ${preview.network}`, `Source: ${preview.source}`, `Fee payer: ${preview.feePayer}; maximum fee ${preview.maxFeeStroops} stroops`, ...preview.operations.map((op) => `${op.description}${op.contract ? ` on ${op.contract}` : ''}`), ...preview.warnings, 'Authorization trees:', JSON.stringify(preview.operations.flatMap((op) => op.authorizations), null, 2)].join('\n'));
+      return preview.kind === 'inspected' ? 0 : EXIT.error;
+    }
+    const network = STELLAR_NETWORKS.find((item) => item.name === chain)!;
+    const address = process.env[network.rpcVariable] || network.defaultRpc;
+    if (!address) throw new Error('configure the RPC for this network before simulation');
+    const simulation = await simulateStellarTransaction(text, chain, httpRpc(address));
+    console.log(JSON.stringify({ preview, simulation }, null, 2));
+    return simulation.kind === 'simulated' ? 0 : EXIT.error;
+  }
+  if (simulate) return USAGE_ERROR;
   const extra = { ...(publicInputs === undefined ? {} : { publicInputs }), ...(verificationKey === undefined ? {} : { verificationKey }) };
   if (command === 'lookup') return publicInputs === undefined && verificationKey === undefined ? lookup(paths[0]!, chain, json, exportPath) : USAGE_ERROR;
   if (chain !== undefined) return USAGE_ERROR;

@@ -5,14 +5,15 @@ import type { TransactionFacts } from './facts.js';
 import { describeCallWithAbi, type ContractAbi } from './abi.js';
 import { describeTokenEvent, labelTokens, readTokenEvents, TOKEN_FUNCTIONS } from './tokens.js';
 import type { ChainSource } from './source.js';
+import type { LookupAvailability } from './availability.js';
 
 /**
  * A proof found in a transaction, or why none was. When the transaction was
  * read but holds no proof this tool reads, `facts` says what it was.
  */
-export type Lookup =
+export type Lookup = (
   | { found: true; source: ChainSource; inputs: ProofInputs; facts?: TransactionFacts }
-  | { found: false; reason: string; facts?: TransactionFacts };
+  | { found: false; reason: string; facts?: TransactionFacts }) & { availability?: LookupAvailability };
 
 const HASH = /^0x[0-9a-f]{64}$/;
 const ADDRESS = /^0x[0-9a-f]{40}$/;

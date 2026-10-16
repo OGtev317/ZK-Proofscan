@@ -51,7 +51,8 @@
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
-    "docs/DEVELOPERS.md"
+    "docs/DEVELOPERS.md",
+    "docs/PRODUCT_LENSES.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

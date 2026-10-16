@@ -47,3 +47,8 @@ export { renderChainSource, type ChainSource } from './chain/source.js';
 export { plainFacts, factLines, type TransactionFacts } from './chain/facts.js';
 export type { ProofInputs } from './inputs.js';
 export type { LookedUp, ProofPaths } from './node/run.js';
+export { transactionStory, type TransactionStory } from './story.js';
+export { proofProfile, circuitDirectory, reviewText, type ProofProfile } from './profiles.js';
+export { inspectStellarTransaction, simulateStellarTransaction, type TransactionPreview, type PreviewResult, type SimulationResult } from './chain/preview.js';
+export { decodeSoroswapSwap, type SwapExplanation } from './chain/swaps.js';
+export type { LookupAvailability } from './chain/availability.js';

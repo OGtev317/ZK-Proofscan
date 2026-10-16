@@ -93,6 +93,12 @@ and output, with tools `check_proof`, `write_evidence_export`,
 
 ## What to read before relying on a result
 
+Development branch additions: transaction stories, guarded swap decoding,
+provider history/fallback, proof profiles and unsigned transaction inspection
+are described in [Product lenses](PRODUCT_LENSES.md), including SDK exports,
+the `inspect` command, privacy boundaries and current limitations. They are
+not part of the published 0.1.0 package until a new release is approved.
+
 - [The lookup notes](LOOKUP.md): coverage, and exactly what the provider
   is trusted for.
 - [The formats](FORMATS.md): each proof system, its verifier, and what a

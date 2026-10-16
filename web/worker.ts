@@ -22,7 +22,7 @@ import { snarkjsEngine, snarkjsSuppliedKeyEngine } from '../src/snarkjs-engine.j
 import twitterKeyUrl from '../artifacts/zk-email-proof-of-twitter/verification-key.json?url';
 import { sourcifyAbi } from '../src/chain/abi.js';
 import { findProof } from '../src/chain/find.js';
-import { PAGE_RPCS } from '../src/chain/reference.js';
+import { PAGE_RPCS, STELLAR_ARCHIVE_RPC } from '../src/chain/reference.js';
 import { recordedRpc } from '../src/chain/recorded.js';
 import { httpRpc, type RpcClient } from '../src/chain/rpc.js';
 import { SAVED_EXAMPLES } from './saved.js';
@@ -113,9 +113,12 @@ scope.onmessage = (event) => {
         }
         // A live Ethereum lookup may ask Sourcify to name an ordinary call's function; a saved example asks no one.
         const contractAbi = request.saved === undefined ? { contractAbi: sourcifyAbi() } : {};
-        const found = await findProof(request.network, request.hash, rpc, { ...recordedFiles(scanning), ...contractAbi });
-        if (!found.found) scope.postMessage({ id: request.id, ok: true, kind: 'lookup', found: false, reason: found.reason, ...(found.facts === undefined ? {} : { facts: found.facts }), ...recorded });
-        else scope.postMessage({ id: request.id, ok: true, kind: 'lookup', found: true, source: found.source, inputs: found.inputs, report: await scan(found.inputs, scanning), ...(found.facts === undefined ? {} : { facts: found.facts }), ...recorded });
+        const liveStellar = request.saved === undefined && request.network.startsWith('stellar-');
+        const archive = liveStellar && request.network === 'stellar-mainnet' && request.archive === true ? { archiveRpc: httpRpc(STELLAR_ARCHIVE_RPC) } : {};
+        const found = await findProof(request.network, request.hash, rpc, { ...recordedFiles(scanning), ...contractAbi, inspectAvailability: liveStellar, ...archive });
+        const availability = found.availability === undefined ? {} : { availability: found.availability };
+        if (!found.found) scope.postMessage({ id: request.id, ok: true, kind: 'lookup', found: false, reason: found.reason, ...(found.facts === undefined ? {} : { facts: found.facts }), ...recorded, ...availability });
+        else scope.postMessage({ id: request.id, ok: true, kind: 'lookup', found: true, source: found.source, inputs: found.inputs, report: await scan(found.inputs, scanning), ...(found.facts === undefined ? {} : { facts: found.facts }), ...recorded, ...availability });
       } else if (request.kind === 'check') {
         scope.postMessage({ id: request.id, ok: true, kind: 'check', report: await scan(request.inputs, scanning) });
       } else {

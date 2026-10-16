@@ -1,4 +1,6 @@
 import { Address, scValToNative, StrKey, xdr } from '@stellar/stellar-base';
+import { stellarAmount } from './movement.js';
+export { stellarAmount, describeMovement } from './movement.js';
 
 /**
  * What a Stellar transaction did, as the network data records it: the fee
@@ -19,9 +21,12 @@ export interface StellarActivity {
   movements: Movement[];
   /** More movements were recorded than are listed. */
   more: boolean;
+  moreOtherEvents?: boolean;
 }
 
 export interface Movement {
+  /** Contract that emitted this event, not a token name supplied by a caller. */
+  tokenContract?: string;
   kind: 'transfer' | 'mint' | 'burn' | 'clawback' | 'approve';
   /** For an allowance: the last ledger it holds for. */
   until?: number;
@@ -34,38 +39,7 @@ export interface Movement {
 
 const MAX_MOVEMENTS = 20;
 const MAX_OTHER_EVENTS = 10;
-const I128_MAX = (1n << 127n) - 1n;
-const STROOPS = 10_000_000n;
 const words = (name: string): string => name.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
-
-/** An amount in an asset's units: Stellar assets have 7 decimal places; another token's are not known here. */
-export function stellarAmount(amount: bigint, asset: Movement['asset']): string {
-  if (asset.kind === 'contract') return `${amount} of the smallest units of the token at ${asset.contract}`;
-  const negative = amount < 0n;
-  const value = negative ? -amount : amount;
-  const fraction = (value % STROOPS).toString().padStart(7, '0').replace(/0+$/, '');
-  const units = `${negative ? '-' : ''}${value / STROOPS}${fraction === '' ? '' : `.${fraction}`}`;
-  return asset.kind === 'native' ? `${units} XLM` : `${units} ${asset.code} (issued by ${asset.issuer})`;
-}
-
-/** One sentence for a movement. */
-export function describeMovement(movement: Movement): string {
-  const amount = stellarAmount(movement.amount, movement.asset);
-  switch (movement.kind) {
-    case 'transfer':
-      return `moved ${amount} from ${movement.from} to ${movement.to}`;
-    case 'mint':
-      return `created ${amount} for ${movement.to}`;
-    case 'burn':
-      return `destroyed ${amount} held by ${movement.from}`;
-    case 'clawback':
-      return `clawed back ${amount} from ${movement.from}`;
-    case 'approve':
-      return movement.amount >= I128_MAX >> 1n
-        ? `allowed ${movement.to} to spend an UNLIMITED amount of ${amount.replace(/^\S+ /, '')} belonging to ${movement.from}, until ledger ${movement.until}, which lets it move all of it until then`
-        : `allowed ${movement.to} to spend up to ${amount} belonging to ${movement.from}, until ledger ${movement.until}`;
-  }
-}
 
 const native = (value: xdr.ScVal): unknown => {
   try {
@@ -211,13 +185,15 @@ export function readStellarActivity(answer: { envelope: xdr.TransactionEnvelope;
         const movement = readMovement(event);
         if (movement === undefined) {
           if (activity.others.length < MAX_OTHER_EVENTS) activity.others.push(event);
+          else activity.moreOtherEvents = true;
           continue;
         }
         if (activity.movements.length === MAX_MOVEMENTS) {
           activity.more = true;
           break;
         }
-        activity.movements.push(movement);
+        const emitter = event.contractId();
+        activity.movements.push({ ...movement, ...(emitter == null ? {} : { tokenContract: StrKey.encodeContract(emitter as unknown as Buffer) }) });
       }
     }
   }

@@ -358,6 +358,10 @@ async function providers(page: Page, asked: string[]): Promise<void> {
     const testnet = params.hash === undefined || params.hash === (pool.getTransaction as { txHash: string }).txHash ? pool : params.hash === (plainTransaction.getTransaction as { txHash: string }).txHash ? plainTransaction : { ...pool, getTransaction: { status: 'NOT_FOUND' } };
     const answers = host === 'sepolia.drpc.org' ? sepolia : host === 'soroban-testnet.stellar.org' ? testnet : host === 'mainnet.sorobanrpc.com' ? mainnet : host === 'eth.drpc.org' ? approval : undefined;
     if (answers === undefined) return route.abort();
+    if (method === 'getHealth') {
+      asked.push(`${host} ${method}`);
+      return route.fulfill({ status: 200, headers, contentType: 'application/json', body: JSON.stringify({ jsonrpc: '2.0', id, result: { status: 'healthy', oldestLedger: 5000000, latestLedger: 5200000, ledgerRetentionWindow: 200001 } }) });
+    }
     if (method === 'eth_call') {
       asked.push(`${host} ${method}`);
       const data = (params as unknown as [{ data: string }])[0].data;
@@ -436,7 +440,7 @@ test('switches to Stellar from a pasted link and checks a private payment', asyn
   await expect(page.locator('#proof-detail')).toContainText('On the network: verifier contract CA66PGQD3OUO5R64CMOWL3FIRAQTWORLX36ZERALPPYOJ4ORETGFO3P5');
   // Three ledger reads find the proof and its key; the rest read the pool's interface.
   expect(asked.filter((entry) => entry.endsWith('getLedgerEntries')).length).toBeGreaterThanOrEqual(3);
-  expect(asked.every((entry) => /(getNetwork|getTransaction|getLedgerEntries)$/.test(entry))).toBe(true);
+  expect(asked.every((entry) => /(getNetwork|getTransaction|getLedgerEntries|getHealth)$/.test(entry))).toBe(true);
   expect(problems).toEqual([]);
 });
 
@@ -471,7 +475,7 @@ test('describes a transaction with no proof instead of calling it an error, and 
   await expect(page.locator('#unknown-block')).toBeHidden();
   await expect(page.locator('#facts')).toContainText('GAYU5HRTJPRGF4BFKI4BXRLFBEKAMK5BF5L6VTNERKA3P42SN2Y5EJ46');
   await expect(page.locator('#download')).toBeHidden();
-  expect(asked).toEqual(['soroban-testnet.stellar.org getNetwork', 'soroban-testnet.stellar.org getTransaction']);
+  expect(asked).toEqual(['soroban-testnet.stellar.org getNetwork', 'soroban-testnet.stellar.org getTransaction', 'soroban-testnet.stellar.org getHealth']);
   expect(problems).toEqual([]);
 });
 
@@ -483,7 +487,7 @@ test('tries a bare Stellar hash on testnet, then mainnet, and says so first', as
   await expect(page.locator('#network-summary')).toHaveText('Stellar testnet, then mainnet');
   await page.click('#lookup');
   await expect(page.locator('#plain')).toContainText('the provider has no such transaction on stellar-mainnet');
-  expect(asked).toEqual(['soroban-testnet.stellar.org getNetwork', 'soroban-testnet.stellar.org getTransaction', 'mainnet.sorobanrpc.com getNetwork', 'mainnet.sorobanrpc.com getTransaction']);
+  expect(asked).toEqual(['soroban-testnet.stellar.org getNetwork', 'soroban-testnet.stellar.org getTransaction', 'soroban-testnet.stellar.org getHealth', 'mainnet.sorobanrpc.com getNetwork', 'mainnet.sorobanrpc.com getTransaction', 'mainnet.sorobanrpc.com getHealth']);
   expect(problems).toEqual([]);
 });
 

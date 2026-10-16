@@ -5,9 +5,13 @@ import { lookupTransaction, type Lookup } from './lookup.js';
 import { readTransactionReference } from './reference.js';
 import { CHAINS, type RpcClient } from './rpc.js';
 import type { RecordedKey } from './stellar.js';
+import { withStellarAvailability } from './availability.js';
 
 /** What a lookup needs besides the provider: the recorded key files it may use. */
 export interface RecordedFiles {
+  inspectAvailability?: boolean;
+  /** Explicitly selected second provider, never read from transaction/proof data. */
+  archiveRpc?: RpcClient;
   /** A recorded key file, by registry artifact, for an Ethereum call that names one. */
   keyText(artifactId: string): Promise<string>;
   /** The recorded Stellar Private Payments keys, looked for in a verifier's code. */
@@ -46,5 +50,6 @@ export async function findProof(network: string, hash: string, rpc: RpcClient, f
   const { lookupStellarTransaction, STELLAR_NETWORKS } = await import('./stellar.js');
   const stellar = STELLAR_NETWORKS.find((known) => known.name === network);
   if (stellar === undefined) return { found: false, reason: `the network must be one of ${[...CHAINS.map((known) => known.name), ...STELLAR_NETWORKS.map((known) => known.name)].join(', ')}` };
-  return lookupStellarTransaction({ network: stellar, transaction: hash, rpc, recordedKeys: () => files.stellarPrivatePaymentsKeys(), ...(files.stellarAssetInfo === undefined ? {} : { assetInfo: files.stellarAssetInfo }), ...(files.checkBuild === undefined ? {} : { checkBuild: files.checkBuild }) });
+  const read = (provider: RpcClient) => lookupStellarTransaction({ network: stellar, transaction: hash, rpc: provider, recordedKeys: () => files.stellarPrivatePaymentsKeys(), ...(files.stellarAssetInfo === undefined ? {} : { assetInfo: files.stellarAssetInfo }), ...(files.checkBuild === undefined ? {} : { checkBuild: files.checkBuild }) });
+  return files.inspectAvailability || files.archiveRpc !== undefined ? withStellarAvailability(rpc, files.archiveRpc, read) : read(rpc);
 }

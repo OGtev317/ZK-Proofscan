@@ -3,6 +3,12 @@
  * found: where it is, whether the network accepted it, who sent it and what
  * it did, as the provider reported. Nothing here is checked by this tool.
  */
+import type { Movement } from './stellar-activity.js';
+import type { SwapExplanation } from './swaps.js';
+
+/** JSON-safe movement; no numeric rounding and no private witness values. */
+export type RecordedMovement = Omit<Movement, 'amount'> & { amount: string };
+
 export interface TransactionFacts {
   family: 'ethereum' | 'stellar';
   /** Host name of the provider that was asked. */
@@ -31,6 +37,8 @@ export interface TransactionFacts {
   events?: string[];
   /** How the called contract's code says it was built, and whether that was traced to source. */
   build?: string;
+  movements?: RecordedMovement[];
+  swaps?: SwapExplanation[];
 }
 
 const NETWORK_NAMES: Record<string, string> = {
@@ -55,7 +63,8 @@ export function plainFacts(facts: TransactionFacts): string {
     tokens.length === 0
       ? ''
       : ` It ${tokens.slice(0, 3).join('; it ')}${tokens.length > 3 || facts.moreTokens === true ? '; and more, listed in the technical details' : ''}. A token's name is what its own contract claims.`;
-  return `This is a transaction on ${networkName(facts.network)}: ${facts.action}. According to ${facts.provider}, the network ${STATUS[facts.status]} it.${activity} No zero-knowledge proof that this tool can read was found in it, so there is no proof to check.`;
+  const action = facts.swaps?.[0] === undefined ? facts.action : `${facts.swaps[0].description} ${facts.swaps[0].identity}`;
+  return `This is a transaction on ${networkName(facts.network)}: ${action}. According to ${facts.provider}, the network ${STATUS[facts.status]} it.${activity} No zero-knowledge proof that this tool can read was found in it, so there is no proof to check.`;
 }
 
 /** The facts as labelled lines, for technical details and the command line. */
@@ -73,6 +82,7 @@ export function factLines(facts: TransactionFacts): [string, string][] {
     ...(facts.outcomes ?? []).map((line): [string, string] => ['Outcome', line]),
     ...(facts.tokens ?? []).map((line): [string, string] => ['Token activity', `It ${line}`]),
     ...(facts.events ?? []).map((line): [string, string] => ['Contract event', line]),
+    ...(facts.swaps ?? []).map((swap): [string, string] => ['Swap', `${swap.description} ${swap.identity}`]),
     ...(facts.build === undefined ? [] : ([['Contract build', facts.build]] as [string, string][])),
     ...(facts.moreTokens === true ? ([['Token activity', 'More token events were recorded than are listed here.']] as [string, string][]) : []),
   ];

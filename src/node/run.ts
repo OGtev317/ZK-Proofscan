@@ -76,9 +76,9 @@ export const saveExport = (path: string, inputs: ProofInputs, report: Report, so
   writeFile(path, writeExport(inputs, report, source), { flag: 'wx' });
 
 export type LookedUp =
-  | { kind: 'checked'; source: ChainSource; inputs: ProofInputs; report: Report; facts?: TransactionFacts }
+  | { kind: 'checked'; source: ChainSource; inputs: ProofInputs; report: Report; facts?: TransactionFacts; availability?: import('../chain/availability.js').LookupAvailability }
   /** Nothing was checked, and the reason is not a fault in any proof. */
-  | { kind: 'not-checked'; reason: string; facts?: TransactionFacts };
+  | { kind: 'not-checked'; reason: string; facts?: TransactionFacts; availability?: import('../chain/availability.js').LookupAvailability };
 
 /** Every name `lookup` accepts. */
 export const LOOKUP_CHAINS: readonly string[] = [...CHAINS.map((known) => known.name), ...STELLAR_NETWORKS.map((known) => known.name)];
@@ -112,12 +112,14 @@ export async function lookupAndCheck(chainName: string | undefined, pasted: stri
     const stellarAssetInfo = env.LUMENLENZ_STELLAR_TOML === 'off' ? {} : { stellarAssetInfo: stellarTomlCheck() };
     // A contract's claimed source is checked against GitHub's build attestations (SEP-55); LUMENLENZ_SEP55=off asks GitHub nothing.
     const checkBuild = env.LUMENLENZ_SEP55 === 'off' ? {} : { checkBuild: githubAttestations() };
-    found = await findProof(resolved.network, resolved.hash, httpRpc(address), { keyText: recordedKeyText, stellarPrivatePaymentsKeys, ...contractAbi, ...stellarAssetInfo, ...checkBuild });
+    const archiveAddress = stellar === undefined ? undefined : env[stellar.name === 'stellar-mainnet' ? 'STELLAR_MAINNET_ARCHIVE_RPC_URL' : 'STELLAR_ARCHIVE_RPC_URL'];
+    const archive = archiveAddress ? { archiveRpc: httpRpc(archiveAddress) } : {};
+    found = await findProof(resolved.network, resolved.hash, httpRpc(address), { keyText: recordedKeyText, stellarPrivatePaymentsKeys, inspectAvailability: stellar !== undefined, ...archive, ...contractAbi, ...stellarAssetInfo, ...checkBuild });
   } catch (error) {
     return { kind: 'not-checked', reason: message(error) };
   }
-  if (!found.found) return { kind: 'not-checked', reason: found.reason, ...(found.facts === undefined ? {} : { facts: found.facts }) };
-  return { kind: 'checked', source: found.source, inputs: found.inputs, report: await checkText(found.inputs), ...(found.facts === undefined ? {} : { facts: found.facts }) };
+  if (!found.found) return { kind: 'not-checked', reason: found.reason, ...(found.availability === undefined ? {} : { availability: found.availability }), ...(found.facts === undefined ? {} : { facts: found.facts }) };
+  return { kind: 'checked', source: found.source, inputs: found.inputs, report: await checkText(found.inputs), ...(found.availability === undefined ? {} : { availability: found.availability }), ...(found.facts === undefined ? {} : { facts: found.facts }) };
 }
 
 export const renderLookup = (source: ChainSource, report: Report): string => `${renderChainSource(source)}\n\n${renderReport(report)}`;

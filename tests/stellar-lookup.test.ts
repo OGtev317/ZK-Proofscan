@@ -226,7 +226,8 @@ describe('looking up on Stellar from the command line', () => {
     expect(done.stdout).toMatch(/^Source, as reported by 127\.0\.0\.1 and not checked by this tool:/);
     expect(done.stdout).toContain('PASSED using @aztec/bb.js 0.87.0');
     expect(asked.slice(0, 3)).toEqual(['getNetwork', 'getTransaction', 'getLedgerEntries']);
-    expect(asked.slice(3).every((method) => method === 'getLedgerEntries')).toBe(true);
+    expect(asked.slice(3).every((method) => method === 'getLedgerEntries' || method === 'getHealth')).toBe(true);
+    expect(asked).toContain('getHealth');
     const rerun = await run('rerun', exported);
     expect(rerun.status).toBe(0);
     expect(rerun.stdout).toContain('Source recorded in the export');

@@ -16,6 +16,9 @@ import { binaryBytes, isBinaryPart, MAX_PROOF_PART_CHARACTERS, MAX_PUBLIC_INPUTS
 import { reportSections, unreadReport, type Report } from '../src/report.js';
 import type { Request, Response, ToPage } from './protocol.js';
 import { runSwiftness } from './swiftness.js';
+import { renderLenses, renderAvailability, setupLenses } from './lenses.js';
+
+setupLenses();
 
 const $ = <T extends HTMLElement>(id: string): T => {
   const node = document.getElementById(id);
@@ -66,7 +69,7 @@ const examples = [$<HTMLButtonElement>('example-semaphore'), $<HTMLButtonElement
 
 /** Longer than any supported proof takes on a phone; a check that runs past it is stopped and reported as not checked. */
 const TIME_LIMIT_MS = 300_000;
-type Sendable = { kind: 'check'; inputs: ProofInputs } | { kind: 'rerun'; export: string } | { kind: 'lookup'; network: string; hash: string; saved?: string };
+type Sendable = { kind: 'check'; inputs: ProofInputs } | { kind: 'rerun'; export: string } | { kind: 'lookup'; network: string; hash: string; saved?: string; archive?: boolean };
 /**
  * Each check runs in a new worker that is discarded afterwards, so no
  * verifier instance, and nothing a malformed file did to one, outlasts the
@@ -151,6 +154,7 @@ function present(explained: Explained): void {
 
 /** A transaction that was read but holds no proof this tool reads: its facts, and nothing to check. */
 function showFacts(facts: TransactionFacts): void {
+  renderLenses(facts);
   present(explain({ facts }));
   fillFacts(facts);
   sourceBox.hidden = true;
@@ -177,6 +181,7 @@ function fillFacts(facts: TransactionFacts): void {
 }
 
 function show(report: Report, source?: ChainSource, recordedSource = false, facts?: TransactionFacts): void {
+  renderLenses(facts, report, source);
   present(explain(source === undefined ? { report } : { report, source, ...(facts === undefined ? {} : { facts }) }));
   if (facts === undefined) factsBox.hidden = true;
   else fillFacts(facts);
@@ -360,6 +365,7 @@ lookupText.addEventListener('input', () => {
 });
 
 async function lookUp(): Promise<void> {
+  renderAvailability();
   // A new lookup replaces the last result as soon as it starts.
   reportBox.hidden = true;
   const mine = ++latest;
@@ -371,7 +377,7 @@ async function lookUp(): Promise<void> {
     if ('reason' in next) throw new Error(next.reason);
     resolved = next;
     if (index > 0) status.textContent = `Not found on ${NETWORK_LABELS[tried[index - 1]!]}; trying ${NETWORK_LABELS[name]}…`;
-    response = await ask({ kind: 'lookup', network: next.network, hash: next.hash });
+    response = await ask({ kind: 'lookup', network: next.network, hash: next.hash, archive: next.network === 'stellar-mainnet' && $<HTMLInputElement>('archive-opt-in').checked });
     if (mine !== latest) return;
     const notFound = response.ok && response.kind === 'lookup' && !response.found && response.facts === undefined && response.reason.startsWith('the provider has no such transaction');
     if (!notFound) break;
@@ -402,6 +408,7 @@ function showExplorers(network: string, hash: string): void {
 
 /** Shows a lookup's answer, live or saved; `address` is the page address that repeats it. */
 function presentLookup(response: Extract<Response, { kind: 'lookup' }>, address: string): void {
+  renderAvailability(response.availability);
   const query = new URLSearchParams(address);
   const saved = SAVED_EXAMPLES.find((example) => example.id === query.get('example'));
   const network = saved?.network ?? query.get('network');
