@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
     <!-- The page loads nothing from other sites. It contacts a named public RPC only after a transaction lookup or when opening a shared result. -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self'; connect-src 'self' https://sepolia.drpc.org https://eth.drpc.org https://base.drpc.org https://base-sepolia.drpc.org https://optimism.drpc.org https://arbitrum.drpc.org https://polygon-bor.publicnode.com https://sourcify.dev https://soroban-testnet.stellar.org https://mainnet.sorobanrpc.com; base-uri 'none'; form-action 'none'" />
     <meta name="referrer" content="no-referrer" />
@@ -11,46 +12,60 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <nav class="topbar" aria-label="Site">
-      <p class="brand">
-        <svg class="mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="14" cy="14" r="9.5" fill="none" stroke="currentColor" stroke-width="3" /><path d="M21 21l7 7" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" /><path class="mark-star" d="M14 8.5l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" /></svg>
-        <span>LumenLenz</span>
-      </p>
-      <a class="topbar-link" href="https://github.com/OGtev317/ZK-Proofscan" rel="noopener">Source</a>
-    </nav>
+    <div class="starfield" aria-hidden="true">
+      <span class="starfield__layer starfield__layer--far"></span>
+      <span class="starfield__layer starfield__layer--mid"></span>
+      <span class="starfield__layer starfield__layer--near"></span>
+    </div>
     <main>
+      <nav class="site-header" aria-label="Main navigation">
+        <a class="brand" href="./" aria-label="LumenLenz home"><span class="brand-mark" aria-hidden="true"></span>LumenLenz</a>
+        <div class="nav-links">
+          <a href="https://github.com/OGtev317/ZK-Proofscan/blob/main/docs/DEVELOPERS.md" rel="noopener">Developer guide</a>
+          <a href="https://github.com/OGtev317/ZK-Proofscan" rel="noopener">Source <span aria-hidden="true">↗</span></a>
+        </div>
+      </nav>
       <header class="hero">
-        <p class="pill">Stellar &amp; Ethereum · zero-knowledge proofs</p>
-        <h1>Paste a transaction.<br />See what its proof <em>actually</em> shows.</h1>
-        <p class="lede">LumenLenz finds the proof in the transaction, checks it again in your browser, and says in plain English what it establishes and what it does not.</p>
+        <p class="eyebrow">A clearer view of zero knowledge</p>
+        <h1>Read the transaction.<br /><span>Check the proof.</span></h1>
+        <p class="lede">Turn a supported transaction into a readable report.<br class="desktop-break" /> See what happened, what checks out, and what remains unknown.</p>
+        <ul class="capabilities" aria-label="Reader capabilities">
+          <li>Stellar &amp; Ethereum</li>
+          <li>Proofs checked on your device</li>
+          <li>No wallet connection</li>
+        </ul>
       </header>
 
       <section class="lookup-panel" aria-labelledby="lookup-heading">
-        <h2 id="lookup-heading" class="sr-only">Translate a transaction proof</h2>
-        <form id="lookup-form" class="search-bar" role="search">
-          <label class="sr-only" for="lookup-text">Transaction hash or block-explorer link</label>
-          <input id="lookup-text" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Paste a transaction hash or explorer link" />
-          <button id="lookup" type="submit">Check transaction</button>
-        </form>
-        <p id="lookup-note" class="note lookup-note"></p>
-        <div class="saved">
-          <p class="saved-label">Try one</p>
-          <div class="examples">
-            <div id="saved-examples" class="examples-inline"></div>
-            <button id="example-lookup" type="button" class="quiet chip live">Live: an Ethereum Sepolia proof</button>
-          </div>
-          <p class="note">The first three are recorded from the Stellar test network and replayed here without contacting it, so they keep working after public servers drop the transaction. The live one asks a public Sepolia RPC now.</p>
+        <div class="lookup-heading">
+          <h2 id="lookup-heading">Explore a transaction</h2>
+          <span class="input-hint">Transaction hash or explorer link</span>
         </div>
-        <details id="network-settings" class="settings">
-          <summary>Network: <span id="network-summary">Ethereum Sepolia</span></summary>
-          <p>A block-explorer link selects its network automatically. Choose the network here when you paste a hash by itself.</p>
-          <div class="family" role="radiogroup" aria-label="Network family">
-            <label><input type="radio" name="family" value="ethereum" checked /> Ethereum</label>
-            <label><input type="radio" name="family" value="stellar" /> Stellar</label>
-          </div>
-          <!-- Radio buttons, not a select: WebKit draws a select with styles its own security policy then refuses. -->
-          <div id="lookup-network" class="networks" role="radiogroup" aria-label="Network"></div>
-        </details>
+        <form id="lookup-form" class="search-bar" role="search">
+          <span class="search-icon" aria-hidden="true"></span>
+          <label class="sr-only" for="lookup-text">Transaction hash or block-explorer link</label>
+          <input id="lookup-text" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Paste a transaction hash or link" />
+          <button id="lookup" type="submit">Check transaction <span aria-hidden="true">→</span></button>
+        </form>
+        <div class="lookup-options">
+          <details id="network-settings" class="settings">
+            <summary>Network: <span id="network-summary">Ethereum Sepolia</span></summary>
+            <p>A block-explorer link selects its network automatically. Choose the network here when you paste a hash by itself.</p>
+            <div class="family" role="radiogroup" aria-label="Network family">
+              <label><input type="radio" name="family" value="ethereum" checked /> Ethereum</label>
+              <label><input type="radio" name="family" value="stellar" /> Stellar</label>
+            </div>
+            <!-- Radio buttons, not a select: WebKit draws a select with styles its own security policy then refuses. -->
+            <div id="lookup-network" class="networks" role="radiogroup" aria-label="Network"></div>
+          </details>
+          <button id="example-lookup" type="button" class="text-button">Try a live example <span aria-hidden="true">↗</span></button>
+        </div>
+        <p id="lookup-note" class="note provider-note"></p>
+        <section class="saved" aria-labelledby="saved-heading">
+          <div class="saved-heading"><h3 id="saved-heading">Just looking? Start here.</h3><span class="saved-label">Saved examples</span></div>
+          <div id="saved-examples" class="examples"></div>
+          <p class="note">Recorded Stellar Testnet data, replayed locally. Any proof is checked again on this device; no chain provider is contacted.</p>
+        </section>
       </section>
 
       <p id="status" role="status" aria-live="polite"></p>
@@ -66,8 +81,10 @@
         </dl>
         <h3 class="panel-heading">What happened</h3>
         <p id="plain" class="plain" hidden></p>
-        <div id="proves-block" class="panel"><h3 class="panel-heading">What this proves</h3><ul id="proves"></ul></div>
-        <div id="unknown-block" class="panel unknown"><h3 class="panel-heading">What remains unknown</h3><ul id="unknown"></ul></div>
+        <div class="explanation-grid">
+          <div id="proves-block" class="panel"><h3 class="panel-heading">What this proves</h3><ul id="proves"></ul></div>
+          <div id="unknown-block" class="panel unknown"><h3 class="panel-heading">What remains unknown</h3><ul id="unknown"></ul></div>
+        </div>
         <div class="result-actions">
           <button id="share" type="button" class="quiet" hidden>Copy result link</button>
           <button id="download" type="button" class="quiet" hidden>Download evidence</button>
@@ -124,6 +141,7 @@
       </details>
 
       <footer>
+        <label class="motion-toggle"><input id="pause-stars" type="checkbox" /> Pause star motion</label>
         <p>Proof files are checked locally and are not uploaded. A transaction lookup sends the transaction hash and standard RPC requests to the provider named above. Stellar lookups may also request the ledger entries needed to read the called contract and verifier. The provider can see the request and ordinary connection information. Public proof inputs can identify or link people, so think before sharing a result or export.</p>
         <p>Open source, GPL-3.0-or-later. <a href="https://github.com/OGtev317/ZK-Proofscan" rel="noopener">Source, documentation and known limits</a>.</p>
       </footer>
