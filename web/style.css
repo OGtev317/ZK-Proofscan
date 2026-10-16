@@ -87,7 +87,7 @@ p { overflow-wrap: anywhere; }
 .nav-links { display: flex; align-items: center; gap: 1.5rem; }
 .nav-links a { color: var(--muted); font-size: .8rem; text-decoration: none; }
 .nav-links a:hover { color: var(--fg); }
-.hero { padding: clamp(3.5rem, 8vw, 6rem) 0 2.6rem; text-align: center; }
+.hero { padding: clamp(3.5rem, 8vw, 6rem) 0 2.6rem; text-align: center; background: radial-gradient(ellipse 75% 70% at 50% 50%, #000 70%, transparent 100%); }
 .eyebrow { margin: 0; color: var(--muted); font-size: .7rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }
 .lede { max-width: 42rem; margin: 0 auto; color: var(--muted); font-size: 1rem; line-height: 1.75; }
 .capabilities { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem 1.3rem; margin: 1.4rem 0 0; padding: 0; color: var(--muted); list-style: none; font-size: .72rem; }
@@ -128,7 +128,7 @@ button.quiet:hover:not(:disabled) { background: #181818; border-color: #555; }
 .examples button { margin: 0; }
 .saved .examples { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; }
 .saved .examples button { position: relative; min-height: 68px; padding: .85rem 1.6rem .85rem .85rem; border-radius: 9px; font-size: .78rem; font-weight: 500; line-height: 1.55; text-align: left; }
-.saved .examples button::after { content: ""; position: absolute; top: 1rem; right: .8rem; width: 5px; height: 5px; border-top: 1px solid #999; border-right: 1px solid #999; }
+.saved .examples button::after { content: ""; position: absolute; top: 50%; right: .95rem; width: 6px; height: 6px; margin-top: -3px; border-top: 1px solid #999; border-right: 1px solid #999; transform: rotate(45deg); }
 .saved .note { margin-top: .75rem; font-size: .7rem; }
 #status { max-width: 52rem; min-height: 1.5rem; margin: .75rem auto; color: var(--muted); font-size: .85rem; }
 #status:empty { display: none; }

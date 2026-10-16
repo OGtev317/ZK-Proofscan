@@ -49,16 +49,16 @@
         </form>
         <div class="lookup-options">
           <details id="network-settings" class="settings">
-            <summary>Network: <span id="network-summary">Ethereum Sepolia</span></summary>
+            <summary>Network: <span id="network-summary">Stellar testnet</span></summary>
             <p>A block-explorer link selects its network automatically. Choose the network here when you paste a hash by itself.</p>
             <div class="family" role="radiogroup" aria-label="Network family">
-              <label><input type="radio" name="family" value="ethereum" checked /> Ethereum</label>
-              <label><input type="radio" name="family" value="stellar" /> Stellar</label>
+              <label><input type="radio" name="family" value="stellar" checked /> Stellar</label>
+              <label><input type="radio" name="family" value="ethereum" /> Ethereum</label>
             </div>
             <!-- Radio buttons, not a select: WebKit draws a select with styles its own security policy then refuses. -->
             <div id="lookup-network" class="networks" role="radiogroup" aria-label="Network"></div>
           </details>
-          <button id="example-lookup" type="button" class="text-button">Try a live example <span aria-hidden="true">↗</span></button>
+          <button id="example-lookup" type="button" class="text-button">Try a live Sepolia lookup</button>
         </div>
         <p id="lookup-note" class="note provider-note"></p>
         <section class="saved" aria-labelledby="saved-heading">

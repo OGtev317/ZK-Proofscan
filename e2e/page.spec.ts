@@ -384,8 +384,10 @@ async function openWithProviders(page: Page, asked: string[], path = '/'): Promi
 test('looks up a transaction from an explorer link, explains it, and can share it', async ({ page }, info) => {
   const asked: string[] = [];
   const problems = await openWithProviders(page, asked);
-  await expect(page.locator('#lookup-note')).toContainText('Checking sends the transaction hash to sepolia.drpc.org');
+  // Stellar testnet is the default; the live example switches to Sepolia and says so.
+  await expect(page.locator('#lookup-note')).toContainText('Checking sends the transaction hash to soroban-testnet.stellar.org');
   await page.click('#example-lookup');
+  await expect(page.locator('#lookup-note')).toContainText('Checking sends the transaction hash to sepolia.drpc.org');
   await expect(outcome(page)).toHaveAttribute('data-outcome', 'valid');
   expect(asked).toEqual(['sepolia.drpc.org eth_chainId', 'sepolia.drpc.org eth_getTransactionByHash', 'sepolia.drpc.org eth_getTransactionReceipt']);
   await expect(page.locator('#plain')).toContainText('The proof is valid: snarkjs and ark-groth16, two independent verifiers, both accept it. What it shows: Someone had an email');

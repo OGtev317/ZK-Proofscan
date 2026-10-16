@@ -441,7 +441,7 @@ async function runSaved(example: SavedExample): Promise<void> {
 for (const example of SAVED_EXAMPLES) {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'quiet chip';
+  button.className = 'quiet';
   button.id = `saved-${example.id}`;
   button.textContent = example.label;
   button.addEventListener('click', () => void busy('Replaying the saved example and checking any proof on this device…', () => runSaved(example)));
@@ -475,7 +475,7 @@ share.addEventListener('click', () => {
   const network = params.get('network');
   const hash = params.get('tx');
   const family = network === null ? undefined : familyOf(network);
-  chooseFamily(family ?? 'ethereum', family === undefined ? undefined : network!);
+  chooseFamily(family ?? 'stellar', family === undefined ? undefined : network!);
   if (family !== undefined && hash !== null) {
     // The link names its network, so only that one is asked.
     chosenByHand = true;
