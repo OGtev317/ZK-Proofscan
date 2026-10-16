@@ -506,7 +506,7 @@ test('replays a saved example without contacting any network, and says so', asyn
     await expect(page.locator('#status')).toHaveText('Summary copied as plain text.');
     const copied = await page.evaluate(() => navigator.clipboard.readText());
     expect(copied.split('\n')[0]).toBe('LumenLenz result (experimental, unaudited; the wording has not been reviewed by a qualified person)');
-    for (const part of ['The proof passed on this device', 'Proof check: Passed: two independent verifiers agree.', 'What this proves:\n- Mathematical statement only', 'What remains unknown:\n- About the key:', 'Check it yourself: http://127.0.0.1:4317/?example=stellar-private-payment']) expect(copied).toContain(part);
+    for (const part of ['The proof passed on this device', 'Read from the network: Succeeded. The Stellar test network, ledger 5190131', 'Proof check: Passed: two independent verifiers agree.', 'What this proves:\n- Mathematical statement only', 'What remains unknown:\n- About the key:', 'Check it yourself: http://127.0.0.1:4317/?example=stellar-private-payment']) expect(copied).toContain(part);
   }
   // The call's arguments and the pool's events, named by the pool's own interface, from the recording alone.
   await expect(page.locator('#facts')).toContainText('a call to transact(proof: {asp_membership_root: 0');

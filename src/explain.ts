@@ -64,7 +64,8 @@ function foundIn(source: ChainSource): string {
  */
 export function explainedText(explained: Explained, link?: string): string {
   const lines = ['LumenLenz result (experimental, unaudited; the wording has not been reviewed by a qualified person)', '', explained.summary, ''];
-  if (explained.status !== undefined) lines.push(`Read from the network: ${explained.status.text}. ${explained.status.note}`);
+  const sentence = (text: string): string => `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
+  if (explained.status !== undefined) lines.push(`Read from the network: ${explained.status.text}. ${sentence(explained.status.note)}`);
   lines.push(`Proof check: ${explained.proofCheck.text}.${explained.proofCheck.detail === undefined ? '' : ` ${explained.proofCheck.detail}`}`);
   lines.push(`Settlement: ${explained.settlement.text}. ${explained.settlement.detail}`);
   if (explained.proves.length > 0) lines.push('', 'What this proves:', ...explained.proves.map((line) => `- ${line}`));
