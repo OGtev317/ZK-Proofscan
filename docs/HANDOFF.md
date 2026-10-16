@@ -1,21 +1,15 @@
 # LumenLenz handoff
 
-## Product-lenses worktree (2026-10-15)
+## Product lenses (2026-10-15)
 
-On `feat/product-lenses`, based on `fdb0525`: transaction stories, a narrow
-Soroswap-compatible decoder, provider retention reporting and opt-in archive
-fallback, profiles/directory derived from the pinned key registry, and local
-unsigned-XDR inspection with separately consented read-only simulation.
-See [Product lenses](PRODUCT_LENSES.md) for exact coverage, SDK/CLI use,
-trust/privacy boundaries and validation. These additions are local development
-work, not part of the deployed site or the published 0.1.0 package.
-No signing, submission, new paid service, push or deployment is authorized by
-the worktree request. No explanation has gained a qualified review.
-
-The original repository was moved during this work to a nested local folder
-inside the new worktree; Git's worktree path metadata was repaired without
-moving/deleting any files. Unrelated nested project directories must remain
-untracked and must never be staged with this feature.
+Transaction stories, a narrow Soroswap-compatible decoder, provider retention
+reporting (and a second provider the command-line operator may name),
+profiles and a directory derived from the pinned key registry, and local
+unsigned-XDR inspection. See [Product lenses](PRODUCT_LENSES.md). The owner
+dropped the page's built-in archive provider and all simulation of unsigned
+transactions before release, since neither had approval to send data to a
+provider. On the page; not yet in an npm release. No explanation has gained a
+qualified review.
 
 ## Prototype (2026-10-11)
 

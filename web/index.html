@@ -4,11 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
-    <!-- External requests require a lookup/shared transaction link, or a separate simulation consent. Archive fallback is opt-in. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self'; connect-src 'self' https://sepolia.drpc.org https://eth.drpc.org https://base.drpc.org https://base-sepolia.drpc.org https://optimism.drpc.org https://arbitrum.drpc.org https://polygon-bor.publicnode.com https://sourcify.dev https://soroban-testnet.stellar.org https://mainnet.sorobanrpc.com https://archive-rpc.lightsail.network; base-uri 'none'; form-action 'none'" />
+    <!-- The page loads nothing from other sites. It contacts a named public RPC only after a transaction lookup or when opening a shared result. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self'; img-src 'self'; connect-src 'self' https://sepolia.drpc.org https://eth.drpc.org https://base.drpc.org https://base-sepolia.drpc.org https://optimism.drpc.org https://arbitrum.drpc.org https://polygon-bor.publicnode.com https://sourcify.dev https://soroban-testnet.stellar.org https://mainnet.sorobanrpc.com; base-uri 'none'; form-action 'none'" />
     <meta name="referrer" content="no-referrer" />
     <meta name="description" content="Paste a blockchain transaction and get a plain-English explanation of the zero-knowledge proof it contains. Prototype, unaudited." />
     <title>LumenLenz</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="./lumenlenz-icon.png" />
+    <link rel="apple-touch-icon" href="./lumenlenz-icon.png" />
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
@@ -19,7 +21,7 @@
     </div>
     <main>
       <nav class="site-header" aria-label="Main navigation">
-        <a class="brand" href="./" aria-label="LumenLenz home"><span class="brand-mark" aria-hidden="true"></span>LumenLenz</a>
+        <a class="brand" href="./" aria-label="LumenLenz home"><img class="brand-logo" src="./lumenlenz-logo.png" alt="LumenLenz" width="102" height="72" /></a>
         <div class="nav-links">
           <a href="https://github.com/OGtev317/ZK-Proofscan/blob/main/docs/DEVELOPERS.md" rel="noopener">Developer guide</a>
           <a href="https://github.com/OGtev317/ZK-Proofscan" rel="noopener">Source <span aria-hidden="true">↗</span></a>
@@ -61,11 +63,6 @@
           <button id="example-lookup" type="button" class="text-button">Try a live Sepolia lookup</button>
         </div>
         <p id="lookup-note" class="note provider-note"></p>
-        <details class="settings archive-settings">
-          <summary>Older Stellar transactions</summary>
-          <label><input id="archive-opt-in" type="checkbox" /> On mainnet, try archive-rpc.lightsail.network if the primary provider has no transaction or is unavailable.</label>
-          <p class="note">Off by default. Opting in sends the hash to this additional provider. Archive ledger support does not guarantee lookup by transaction hash or historical verification keys. Saved examples never use it.</p>
-        </details>
         <div id="availability" class="note" role="status" hidden></div>
         <section class="saved" aria-labelledby="saved-heading">
           <div class="saved-heading"><h3 id="saved-heading">Just looking? Start here.</h3><span class="saved-label">Saved examples</span></div>
@@ -121,10 +118,6 @@
           <textarea id="unsigned-xdr" rows="5" spellcheck="false" autocomplete="off"></textarea>
           <div class="examples"><button id="inspect-xdr" type="button" class="quiet">Inspect locally</button><button id="clear-xdr" type="button" class="text-button">Clear</button></div>
           <div id="preview-result" aria-live="polite" hidden></div>
-          <label><input id="simulation-consent" type="checkbox" /> Send this unsigned XDR to <span id="simulation-provider">soroban-testnet.stellar.org</span> for simulation.</label>
-          <p class="note">A prediction only. The provider can see the complete public transaction and connection metadata. Authorization is recorded, not enforced. No signing, wallet connection, or submission occurs.</p>
-          <button id="simulate-xdr" type="button" class="quiet" disabled>Simulate unsigned transaction</button>
-          <div id="simulation-result" aria-live="polite" hidden></div>
         </div>
       </details>
 
@@ -172,7 +165,7 @@
 
       <footer>
         <label class="motion-toggle"><input id="pause-stars" type="checkbox" /> Pause star motion</label>
-        <p>Proof files are checked locally and are not uploaded. A transaction lookup sends the transaction hash and standard RPC requests to the provider named above. Stellar lookups may also request ledger entries and provider health. Opt-in archive fallback sends the hash to the named additional provider. Local XDR inspection sends nothing; a separately approved simulation sends the full unsigned transaction to its selected provider. Providers can see requests and ordinary connection information. Public proof inputs can identify or link people, so think before sharing a result or export.</p>
+        <p>Proof files are checked locally and are not uploaded. A transaction lookup sends the transaction hash and standard RPC requests to the provider named above. Stellar lookups may also request ledger entries and provider health. Inspecting an unsigned transaction happens on this device and sends nothing. Providers can see requests and ordinary connection information. Public proof inputs can identify or link people, so think before sharing a result or export.</p>
         <p>Open source, GPL-3.0-or-later. <a href="https://github.com/OGtev317/ZK-Proofscan" rel="noopener">Source, documentation and known limits</a>.</p>
       </footer>
     </main>

@@ -13,6 +13,23 @@ export interface TransactionStory {
 
 /** Recorded public effects, never a reconstruction of a private witness. */
 export function transactionStory(facts: TransactionFacts): TransactionStory {
+  if (facts.family !== 'stellar') {
+    // Structured movements are read for Stellar only; never report "0 permissions" beside an allowance the facts flag.
+    const tokens = facts.status === 'succeeded' ? (facts.tokens ?? []) : [];
+    return {
+      title: facts.status !== 'succeeded' ? 'The transaction failed; requested actions did not commit.' : facts.action,
+      evidence: `Execution effects as reported by ${facts.provider}; not independently authenticated against consensus.`,
+      movements: [],
+      permissions: tokens.filter((line) => line.startsWith('allowed ')),
+      contracts: facts.to === undefined ? [] : [facts.to],
+      fee: facts.fee ?? 'Fee not available in the recorded data.',
+      notes: [
+        'Structured asset movements are read for Stellar transactions only; this transaction\'s token activity is listed in its facts.',
+        'Private witness values and hidden participants or amounts cannot be reconstructed from a proof.',
+        'A token contract can claim any name; an event label alone does not authenticate that claim.',
+      ],
+    };
+  }
   const movements = facts.status === 'succeeded' ? (facts.movements ?? []) : [];
   const effects = movements.filter((m) => m.kind !== 'approve').length;
   const permissions = movements.filter((m) => m.kind === 'approve').length;

@@ -5,7 +5,7 @@ import type { ProofInputs } from '../src/inputs.js';
 import type { Report } from '../src/report.js';
 import type { SwiftnessOutcome } from './swiftness.js';
 
-export type Request = { id: number; kind: 'check'; inputs: ProofInputs } | { id: number; kind: 'rerun'; export: string } | { id: number; kind: 'lookup'; network: string; hash: string; saved?: string; archive?: boolean };
+export type Request = { id: number; kind: 'check'; inputs: ProofInputs } | { id: number; kind: 'rerun'; export: string } | { id: number; kind: 'lookup'; network: string; hash: string; saved?: string };
 
 export type Response =
   | { id: number; ok: true; kind: 'check'; report: Report }

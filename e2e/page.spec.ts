@@ -554,6 +554,8 @@ test('describes an unlimited token allowance in an ordinary Ethereum transaction
   await expect(page.locator('#plain')).toContainText('a call to approve on contract 0xe7802782ac7679b4ff0e7106b3230adfef251688');
   await expect(page.locator('#plain')).toContainText('to spend an UNLIMITED amount of a token calling itself HASH (0xe7802782ac7679b4ff0e7106b3230adfef251688)');
   await expect(page.locator('#plain')).toContainText("A token's name is what its own contract claims.");
+  // Structured stories are Stellar-only: none here to understate the allowance flagged above.
+  await expect(page.locator('#transaction-story')).toBeHidden();
   await expect(page.locator('#facts')).toContainText('Token activity');
   expect(asked).toEqual(['eth.drpc.org eth_chainId', 'eth.drpc.org eth_getTransactionByHash', 'eth.drpc.org eth_getTransactionReceipt', 'eth.drpc.org eth_call', 'eth.drpc.org eth_call']);
   expect(problems).toEqual([]);

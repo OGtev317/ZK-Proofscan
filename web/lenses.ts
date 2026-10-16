@@ -5,8 +5,6 @@ import { transactionStory } from '../src/story.js';
 import type { TransactionFacts } from '../src/chain/facts.js';
 import type { ChainSource } from '../src/chain/source.js';
 import type { Report } from '../src/report.js';
-import { PAGE_RPCS } from '../src/chain/reference.js';
-import { httpRpc } from '../src/chain/rpc.js';
 import type { LookupAvailability } from '../src/chain/availability.js';
 import type { AuthorizationNode, PreviewResult } from '../src/chain/preview.js';
 
@@ -31,9 +29,11 @@ const detail = (label: string, text: string): HTMLDetailsElement => {
 export function renderLenses(facts?: TransactionFacts, report?: Report, source?: ChainSource): void {
   const storyBox = get('transaction-story');
   storyBox.replaceChildren();
-  storyBox.hidden = facts === undefined;
-  if (facts !== undefined) {
-    const story = transactionStory(facts);
+  // Structured movements are read for Stellar only; an Ethereum transaction's token activity is in its facts.
+  const storied = facts?.family === 'stellar' ? facts : undefined;
+  storyBox.hidden = storied === undefined;
+  if (storied !== undefined) {
+    const story = transactionStory(storied);
     storyBox.append(node('h3', 'Transaction story'), node('p', story.title), node('p', story.evidence));
     const flow = document.createElement('ol');
     flow.className = 'movement-flow';
@@ -106,35 +106,24 @@ export function setupLenses(): void {
 
   const input = get<HTMLTextAreaElement>('unsigned-xdr');
   const inspect = get<HTMLButtonElement>('inspect-xdr');
-  const simulate = get<HTMLButtonElement>('simulate-xdr');
-  const consent = get<HTMLInputElement>('simulation-consent');
   const output = get('preview-result');
-  const prediction = get('simulation-result');
   const choices = [...document.querySelectorAll<HTMLInputElement>('input[name="preview-network"]')];
   const network = (): string => choices.find((choice) => choice.checked)!.value;
   let epoch = 0;
   let inspected: PreviewResult | undefined;
-  const enabled = (): void => { simulate.disabled = !consent.checked || inspected?.kind !== 'inspected' || inspected.signatures > 0 || inspected.embeddedAuthorizationSignatures; };
   const reset = (): void => {
     epoch++;
     inspected = undefined;
-    consent.checked = false;
-    output.replaceChildren(); prediction.replaceChildren();
-    output.hidden = true; prediction.hidden = true;
-    get('simulation-provider').textContent = new URL(PAGE_RPCS[network()]!).hostname;
-    enabled();
+    output.replaceChildren();
+    output.hidden = true;
   };
   input.addEventListener('input', reset);
   choices.forEach((choice) => choice.addEventListener('change', reset));
-  consent.addEventListener('change', enabled);
   get('clear-xdr').addEventListener('click', () => { input.value = ''; reset(); });
   inspect.addEventListener('click', () => {
     const mine = ++epoch;
     inspected = undefined;
-    consent.checked = false;
-    prediction.replaceChildren(); prediction.hidden = true;
     output.textContent = 'Inspecting locally…'; output.hidden = false;
-    enabled();
     const text = input.value;
     const selected = network();
     void import('../src/chain/preview.js').then(({ inspectStellarTransaction }) => {
@@ -149,24 +138,6 @@ export function setupLenses(): void {
         for (const auth of operation.authorizations) output.append(node('p', `Requested signer: ${auth.signer}`), invocationTree([auth.invocation]));
       }
       output.append(list(inspected.warnings));
-      enabled();
     }).catch(() => { if (mine === epoch) output.textContent = 'The local inspector could not start.'; });
-  });
-  simulate.addEventListener('click', () => {
-    if (simulate.disabled || !consent.checked || inspected?.kind !== 'inspected') return;
-    const mine = epoch;
-    const text = input.value;
-    const selected = network();
-    simulate.disabled = true;
-    prediction.hidden = false; prediction.textContent = 'Simulating on the selected provider; not submitting…';
-    void import('../src/chain/preview.js').then(async ({ simulateStellarTransaction }) => {
-      const result = await simulateStellarTransaction(text, selected, httpRpc(PAGE_RPCS[selected]!));
-      if (mine !== epoch) return;
-      prediction.replaceChildren(node('h3', result.kind === 'simulated' ? 'Simulation prediction — not executed' : 'Simulation not completed'), node('p', result.message));
-      if (result.provider) prediction.append(node('p', `Provider: ${result.provider}; ledger: ${result.ledger ?? 'not supplied'}`));
-      if (result.minResourceFeeStroops) prediction.append(node('p', `Estimated minimum resource fee: ${result.minResourceFeeStroops} stroops, in addition to the network inclusion fee.`));
-      for (const auth of result.authorizations ?? []) prediction.append(node('p', `Predicted authorization: ${auth.signer}`), invocationTree([auth.invocation]));
-      if (result.stateChanges) prediction.append(detail(`${result.stateChanges.length} predicted ledger-entry changes${result.moreStateChanges ? ' (truncated)' : ''}`, result.stateChanges.map((change) => `${change.type}: ${change.key}`).join('\n') || 'No ledger-entry changes were reported; this is not a guarantee of no effects.'));
-    }).catch(() => { if (mine === epoch) prediction.textContent = 'Simulation could not be completed; nothing was submitted.'; }).finally(() => { if (mine === epoch) enabled(); });
   });
 }

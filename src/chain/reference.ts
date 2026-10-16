@@ -6,8 +6,6 @@
  */
 
 export type ChainFamily = 'ethereum' | 'stellar';
-/** Used only after explicit visitor consent. Method coverage is provider-dependent. */
-export const STELLAR_ARCHIVE_RPC = 'https://archive-rpc.lightsail.network/';
 
 export interface TransactionReference {
   family: ChainFamily;

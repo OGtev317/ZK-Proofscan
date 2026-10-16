@@ -1,12 +1,16 @@
-# Product lenses (development branch)
+# Product lenses
 
-Implemented in a separate worktree on 2026-10-15, based on `fdb0525`.
-Not a deployment or a new npm release. No wallet, signing, or submission.
+Added 2026-10-15. On the page since then; not yet in an npm release. No
+wallet, signing, or submission. Two parts of the first draft were removed by
+the owner's decision before release: an archive provider built into the page,
+and simulation of unsigned transactions.
 
 ## 1. Transaction story
 
 Stellar transaction results now carry JSON-safe structured movements beside
-the existing sentences. The page shows assets and amounts, a movement flow
+the existing sentences. Ethereum results have none yet, so the page shows no
+story for them, and `transactionStory` gives an Ethereum transaction its action
+and any allowance sentences rather than a count of decoded movements. The page shows assets and amounts, a movement flow
 with expandable full addresses, fee charged, contracts, spending permissions,
 and limits. `transactionStory(facts)` exposes the same view to developers.
 Failed transactions never display requested token effects as committed.
@@ -36,17 +40,16 @@ Source read and pinned for the format:
 [router events](https://github.com/soroswap/core/blob/6eade008ee6794075ad941609e0fef0d1124d3eb/contracts/router/src/event.rs),
 [router calls](https://github.com/soroswap/core/blob/6eade008ee6794075ad941609e0fef0d1124d3eb/contracts/router/src/lib.rs).
 
-## 3. Availability and optional archive fallback
+## 3. Availability, and an archive provider the operator chooses
 
 Live Stellar lookups now query `getHealth` and display a validated,
 provider-reported ledger retention range. `NOT_FOUND` is not an invalid proof,
 and a hash alone cannot establish that a transaction expired from retention.
 Network checks and local transaction-hash checks remain in effect.
 
-On the page an unchecked-by-default control permits a fallback to
-`archive-rpc.lightsail.network` for mainnet only. The hash is sent there only
-after consent and a missing/unavailable primary response. Saved examples
-remain completely offline. For the CLI/library, the operator can configure:
+The page asks no provider beyond those it already names. On the command line
+the operator can name a second provider to try when the first has no record
+of the transaction or does not answer:
 
 ```sh
 STELLAR_ARCHIVE_RPC_URL=https://operator-chosen-testnet-provider.example
@@ -61,12 +64,8 @@ Never put credential-bearing provider URLs in public output.
 says archive support may apply only to `getLedgers`. It does not guarantee
 `getTransaction(hash)` or historical contract/key storage. This implementation
 tries the explicitly chosen provider without claiming those guarantees.
-An actual read-only `getHealth` request on 2026-10-15 to the public Lightsail
-archive returned a healthy status with a 64-ledger live retention window;
-that does not measure its full historical capabilities. No historical
-transaction recovery is claimed from that check.
 
-## 5. Proof profiles and directory
+## 4. Proof profiles and directory
 
 The page's circuit directory is derived from the existing SHA-256-pinned
 registry, loaded only when opened. A checked proof gets a profile with its
@@ -80,61 +79,41 @@ Missing reviewer/date never produces a reviewed label. Even a recorded
 review is distinguished from authentication of reviewer qualifications.
 Invalid proofs do not get a successful claim; unknown circuits stay unknown.
 
-## 6. Before you sign
+## 5. Before you sign
 
 Local inspection accepts a bounded, canonical, base64 Stellar transaction
 envelope, with an explicitly selected testnet/mainnet passphrase. XDR itself
 does not identify the network. It shows requested operations, account/fee
 payer, maximum fee in stroops, signature presence, and bounded nested
 authorization trees. Other operation kinds remain explicitly undecoded.
-No transaction is written to browser storage, URL parameters or an export.
-
-Simulation is a separate, consent-gated action. It sends the complete unsigned
-public transaction to the selected provider using `simulateTransaction` with
-`authMode: record`. The provider/network is checked first. Signed envelopes
-and embedded authorization signatures are refused before any RPC request.
-Only one unsigned Soroban operation is supported for simulation; fee bumps
-and classic transactions remain inspect-only.
-
-The result is a **prediction**, not execution: provider, ledger, estimated
-minimum resource fee (additional to inclusion fees), predicted authorization
-trees, and up to 20 predicted ledger-entry change keys. State values and
-balance deltas are not interpreted. Signature authorization is not enforced
-in recording mode. State can change before execution. No proof, signature,
-economic outcome or transaction safety is guaranteed.
+No transaction is written to browser storage, URL parameters or an export,
+and nothing is sent anywhere: there is no simulation, on the page, the
+command line or in the library.
 
 ```sh
 lumenlenz inspect unsigned.xdr --chain stellar-testnet
 lumenlenz inspect unsigned.xdr --chain stellar-testnet --json
-# Explicit consent to send the unsigned XDR to the selected provider:
-lumenlenz inspect unsigned.xdr --chain stellar-testnet --simulate
 ```
 
-SDK: `inspectStellarTransaction(xdrText, network)` is offline;
-`simulateStellarTransaction(xdrText, network, rpcClient)` is explicit online
-simulation. No new verifier library, provider subscription or hosted server.
+SDK: `inspectStellarTransaction(xdrText, network)`, offline. No new verifier
+library, provider subscription or hosted server.
 
 Primary references:
 [getHealth](https://developers.stellar.org/docs/data/apis/rpc/api-reference/methods/getHealth),
-[getTransaction](https://developers.stellar.org/docs/data/apis/rpc/api-reference/methods/getTransaction),
-[simulateTransaction](https://developers.stellar.org/docs/data/apis/rpc/api-reference/methods/simulateTransaction).
+[getTransaction](https://developers.stellar.org/docs/data/apis/rpc/api-reference/methods/getTransaction).
 
 ## Validation and boundaries
 
 Unit tests cover stories, positive/negative swap evidence, retention-window
 validation, fallback provenance/error redaction, unsigned inspection,
-signature refusal, authorization recursion, simulation output and profile
-review boundaries. Browser tests cover offline/consent behavior, archive
-opt-in, saved proof stories/profiles, the pinned directory and mobile width,
+signature notices, authorization recursion and profile review boundaries.
+Browser tests cover offline inspection, saved proof stories/profiles, the pinned directory and mobile width,
 on Chromium and WebKit. Existing proof verification/export tests still run.
 The package's existing production-dependency audit and packaging check also
-run. No real swap, production simulation, qualified review, phone-device
+run. No real swap, qualified review, phone-device
 validation, deployment, push or npm publication is implied by these tests.
 
-Validated 2026-10-15: type checking; 304 unit tests; the complete 74-test
-Chromium/WebKit suite, followed by a 14-test rerun of the feature suite after
-the final story-copy adjustment; production browser build; fresh-install
-`release:check -- --quick`; production audit (0 vulnerabilities); and
-`git diff --check`. The local transaction-story page was also inspected
-visually. Development-tool dependency advisories from `npm ci` were not
-fixed by changing the dependency tree in this feature branch.
+The first draft passed type checking, 304 unit tests and 74 browser tests on
+2026-10-15. A review then found that the story said "0 decoded spending
+permissions" for an Ethereum transaction granting an unlimited allowance; it
+was fixed, with a test, before release.

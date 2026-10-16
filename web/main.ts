@@ -69,7 +69,7 @@ const examples = [$<HTMLButtonElement>('example-semaphore'), $<HTMLButtonElement
 
 /** Longer than any supported proof takes on a phone; a check that runs past it is stopped and reported as not checked. */
 const TIME_LIMIT_MS = 300_000;
-type Sendable = { kind: 'check'; inputs: ProofInputs } | { kind: 'rerun'; export: string } | { kind: 'lookup'; network: string; hash: string; saved?: string; archive?: boolean };
+type Sendable = { kind: 'check'; inputs: ProofInputs } | { kind: 'rerun'; export: string } | { kind: 'lookup'; network: string; hash: string; saved?: string };
 /**
  * Each check runs in a new worker that is discarded afterwards, so no
  * verifier instance, and nothing a malformed file did to one, outlasts the
@@ -377,7 +377,7 @@ async function lookUp(): Promise<void> {
     if ('reason' in next) throw new Error(next.reason);
     resolved = next;
     if (index > 0) status.textContent = `Not found on ${NETWORK_LABELS[tried[index - 1]!]}; trying ${NETWORK_LABELS[name]}…`;
-    response = await ask({ kind: 'lookup', network: next.network, hash: next.hash, archive: next.network === 'stellar-mainnet' && $<HTMLInputElement>('archive-opt-in').checked });
+    response = await ask({ kind: 'lookup', network: next.network, hash: next.hash });
     if (mine !== latest) return;
     const notFound = response.ok && response.kind === 'lookup' && !response.found && response.facts === undefined && response.reason.startsWith('the provider has no such transaction');
     if (!notFound) break;

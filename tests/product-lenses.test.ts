@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { Account, Address, Asset, Contract, nativeToScVal, Networks, Operation, StrKey, TransactionBuilder, xdr } from '@stellar/stellar-base';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import { decodeSoroswapSwap } from '../src/chain/swaps.js';
-import { inspectStellarTransaction, simulateStellarTransaction } from '../src/chain/preview.js';
+import { inspectStellarTransaction } from '../src/chain/preview.js';
 import { providerWindow, withStellarAvailability } from '../src/chain/availability.js';
 import { RpcError, type RpcClient } from '../src/chain/rpc.js';
 import type { ContractSpec } from '../src/chain/soroban-spec.js';
@@ -56,6 +56,14 @@ function swapParts() {
 }
 
 describe('transaction stories', () => {
+  it('never reports zero permissions for an Ethereum transaction whose facts flag an allowance', () => {
+    const allowance = 'allowed 0xbb to spend an UNLIMITED amount of a token calling itself HASH (0xe7802782ac7679b4ff0e7106b3230adfef251688)';
+    const story = transactionStory({ family: 'ethereum', provider: 'eth.example', network: 'ethereum', transaction: '0x1', position: 1, status: 'succeeded', from: '0xaa', action: 'a call to approve on contract 0xe7802782ac7679b4ff0e7106b3230adfef251688', tokens: [allowance] });
+    expect(story.title).toBe('a call to approve on contract 0xe7802782ac7679b4ff0e7106b3230adfef251688');
+    expect(story.permissions).toEqual([allowance]);
+    expect(story.notes[0]).toContain('Stellar transactions only');
+    expect(JSON.stringify(story)).not.toContain('0 decoded');
+  });
   it('keeps effects, fees, permission grants and private-data limits separate', () => {
     const story = transactionStory({ ...facts, movements: [{ kind: 'transfer', asset: { kind: 'native' }, amount: '125000000', from: USER, to: OTHER }, { kind: 'approve', asset: { kind: 'native' }, amount: ((1n << 127n) - 1n).toString(), from: USER, to: OTHER, until: 500 }] });
     expect(story.movements[0]?.label).toContain('12.5 XLM');
@@ -140,7 +148,7 @@ describe('provider history and explicit archive fallback', () => {
   });
 });
 
-describe('before-you-sign inspection and simulation', () => {
+describe('before-you-sign inspection, on this device only', () => {
   it('inspects unsigned calls locally and states what was not checked', () => {
     const result = inspectStellarTransaction(envelope(), 'stellar-testnet');
     expect(result).toMatchObject({ kind: 'inspected', source: USER, feePayer: USER, signatures: 0, maxFeeStroops: '100' });
@@ -152,16 +160,13 @@ describe('before-you-sign inspection and simulation', () => {
     const result = inspectStellarTransaction(envelope(Operation.payment({ destination: OTHER, asset: Asset.native(), amount: '1.2' })), 'stellar-mainnet');
     expect(result.kind === 'inspected' && result.operations[0]?.description).toContain('Requested payment of 1.2000000 XLM');
   });
-  it('keeps fee-bump fee payers separate and refuses their simulation', async () => {
+  it('keeps fee-bump fee payers separate', () => {
     const inner = TransactionBuilder.fromXDR(envelope(), Networks.TESTNET);
     if ('innerTransaction' in inner) throw new Error('expected ordinary transaction');
     const feeBump = TransactionBuilder.buildFeeBumpTransaction(OTHER, '100', inner, Networks.TESTNET).toXDR();
     expect(inspectStellarTransaction(feeBump, 'stellar-testnet')).toMatchObject({ kind: 'inspected', source: USER, feePayer: OTHER, signatures: 0 });
-    const asked: string[] = [];
-    expect((await simulateStellarTransaction(feeBump, 'stellar-testnet', rpc({}, asked))).kind).toBe('not-simulated');
-    expect(asked).toEqual([]);
   });
-  it('runs the offline inspect CLI and rejects simulation flags on other commands', () => {
+  it('runs the offline inspect CLI, which has no way to send the transaction anywhere', () => {
     const folder = mkdtempSync(join(tmpdir(), 'lumenlenz-inspect-'));
     const file = join(folder, 'unsigned.xdr');
     writeFileSync(file, envelope());
@@ -170,7 +175,7 @@ describe('before-you-sign inspection and simulation', () => {
     expect(result.status).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({ kind: 'inspected', source: USER });
     expect(result.stdout).not.toContain(envelope());
-    const misuse = spawnSync(process.execPath, [cli, 'lookup', 'a'.repeat(64), '--simulate'], { encoding: 'utf8' });
+    const misuse = spawnSync(process.execPath, [cli, 'inspect', file, '--chain', 'stellar-testnet', '--simulate'], { encoding: 'utf8' });
     expect(misuse.status).toBe(64);
   });
   it.each(['', 'SSECRET', 'a'.repeat(262145), '<script>alert(1)</script>'])('refuses malformed/oversize inputs without echoing them', (text) => {
@@ -181,12 +186,12 @@ describe('before-you-sign inspection and simulation', () => {
   it('requires an explicit supported network', () => {
     expect(inspectStellarTransaction(envelope(), 'ethereum')).toEqual({ kind: 'not-inspected', reason: 'Choose Stellar testnet or mainnet explicitly.' });
   });
-  it('refuses signed envelopes before making any request', async () => {
+  it('says when an envelope is already signed, without authenticating the signatures', () => {
     const parsed = xdr.TransactionEnvelope.fromXDR(envelope(), 'base64');
     parsed.v1().signatures([new xdr.DecoratedSignature({ hint: Buffer.alloc(4), signature: Buffer.alloc(64) })]);
-    const asked: string[] = [];
-    expect((await simulateStellarTransaction(parsed.toXDR('base64'), 'stellar-testnet', rpc({}, asked))).kind).toBe('not-simulated');
-    expect(asked).toEqual([]);
+    const result = inspectStellarTransaction(parsed.toXDR('base64'), 'stellar-testnet');
+    expect(result).toMatchObject({ kind: 'inspected', signatures: 1 });
+    expect(result.kind === 'inspected' && result.warnings).toContain('This envelope contains signatures; this tool does not authenticate them.');
   });
   it('reads nested authorization trees and refuses excessive depth', () => {
     const result = inspectStellarTransaction(withAuthorization(authEntry(2)), 'stellar-testnet');
@@ -194,40 +199,10 @@ describe('before-you-sign inspection and simulation', () => {
     expect(result.operations[0]?.authorizations[0]?.invocation.children[0]?.call).toContain('transfer');
     expect(inspectStellarTransaction(withAuthorization(authEntry(15)), 'stellar-testnet')).toMatchObject({ kind: 'not-inspected', reason: 'The authorization tree exceeds the inspection limit.' });
   });
-  it('will not send embedded authorization signatures to a simulator', async () => {
+  it('notices authorization signatures embedded in a call', () => {
     const entry = authEntry();
     entry.credentials(xdr.SorobanCredentials.sorobanCredentialsAddress(new xdr.SorobanAddressCredentials({ address: Address.fromString(USER).toScAddress(), nonce: xdr.Int64.fromString('1'), signatureExpirationLedger: 500, signature: xdr.ScVal.scvVec([]) })));
-    const asked: string[] = [];
-    expect((await simulateStellarTransaction(withAuthorization(entry), 'stellar-testnet', rpc({}, asked))).kind).toBe('not-simulated');
-    expect(asked).toEqual([]);
-  });
-  it('shows predicted authorization trees and bounded ledger-entry changes', async () => {
-    const key = xdr.LedgerKey.contractCode(new xdr.LedgerKeyContractCode({ hash: Buffer.alloc(32, 2) as never })).toXDR('base64');
-    const result = await simulateStellarTransaction(envelope(), 'stellar-testnet', rpc({ getNetwork: { passphrase: Networks.TESTNET }, simulateTransaction: { latestLedger: 123, results: [{ auth: [authEntry(2).toXDR('base64')] }], stateChanges: Array.from({ length: 25 }, () => ({ type: 'updated', key })) } }));
-    expect(result.kind).toBe('simulated');
-    expect(result.authorizations?.[0]?.invocation.children).toHaveLength(1);
-    expect(result.stateChanges).toHaveLength(20);
-    expect(result.moreStateChanges).toBe(true);
-    expect(result.message).toContain('NOT enforced');
-  });
-  it('checks the network before sending the XDR', async () => {
-    const asked: string[] = [];
-    expect((await simulateStellarTransaction(envelope(), 'stellar-testnet', rpc({ getNetwork: { passphrase: Networks.PUBLIC } }, asked))).kind).toBe('not-simulated');
-    expect(asked).toEqual(['getNetwork']);
-  });
-  it('only calls getNetwork and simulateTransaction, and records rather than enforces auth', async () => {
-    const calls: { method: string; params: unknown }[] = [];
-    const provider: RpcClient = { provider: 'rpc.example', async call(method, params) { calls.push({ method, params }); return method === 'getNetwork' ? { passphrase: Networks.TESTNET } : { latestLedger: 123, results: [{ auth: [] }], minResourceFee: '456', stateChanges: [] }; } };
-    expect(await simulateStellarTransaction(envelope(), 'stellar-testnet', provider)).toMatchObject({ kind: 'simulated', ledger: 123, minResourceFeeStroops: '456', authorizations: [], stateChanges: [] });
-    expect(calls.map((c) => c.method)).toEqual(['getNetwork', 'simulateTransaction']);
-    expect(calls[1]?.params).toMatchObject({ authMode: 'record' });
-  });
-  it('refuses incomplete simulation or raw provider error output', async () => {
-    for (const reply of [{}, { error: 'external unsafe error' }, { latestLedger: 123, results: [{ auth: ['bad-xdr'] }] }]) {
-      const result = await simulateStellarTransaction(envelope(), 'stellar-testnet', rpc({ getNetwork: { passphrase: Networks.TESTNET }, simulateTransaction: reply }));
-      expect(result.kind).toBe('simulation-failed');
-      expect(JSON.stringify(result)).not.toContain('external unsafe error');
-    }
+    expect(inspectStellarTransaction(withAuthorization(entry), 'stellar-testnet')).toMatchObject({ kind: 'inspected', embeddedAuthorizationSignatures: true });
   });
 });
 

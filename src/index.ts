@@ -49,6 +49,6 @@ export type { ProofInputs } from './inputs.js';
 export type { LookedUp, ProofPaths } from './node/run.js';
 export { transactionStory, type TransactionStory } from './story.js';
 export { proofProfile, circuitDirectory, reviewText, type ProofProfile } from './profiles.js';
-export { inspectStellarTransaction, simulateStellarTransaction, type TransactionPreview, type PreviewResult, type SimulationResult } from './chain/preview.js';
+export { inspectStellarTransaction, type TransactionPreview, type PreviewResult } from './chain/preview.js';
 export { decodeSoroswapSwap, type SwapExplanation } from './chain/swaps.js';
 export type { LookupAvailability } from './chain/availability.js';
