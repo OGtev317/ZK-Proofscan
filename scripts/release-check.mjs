@@ -58,7 +58,7 @@ const packedJson = JSON.parse(run('npm', ['pack', '--dry-run', '--json', '--igno
 // npm 10 answers with a list, npm 11 and later with an object keyed by name.
 const packed = Array.isArray(packedJson) ? packedJson[0] : packedJson[pkg.name];
 const files = packed.files.map((file) => file.path);
-for (const needed of ['package.json', 'README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'docs/DEVELOPERS.md', 'dist/index.js', 'dist/index.d.ts', 'dist/cli.js', 'dist/mcp.js', 'registry/keys.json']) expectThat(files.includes(needed), `includes ${needed}`);
+for (const needed of ['package.json', 'README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'docs/DEVELOPERS.md', 'docs/INTEGRATIONS.md', 'dist/index.js', 'dist/index.d.ts', 'dist/cli.js', 'dist/mcp.js', 'dist-browser/lumenlenz-report.js', 'dist/browser/index.d.ts', 'dist/integrations/wallet-review.js', 'registry/keys.json']) expectThat(files.includes(needed), `includes ${needed}`);
 const forbidden = [/^tests\//, /^scripts\//, /^web\//, /^src\//, /(^|\/)\.env/, /\.test\./, /\.(pem|key)$/, /bn254_g1_compressed\.dat$/, /grumpkin_g1_v2\.flat\.dat$/, /(^|\/)node_modules\//];
 const leaked = files.filter((path) => forbidden.some((pattern) => pattern.test(path)));
 expectThat(leaked.length === 0, leaked.length === 0 ? 'no tests, sources, scripts, environment files, keys or large reference strings' : `should not ship: ${leaked.slice(0, 8).join(', ')}`);
@@ -75,6 +75,10 @@ try {
   writeFileSync(join(app, 'package.json'), '{"name":"release-check","private":true,"type":"module"}\n');
   run('npm', ['install', '--silent', '--no-audit', '--no-fund', tarball], { cwd: app });
   ok('installs from the packed tarball');
+  writeFileSync(join(app, 'review.ts'), readFileSync(join(root, 'examples/scaffold-stellar/review.ts')));
+  run(process.execPath, [join(root, 'node_modules/typescript/bin/tsc'), '--noEmit', '--target', 'ES2022', '--module', 'NodeNext', '--skipLibCheck', 'review.ts'], { cwd: app });
+  ok('Scaffold adapter typechecks against the packed public review subpath');
+  expectThat(run('node', ['--input-type=module', '-e', 'const {defineLumenLenzReport}=await import("lumenlenz/browser"); const {prepareWalletReview}=await import("lumenlenz/review"); if(typeof defineLumenLenzReport!=="function"||prepareWalletReview("invalid","stellar-testnet").kind!=="not-reviewed") process.exit(1);'], { cwd: app }).trim() === '', 'browser renderer is SSR-importable and review subpath works without a DOM or wallet');
   const proof = join(root, 'tests/fixtures/semaphore-v4-valid.json');
   writeFileSync(
     join(app, 'use.mjs'),

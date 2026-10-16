@@ -1,4 +1,4 @@
-import { Address, scValToNative, StrKey, xdr } from '@stellar/stellar-base';
+import { Address, scValToNative, StrKey, xdr } from '@stellar/stellar-sdk';
 import { stellarAmount } from './movement.js';
 export { stellarAmount, describeMovement } from './movement.js';
 

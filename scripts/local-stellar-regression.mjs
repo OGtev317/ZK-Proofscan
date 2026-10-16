@@ -23,7 +23,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const { Keypair, TransactionBuilder, Operation, Asset, Memo } = createRequire(root)('@stellar/stellar-base');
+const { Keypair, TransactionBuilder, Operation, Asset, Memo } = createRequire(root)('@stellar/stellar-sdk');
 const { lookupStellarTransaction } = await import(`${root}dist/chain/stellar.js`);
 const { stellarPrivatePaymentsKeys } = await import(`${root}dist/node/bundled.js`);
 

@@ -46,6 +46,7 @@ export function renderLenses(facts?: TransactionFacts, report?: Report, source?:
     }
     storyBox.append(flow, node('h4', 'Fee charged'), node('p', story.fee));
     if (story.permissions.length) storyBox.append(node('h4', 'Permissions granted'), list(story.permissions));
+    if (storied.contractChanges?.length) storyBox.append(node('h4', 'Contract control events'), list(storied.contractChanges.map((change) => `${change.contract}: ${change.description} ${change.evidence}`)));
     if (story.contracts.length) storyBox.append(detail('Contracts involved', story.contracts.join('\n')));
     storyBox.append(detail('Limits of this story', story.notes.join('\n')));
     storyBox.append(detail('Terms in this report', 'Proof check: a verifier checked the proof against a key or program. Settlement: whether the transaction was finalized, as reported separately. Witness: private inputs, not recovered here. Allowance: permission for another address to spend tokens.'));
@@ -118,6 +119,20 @@ export function setupLenses(): void {
     output.hidden = true;
   };
   input.addEventListener('input', reset);
+  const file = get<HTMLInputElement>('xdr-file');
+  file.addEventListener('change', () => {
+    input.value = ''; reset();
+    const mine = epoch;
+    const selected = file.files?.[0];
+    file.value = '';
+    if (!selected) return;
+    if (selected.size > 262_144) { output.hidden = false; output.textContent = 'XDR file is too large (maximum 256 KiB).'; return; }
+    void selected.text().then((text) => {
+      if (mine !== epoch) return;
+      input.value = text.trim();
+      output.hidden = false; output.textContent = 'File loaded locally. Select its network, then inspect. Nothing was sent to Stellar Lab.';
+    }).catch(() => { if (mine === epoch) { output.hidden = false; output.textContent = 'The local file could not be read.'; } });
+  });
   choices.forEach((choice) => choice.addEventListener('change', reset));
   get('clear-xdr').addEventListener('click', () => { input.value = ''; reset(); });
   inspect.addEventListener('click', () => {
@@ -135,7 +150,11 @@ export function setupLenses(): void {
       for (const operation of inspected.operations) {
         output.append(node('p', operation.description));
         if (operation.contract) output.append(node('p', `Contract: ${operation.contract}`));
-        for (const auth of operation.authorizations) output.append(node('p', `Requested signer: ${auth.signer}`), invocationTree([auth.invocation]));
+        for (const auth of operation.authorizations) {
+          output.append(node('p', `Requested signer: ${auth.signer}; credential: ${auth.credentialType}; embedded signature: ${auth.signaturePresent ? 'present, not checked' : 'absent'}`), invocationTree([auth.invocation]));
+          const delegates = (entries: typeof auth.delegates): string[] => entries.flatMap((entry) => [entry.address, ...delegates(entry.children)]);
+          if (auth.delegates.length) output.append(node('p', `Declared delegates (signatures not checked): ${delegates(auth.delegates).join(', ')}`));
+        }
       }
       output.append(list(inspected.warnings));
     }).catch(() => { if (mine === epoch) output.textContent = 'The local inspector could not start.'; });

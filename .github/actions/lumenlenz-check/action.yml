@@ -1,0 +1,49 @@
+name: LumenLenz public-fixture check
+description: Offline proof check or unsigned Stellar envelope inspection. Not an audit or signing authorization.
+inputs:
+  fixture:
+    description: Public fixture path relative to the caller workspace
+    required: true
+  public-fixture:
+    description: Must explicitly be true; never provide private witnesses, keys or sensitive transactions
+    required: true
+  mode:
+    description: proof or inspect
+    default: proof
+  expected:
+    description: Proof outcome valid/invalid/unsupported/error, or inspected for local inspection (not safety)
+    default: valid
+  network:
+    description: Explicit stellar-testnet or stellar-mainnet for inspect
+    default: ''
+  public-inputs:
+    description: Optional public-inputs file for a supplied-key proof
+    default: ''
+  verification-key:
+    description: Optional public verification-key file (never a private key)
+    default: ''
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v5
+      with:
+        node-version: 22
+    - name: Install the pinned action's dependencies
+      shell: bash
+      working-directory: ${{ github.action_path }}/../../..
+      run: npm ci --ignore-scripts --no-audit --no-fund
+    - name: Build the pinned checker
+      shell: bash
+      working-directory: ${{ github.action_path }}/../../..
+      run: npm run build
+    - name: Check only the specified public fixture offline
+      shell: bash
+      env:
+        LL_FIXTURE: ${{ inputs.fixture }}
+        LL_PUBLIC: ${{ inputs.public-fixture }}
+        LL_MODE: ${{ inputs.mode }}
+        LL_EXPECTED: ${{ inputs.expected }}
+        LL_NETWORK: ${{ inputs.network }}
+        LL_INPUTS: ${{ inputs.public-inputs }}
+        LL_KEY: ${{ inputs.verification-key }}
+      run: node "$GITHUB_ACTION_PATH/run.mjs"

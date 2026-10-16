@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
 import { RpcError, type RpcClient } from '../src/chain/rpc.js';
 import { readChainSource, renderChainSource, type StellarSource } from '../src/chain/source.js';
-import { lookupStellarTransaction, STELLAR_BASE_VERSION, STELLAR_NETWORKS } from '../src/chain/stellar.js';
+import { lookupStellarTransaction, STELLAR_SDK_VERSION, STELLAR_NETWORKS } from '../src/chain/stellar.js';
 import { rerunExport, writeExport } from '../src/export.js';
 import { binaryBytes } from '../src/inputs.js';
 import { bundledScanning } from '../src/node/bundled.js';
@@ -46,7 +46,7 @@ const entryWith = (change: Record<string, unknown>) => ({ ...recorded.getLedgerE
 
 describe('reading a proof out of a Stellar transaction', () => {
   it('pins the library that reads Stellar transactions', () => {
-    expect(JSON.parse(readFileSync(join(root, 'node_modules/@stellar/stellar-base/package.json'), 'utf8')).version).toBe(STELLAR_BASE_VERSION);
+    expect(JSON.parse(readFileSync(join(root, 'node_modules/@stellar/stellar-sdk/package.json'), 'utf8')).version).toBe(STELLAR_SDK_VERSION);
   });
 
   it('finds a real testnet proof and the key its contract holds, and checks it here', async () => {
@@ -313,7 +313,7 @@ describe('an issued Stellar asset', async () => {
 describe('what a Stellar transaction did', async () => {
   const { recordedRpc } = await import('../src/chain/recorded.js');
   const { readStellarActivity } = await import('../src/chain/stellar-activity.js');
-  const { xdr } = await import('@stellar/stellar-base');
+  const { xdr } = await import('@stellar/stellar-sdk');
   const read = (path: string) => JSON.parse(readFileSync(join(root, path), 'utf8')) as Record<string, Record<string, unknown>>;
   const payment = read('tests/fixtures/stellar-mainnet/usdc-payment.json');
   const pool = read('tests/fixtures/stellar-testnet/private-payments/answers.json');
@@ -357,7 +357,7 @@ describe('typed Soroban calls and events', async () => {
   const { readContractSpec, describeInvocation, describeContractEvent, STANDARD_TOKEN_SPEC } = await import('../src/chain/soroban-spec.js');
   const { contractSpecOf } = await import('../src/chain/stellar.js');
   const { describeMovement } = await import('../src/chain/stellar-activity.js');
-  const { xdr, Address, nativeToScVal, StrKey } = await import('@stellar/stellar-base');
+  const { xdr, Address, nativeToScVal, StrKey } = await import('@stellar/stellar-sdk');
   const poolAnswers = JSON.parse(readFileSync(join(root, 'tests/fixtures/stellar-testnet/private-payments/answers.json'), 'utf8')) as { getLedgerEntries: Record<string, { entries: { xdr: string }[] }> };
   // The pool's code, as recorded: the one ledger entry that is contract code and declares a transact function.
   const codes = Object.values(poolAnswers.getLedgerEntries).flatMap((answer) => answer.entries).map((entry) => xdr.LedgerEntryData.fromXDR(entry.xdr, 'base64')).filter((data) => data.switch().name === 'contractCode').map((data) => new Uint8Array(data.contractCode().code()));

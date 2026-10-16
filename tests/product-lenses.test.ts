@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Account, Address, Asset, Contract, nativeToScVal, Networks, Operation, StrKey, TransactionBuilder, xdr } from '@stellar/stellar-base';
+import { Account, Address, Asset, Contract, nativeToScVal, Networks, Operation, StrKey, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import { decodeSoroswapSwap } from '../src/chain/swaps.js';
 import { inspectStellarTransaction } from '../src/chain/preview.js';

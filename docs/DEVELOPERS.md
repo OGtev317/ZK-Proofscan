@@ -1,6 +1,6 @@
 # Using LumenLenz as a developer
 
-Version 0.1.0, an experimental release. Node 22 or later. Unaudited:
+Version 0.1.0, an experimental release. This source requires Node >=22.12. Unaudited:
 reports and interfaces may change, and no result should be relied on for
 a decision with real value at stake. Read the README's status and the
 release review first.
@@ -103,3 +103,9 @@ transaction inspection (`lumenlenz inspect`). See
 - [The formats](FORMATS.md): each proof system, its verifier, and what a
   pass does and does not say.
 - [The release review](RELEASE_REVIEW.md): what still blocks a release.
+## Frontend and CI integrations
+
+See [INTEGRATIONS.md](INTEGRATIONS.md) for the display-only web component, local
+Scaffold/Freighter/Wallets Kit review adapter, Lab import, pinned Soroswap evidence,
+OpenZeppelin-compatible event explanations and reusable public-fixture action.
+These new package subpaths are source changes, not an npm publication.

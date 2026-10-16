@@ -142,9 +142,9 @@ key is never in the transaction. The provider
 is the Stellar Development Foundation's public testnet RPC unless the
 operator sets `STELLAR_RPC_URL`. No key or account is needed, and nothing
 is signed or sent to the network. Stellar's transaction format is read
-with `@stellar/stellar-base` 15.0.0, the Foundation's own library
-(Apache-2.0); it brought 38 further packages, all permissively licensed,
-listed in the third-party notices.
+with `@stellar/stellar-sdk` 16.3.1, the Foundation's library (Apache-2.0).
+Its production dependencies and licenses are listed in the third-party notices.
+See [Integrations](INTEGRATIONS.md) for the SDK 17.x migration boundary.
 
 | Statement | Rests on |
 | --- | --- |

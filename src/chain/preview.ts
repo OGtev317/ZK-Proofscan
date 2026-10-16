@@ -1,14 +1,16 @@
-import { Address, TransactionBuilder, xdr } from '@stellar/stellar-base';
+import { Address, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
 import { describeInvocation } from './soroban-spec.js';
 import { STELLAR_NETWORKS } from './stellar.js';
 
 const MAX_XDR = 262_144;
 const MAX_AUTH_NODES = 64;
 export interface AuthorizationNode { call: string; contract?: string; children: AuthorizationNode[] }
+export interface DelegateNode { address: string; children: DelegateNode[] }
+export interface InspectedAuthorization { signer: string; invocation: AuthorizationNode; credentialType: string; signaturePresent: boolean; delegates: DelegateNode[] }
 export interface InspectedOperation {
   kind: string;
   description: string;
-  authorizations: { signer: string; invocation: AuthorizationNode }[];
+  authorizations: InspectedAuthorization[];
   contract?: string;
 }
 export interface TransactionPreview {
@@ -40,7 +42,7 @@ function parse(text: string, network: string) {
   return { chosen, normalized, envelope, built, inner, transaction };
 }
 
-function authorization(entry: xdr.SorobanAuthorizationEntry, budget: { left: number }): { signer: string; invocation: AuthorizationNode } {
+function authorization(entry: xdr.SorobanAuthorizationEntry, budget: { left: number }): InspectedAuthorization {
   const visit = (node: xdr.SorobanAuthorizedInvocation, depth: number): AuthorizationNode => {
     if (--budget.left < 0 || depth > 12) throw new Error('The authorization tree exceeds the inspection limit.');
     const fn = node.function();
@@ -49,8 +51,20 @@ function authorization(entry: xdr.SorobanAuthorizationEntry, budget: { left: num
     return { contract: Address.fromScAddress(call.contractAddress()).toString(), call: describeInvocation(call.functionName().toString(), call.args(), undefined), children: node.subInvocations().map((n) => visit(n, depth + 1)) };
   };
   const credentials = entry.credentials();
-  const signer = credentials.switch().name === 'sorobanCredentialsSourceAccount' ? 'transaction source account' : Address.fromScAddress(credentials.address().address()).toString();
-  return { signer, invocation: visit(entry.rootInvocation(), 0) };
+  const credentialType = credentials.switch().name;
+  const base = credentialType === 'sorobanCredentialsSourceAccount' ? undefined
+    : credentialType === 'sorobanCredentialsAddress' ? credentials.address()
+    : credentialType === 'sorobanCredentialsAddressV2' ? credentials.addressV2()
+    : credentialType === 'sorobanCredentialsAddressWithDelegates' ? credentials.addressWithDelegates().addressCredentials()
+    : (() => { throw new Error('The authorization credential type is not supported.'); })();
+  let signaturePresent = base !== undefined && base.signature().switch().name !== 'scvVoid';
+  const readDelegate = (delegate: xdr.SorobanDelegateSignature, depth: number): DelegateNode => {
+    if (--budget.left < 0 || depth > 12) throw new Error('The authorization tree exceeds the inspection limit.');
+    signaturePresent ||= delegate.signature().switch().name !== 'scvVoid';
+    return { address: Address.fromScAddress(delegate.address()).toString(), children: delegate.nestedDelegates().map((item) => readDelegate(item, depth + 1)) };
+  };
+  const delegates = credentialType === 'sorobanCredentialsAddressWithDelegates' ? credentials.addressWithDelegates().delegates().map((item) => readDelegate(item, 0)) : [];
+  return { signer: base === undefined ? 'transaction source account' : Address.fromScAddress(base.address()).toString(), invocation: visit(entry.rootInvocation(), 0), credentialType, signaturePresent, delegates };
 }
 
 /** Parsing only: no fetch, signature validation, signing, or submission. */
@@ -69,8 +83,9 @@ export function inspectStellarTransaction(text: string, network: string): Previe
       }
       const host = body.invokeHostFunctionOp();
       const authorizations = host.auth().map((entry) => {
-        if (entry.credentials().switch().name === 'sorobanCredentialsAddress' && entry.credentials().address().signature().switch().name !== 'scvVoid') embeddedAuthorizationSignatures = true;
-        return authorization(entry, budget);
+        const inspected = authorization(entry, budget);
+        embeddedAuthorizationSignatures ||= inspected.signaturePresent;
+        return inspected;
       });
       if (host.hostFunction().switch().name !== 'hostFunctionTypeInvokeContract') return { kind, description: 'Requested contract creation or code upload; effects not decoded.', authorizations };
       const call = host.hostFunction().invokeContract();

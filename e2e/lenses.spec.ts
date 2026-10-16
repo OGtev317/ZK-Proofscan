@@ -1,4 +1,4 @@
-import { Account, Address, Contract, nativeToScVal, Networks, StrKey, TransactionBuilder } from '@stellar/stellar-base';
+import { Account, Address, Contract, nativeToScVal, Networks, StrKey, TransactionBuilder } from '@stellar/stellar-sdk';
 import { expect, test } from '@playwright/test';
 
 const USER = StrKey.encodeEd25519PublicKey(Buffer.alloc(32, 7));

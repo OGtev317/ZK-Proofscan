@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'" />
+  <meta name="referrer" content="no-referrer" />
+  <title>LumenLenz integrations</title>
+  <link rel="icon" href="../lumenlenz-icon.png" />
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <main>
+    <nav class="site-header"><a class="brand" href="../"><img class="brand-logo" src="../lumenlenz-logo.png" alt="LumenLenz home" width="102" height="72" /></a><a href="https://github.com/OGtev317/ZK-Proofscan/blob/main/docs/INTEGRATIONS.md">Integration guide ↗</a></nav>
+    <header class="hero"><p class="eyebrow">For Stellar builders</p><h1>A clearer review.<br /><span>Inside your app.</span></h1><p class="lede">Embed a supplied report or inspect unsigned XDR before your own wallet flow. Experimental, unaudited, not a safety verdict.</p></header>
+    <section class="lookup-panel" aria-labelledby="embed-heading">
+      <h2 id="embed-heading">Display-only report embed</h2>
+      <p>This component renders a report you provide. It performs no verification or network requests itself. The buttons below run the existing local lookup against saved provider answers; no live RPC is asked.</p>
+      <div class="examples"><button id="embed-proof" type="button" class="quiet">Check saved testnet proof</button><button id="embed-swap" type="button" class="quiet">Read saved mainnet swap</button><button id="embed-clear" type="button" class="text-button">Clear report</button></div>
+      <p id="embed-status" role="status"></p>
+      <lumenlenz-report></lumenlenz-report>
+    </section>
+    <section class="lookup-panel" aria-labelledby="review-heading">
+      <h2 id="review-heading">Local review handoff</h2>
+      <p>Freighter / Stellar Wallets Kit integration point: review the exact unsigned envelope before the host app's separate wallet flow. This demo never loads a wallet, signs, simulates, or submits.</p>
+      <fieldset><legend>Network (not encoded in XDR)</legend><label><input type="radio" name="review-network" value="stellar-testnet" checked /> Testnet</label><label><input type="radio" name="review-network" value="stellar-mainnet" /> Mainnet</label></fieldset>
+      <label for="review-xdr">Unsigned envelope XDR</label><textarea id="review-xdr" rows="5" autocomplete="off" spellcheck="false"></textarea>
+      <button id="review-local" type="button" class="quiet">Review locally</button>
+      <div id="review-details" aria-live="polite"></div>
+      <label><input id="review-ack" type="checkbox" disabled /> I read these requested actions and understand this is not a safety verdict.</label>
+      <button id="review-confirm" type="button" disabled>Record local acknowledgement</button>
+      <p id="review-status" role="status"></p>
+    </section>
+  </main>
+  <script type="module" src="../integrations.ts"></script>
+</body>
+</html>

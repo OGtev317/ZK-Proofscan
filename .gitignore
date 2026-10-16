@@ -12,6 +12,7 @@ coverage/
 .idea/
 .vscode/
 dist-web/
+dist-browser/
 test-results/
 playwright-report/
 # Local notes, kept out of the repository

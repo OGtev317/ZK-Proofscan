@@ -1,6 +1,7 @@
-import { Address, scValToNative, StrKey, type xdr } from '@stellar/stellar-base';
+import { Address, scValToNative, StrKey, type xdr } from '@stellar/stellar-sdk';
 import { stellarAmount, type Movement } from './stellar-activity.js';
 import type { ContractSpec } from './soroban-spec.js';
+import { soroswapDeploymentMatch, SOROSWAP_DEPLOYMENT } from './deployments.js';
 
 /** Source format, NOT a claim that an arbitrary deployment is Soroswap. */
 export const SOROSWAP_SOURCE = 'https://github.com/soroswap/core/blob/6eade008ee6794075ad941609e0fef0d1124d3eb/contracts/router/src/event.rs';
@@ -14,10 +15,13 @@ export interface SwapExplanation {
   description: string;
   identity: string;
   source: string;
+  deploymentMatch?: 'published-address-and-code';
+  deploymentSource?: string;
 }
 
 /** Direct two-token swaps only. Require interface, event, limits and committed transfers. */
 export function decodeSoroswapSwap(parts: {
+  network?: string;
   succeeded: boolean;
   call: { contract: string; name: string; args: xdr.ScVal[] };
   spec: ContractSpec | undefined;
@@ -56,11 +60,15 @@ export function decodeSoroswapSwap(parts: {
     const input = parts.movements.filter((m) => m.kind === 'transfer' && m.tokenContract === path[0] && m.from === recipient && m.amount === amountIn);
     const output = parts.movements.filter((m) => m.kind === 'transfer' && m.tokenContract === path[1] && m.to === recipient && m.amount === amountOut);
     if (input.length !== 1 || output.length !== 1 || input[0]!.to !== output[0]!.from || input[0]!.to === recipient || !StrKey.isValidContract(input[0]!.to ?? '')) return undefined;
+    const matched = soroswapDeploymentMatch(parts.network, call.contract, spec.codeHash);
     return {
       protocol: 'soroswap-compatible', contract: call.contract, codeHash: spec.codeHash,
       path, amounts: [amountIn.toString(), amountOut.toString()], recipient,
       description: `The recorded call and events describe ${recipient} exchanging ${stellarAmount(amountIn, input[0]!.asset)} for ${stellarAmount(amountOut, output[0]!.asset)} through ${call.contract}.`,
-      identity: 'Soroswap-compatible format; the official deployment identity and economic correctness are not established. Execution data is the provider\'s report.',
+      identity: matched
+        ? 'The network, router address and hash-bound WASM match Soroswap\'s pinned published deployment record. This is not a security audit or an economic guarantee; execution data remains the provider\'s report.'
+        : 'Soroswap-compatible format; the official deployment identity and economic correctness are not established. Execution data is the provider\'s report.',
+      ...(matched ? { deploymentMatch: 'published-address-and-code' as const, deploymentSource: SOROSWAP_DEPLOYMENT.source } : {}),
       source: SOROSWAP_SOURCE,
     };
   } catch { return undefined; }

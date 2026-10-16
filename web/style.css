@@ -114,7 +114,7 @@ p { overflow-wrap: anywhere; }
 .site-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 44px; }
 .brand-logo { display: block; width: auto; height: 72px; }
 .brand { display: inline-flex; align-items: center; gap: .7rem; font-size: 1rem; font-weight: 650; letter-spacing: -.025em; text-decoration: none; white-space: nowrap; }
-.nav-links { display: flex; align-items: center; gap: 1.5rem; }
+.nav-links { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .75rem 1.25rem; }
 .nav-links a { color: var(--muted); font-size: .8rem; text-decoration: none; }
 .nav-links a:hover { color: var(--fg); }
 .hero { padding: clamp(3.5rem, 8vw, 6rem) 0 2.6rem; text-align: center; background: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%); }
@@ -240,7 +240,7 @@ a { color: var(--accent); text-underline-offset: 3px; }
   .facts-list dd { margin-bottom: .6rem; }
 }
 @media (max-width: 480px) {
-  .nav-links a:first-child { display: none; }
+  .nav-links a[href*="docs/DEVELOPERS.md"] { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   button { transition: none; }

@@ -5,6 +5,7 @@
  */
 import type { Movement } from './stellar-activity.js';
 import type { SwapExplanation } from './swaps.js';
+import type { ContractChange } from './contract-changes.js';
 
 /** JSON-safe movement; no numeric rounding and no private witness values. */
 export type RecordedMovement = Omit<Movement, 'amount'> & { amount: string };
@@ -39,6 +40,7 @@ export interface TransactionFacts {
   build?: string;
   movements?: RecordedMovement[];
   swaps?: SwapExplanation[];
+  contractChanges?: ContractChange[];
 }
 
 const NETWORK_NAMES: Record<string, string> = {
@@ -82,6 +84,7 @@ export function factLines(facts: TransactionFacts): [string, string][] {
     ...(facts.outcomes ?? []).map((line): [string, string] => ['Outcome', line]),
     ...(facts.tokens ?? []).map((line): [string, string] => ['Token activity', `It ${line}`]),
     ...(facts.events ?? []).map((line): [string, string] => ['Contract event', line]),
+    ...(facts.contractChanges ?? []).map((change): [string, string] => ['Contract control event', `${change.contract}: ${change.description} ${change.evidence}`]),
     ...(facts.swaps ?? []).map((swap): [string, string] => ['Swap', `${swap.description} ${swap.identity}`]),
     ...(facts.build === undefined ? [] : ([['Contract build', facts.build]] as [string, string][])),
     ...(facts.moreTokens === true ? ([['Token activity', 'More token events were recorded than are listed here.']] as [string, string][]) : []),

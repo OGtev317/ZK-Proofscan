@@ -1,4 +1,4 @@
-import { Address, Networks, scValToNative, StrKey, TransactionBuilder, xdr } from '@stellar/stellar-base';
+import { Address, Networks, scValToNative, StrKey, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
 import { binaryPart, MAX_PUBLIC_INPUTS, type ProofInputs } from '../inputs.js';
 import { sha256Hex } from '../sha256.js';
 import type { Lookup } from './lookup.js';
@@ -10,6 +10,7 @@ import { describeMovement, readStellarActivity } from './stellar-activity.js';
 import { describeBuild, describeContractEvent, describeInvocation, readContractSpec, STANDARD_TOKEN_SPEC, type ContractSpec } from './soroban-spec.js';
 import type { CheckBuild } from './sep55.js';
 import { decodeSoroswapSwap } from './swaps.js';
+import { decodeContractChange, type ContractChange } from './contract-changes.js';
 
 /** A Stellar network this tool reads. Reading only: the owner approved the test network, then the main network, on 2026-10-14 and 2026-10-15. */
 export interface StellarNetwork {
@@ -31,7 +32,7 @@ export const STELLAR_NETWORKS: readonly StellarNetwork[] = [
 ];
 
 /** The library that reads Stellar's transaction format. A test checks this against the installed package. */
-export const STELLAR_BASE_VERSION = '15.0.0';
+export const STELLAR_SDK_VERSION = '16.3.1';
 
 /** A recorded key file, by its registry artifact. */
 export interface RecordedKey {
@@ -334,7 +335,7 @@ export async function lookupStellarTransaction(parts: { network: StellarNetwork;
     const call = singleInvocation(ops);
     if (call !== undefined) {
       const spec = await specFor(call.contract);
-      swap = decodeSoroswapSwap({ call, spec, succeeded: transaction.status === 'SUCCESS', events: activity.others, movements: activity.movements, truncated: activity.more || activity.moreOtherEvents === true });
+      swap = decodeSoroswapSwap({ network: network.name, call, spec, succeeded: transaction.status === 'SUCCESS', events: activity.others, movements: activity.movements, truncated: activity.more || activity.moreOtherEvents === true });
       action = `a call to ${describeInvocation(call.name, call.args, spec)} on contract ${call.contract}${spec === undefined ? ', its arguments not named: no interface for the contract could be read' : `, named by its ${spec.origin}`}`;
       // How the called contract's code says it was built, and, when a checker is given, what GitHub's record adds.
       if (spec !== undefined) {
@@ -344,11 +345,14 @@ export async function lookupStellarTransaction(parts: { network: StellarNetwork;
       }
     }
     const events: string[] = [];
+    const contractChanges: ContractChange[] = [];
     for (const event of activity.others) {
       const contractId = event.contractId();
       const spec = contractId === null || contractId === undefined ? undefined : await specFor(StrKey.encodeContract(contractId as unknown as Buffer));
       const line = describeContractEvent(event, spec);
       if (line !== undefined) events.push(line);
+      const change = decodeContractChange(event, spec, transaction.status === 'SUCCESS');
+      if (change !== undefined) contractChanges.push(change);
     }
     return {
       family: 'stellar',
@@ -368,6 +372,7 @@ export async function lookupStellarTransaction(parts: { network: StellarNetwork;
       ...(swap === undefined ? {} : { swaps: [swap] }),
       ...(activity.more ? { moreTokens: true } : {}),
       ...(events.length === 0 ? {} : { events }),
+      ...(contractChanges.length === 0 ? {} : { contractChanges }),
       ...(build === undefined ? {} : { build }),
     };
   };
@@ -447,7 +452,7 @@ function describeOperations(ops: xdr.Operation[]): { action: string; to?: string
       if (kind === 'payment') {
         const payment = body.paymentOp();
         const kind = payment.asset().switch().name;
-        const code = (bytes: Uint8Array): string => new TextDecoder().decode(bytes).replace(/\0+$/, '');
+        const code = (bytes: Uint8Array | string): string => (typeof bytes === 'string' ? bytes : new TextDecoder().decode(bytes)).replace(/\0+$/, '');
         const amount = (Number(payment.amount().toBigInt()) / 1e7).toString();
         const to = StrKey.encodeEd25519PublicKey(payment.destination().switch().name === 'keyTypeEd25519' ? payment.destination().ed25519() : payment.destination().med25519().ed25519());
         if (kind === 'assetTypeNative') return { action: `a payment of ${amount} XLM`, to };

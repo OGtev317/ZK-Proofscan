@@ -1,5 +1,35 @@
 # LumenLenz handoff
 
+## Integration update after the end-of-day baseline
+
+Source additions, approved for commit/push to `main`: display-only
+`lumenlenz/browser` report component and `/integrations/` demo; a local
+unsigned-envelope review helper and Scaffold drop-in adapter (no wallet invoked);
+Stellar Lab file import without sending XDR to Lab; pinned Soroswap deployment
+matching and an existing public mainnet swap fixture; guarded OpenZeppelin-compatible
+control-event explanations; and a reusable offline public-fixture GitHub action.
+See [Integrations](INTEGRATIONS.md) for exact coverage, source pins and boundaries.
+
+Migrated the accessor-based XDR paths from standalone stellar-base to
+stellar-sdk 16.3.1, including V2/delegated auth inspection. Node >=22.12 is
+required. SDK 17.x is a separate XDR representation migration, not completed.
+Axios is overridden to 1.20.0. Production dependency audit passed; development
+dependency advisories remain. No npm release or qualified explanation review
+was performed. The published 0.1.0 package does not contain these additions.
+
+Validation after rebasing onto the latest galaxy/background and handoff update:
+309 unit tests, 80 browser tests (Chromium/WebKit), typecheck and build passed.
+Production audit and fresh packed-install release checks also passed. The release check compiles
+the Scaffold adapter against the packed review export and checks SSR-safe
+browser imports. Pages publication is checked separately after push;
+a commit/push alone is not deployment evidence.
+
+The real Soroswap fixture closes the synthetic-only test gap mentioned below;
+it is an ordinary swap with no supported ZK proof. No trade was created, no
+account was connected, and no transaction was signed or submitted. The owner's
+galaxy/logo UI, ban on simulation, and removal of the page's archive provider
+are preserved. All older state sections below describe their own snapshots.
+
 ## Start here: state on 2026-10-15 (end of day)
 
 Checked live before writing: `main` at `5561d90`, CI green; the page at

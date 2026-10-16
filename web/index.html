@@ -24,6 +24,7 @@
       <nav class="site-header" aria-label="Main navigation">
         <a class="brand" href="./" aria-label="LumenLenz home"><img class="brand-logo" src="./lumenlenz-logo.png" alt="LumenLenz" width="102" height="72" /></a>
         <div class="nav-links">
+          <a href="./integrations/">Integrations</a>
           <a href="https://github.com/OGtev317/ZK-Proofscan/blob/main/docs/DEVELOPERS.md" rel="noopener">Developer guide</a>
           <a href="https://github.com/OGtev317/ZK-Proofscan" rel="noopener">Source <span aria-hidden="true">↗</span></a>
         </div>
@@ -117,6 +118,9 @@
           </fieldset>
           <label for="unsigned-xdr">Unsigned transaction envelope XDR (base64)</label>
           <textarea id="unsigned-xdr" rows="5" spellcheck="false" autocomplete="off"></textarea>
+          <label for="xdr-file">Or import a base64 .xdr / .txt envelope file (256 KiB maximum)</label>
+          <input id="xdr-file" type="file" accept=".xdr,.txt,text/plain" />
+          <p>Stellar Lab handoff: <a href="https://lab.stellar.org/" target="_blank" rel="noopener noreferrer">open Lab and choose XDR to JSON</a>, then paste manually. This page never puts XDR in a link or sends it to Lab.</p>
           <div class="examples"><button id="inspect-xdr" type="button" class="quiet">Inspect locally</button><button id="clear-xdr" type="button" class="text-button">Clear</button></div>
           <div id="preview-result" aria-live="polite" hidden></div>
         </div>

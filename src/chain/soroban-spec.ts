@@ -1,5 +1,5 @@
 import xdrLib from '@stellar/js-xdr';
-import { Address, scValToNative, StrKey, xdr } from '@stellar/stellar-base';
+import { Address, scValToNative, StrKey, xdr } from '@stellar/stellar-sdk';
 
 /**
  * A Soroban contract's interface, as its own code declares it (SEP-48: the

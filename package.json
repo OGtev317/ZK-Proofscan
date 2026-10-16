@@ -25,7 +25,7 @@
     "mcp"
   ],
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12.0"
   },
   "bin": {
     "lumenlenz": "dist/cli.js",
@@ -36,11 +36,20 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./browser": {
+      "types": "./dist/browser/index.d.ts",
+      "default": "./dist-browser/lumenlenz-report.js"
+    },
+    "./review": {
+      "types": "./dist/integrations/wallet-review.d.ts",
+      "default": "./dist/integrations/wallet-review.js"
     }
   },
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "dist-browser",
     "!dist/**/*.test.*",
     "artifacts",
     "!artifacts/aztec-crs/bn254_g1_compressed.dat",
@@ -52,10 +61,12 @@
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
     "docs/DEVELOPERS.md",
-    "docs/PRODUCT_LENSES.md"
+    "docs/PRODUCT_LENSES.md",
+    "docs/INTEGRATIONS.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && npm run build:browser",
+    "build:browser": "vite build --config vite.browser.config.ts",
     "build:web": "vite build",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
@@ -67,7 +78,7 @@
     "@aztec/bb.js": "5.2.1",
     "@noble/hashes": "2.4.0",
     "@stellar/js-xdr": "4.0.0",
-    "@stellar/stellar-base": "15.0.0",
+    "@stellar/stellar-sdk": "16.3.1",
     "aztec-bb-js-0-87-0": "npm:@aztec/bb.js@0.87.0",
     "smol-toml": "1.9.0",
     "snarkjs": "0.7.6",
@@ -91,6 +102,7 @@
     "vitest": "5.0.3"
   },
   "overrides": {
+    "axios": "1.20.0",
     "ws": "8.21.0"
   }
 }
