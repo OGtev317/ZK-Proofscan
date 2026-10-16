@@ -63,6 +63,12 @@ test('keeps the mobile layout usable without horizontal overflow', async ({ page
   await page.locator('#advanced-tools > summary').click();
   await expect(page.getByRole('button', { name: 'Check proof', exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  // Phones zoom into text fields smaller than 16px, and warnings stay readable.
+  const sizes = await page.evaluate(() => Object.fromEntries(['#lookup-text', 'textarea', '.notice', '.provider-note'].map((selector) => [selector, parseFloat(getComputedStyle(document.querySelector(selector)!).fontSize)])));
+  expect(sizes['#lookup-text']).toBeGreaterThanOrEqual(16);
+  expect(sizes['textarea']).toBeGreaterThanOrEqual(16);
+  expect(sizes['.notice']).toBeGreaterThanOrEqual(14);
+  expect(sizes['.provider-note']).toBeGreaterThanOrEqual(14);
 });
 
 for (const viewport of [{ name: 'compact', width: 320, height: 740 }, { name: 'desktop', width: 1280, height: 1000 }]) {
@@ -90,6 +96,8 @@ for (const viewport of [{ name: 'compact', width: 320, height: 740 }, { name: 'd
     await page.getByRole('button', { name: 'A Stellar private payment', exact: true }).click();
     await expect(page.locator('#report')).toHaveAttribute('data-outcome', 'valid');
     await expect(page.locator('#fact-proof')).toHaveText('Passed: two independent verifiers agree');
+    // The outcome has a shape as well as a colour.
+    expect(await page.locator('#fact-proof').evaluate((element) => getComputedStyle(element, '::before').content)).toContain('✓');
     expect(await page.locator('#fact-proof').evaluate((element) => Boolean(element.compareDocumentPosition(document.querySelector('#plain')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
     await expect(page.getByRole('heading', { name: 'What remains unknown', exact: true })).toBeVisible();
     await expect(page.locator('#recorded-note')).toContainText('nothing was fetched now');
