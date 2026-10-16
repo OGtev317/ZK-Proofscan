@@ -11,11 +11,18 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
+    <nav class="topbar" aria-label="Site">
+      <p class="brand">
+        <svg class="mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="14" cy="14" r="9.5" fill="none" stroke="currentColor" stroke-width="3" /><path d="M21 21l7 7" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" /><path class="mark-star" d="M14 8.5l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" /></svg>
+        <span>LumenLenz</span>
+      </p>
+      <a class="topbar-link" href="https://github.com/OGtev317/ZK-Proofscan" rel="noopener">Source</a>
+    </nav>
     <main>
       <header class="hero">
-        <p class="brand">LumenLenz</p>
-        <h1>Paste a transaction.<br />Read what its proof actually shows.</h1>
-        <p class="lede">The proof is found on-chain, checked in your browser and translated into plain English.</p>
+        <p class="pill">Stellar &amp; Ethereum · zero-knowledge proofs</p>
+        <h1>Paste a transaction.<br />See what its proof <em>actually</em> shows.</h1>
+        <p class="lede">LumenLenz finds the proof in the transaction, checks it again in your browser, and says in plain English what it establishes and what it does not.</p>
       </header>
 
       <section class="lookup-panel" aria-labelledby="lookup-heading">
@@ -25,13 +32,14 @@
           <input id="lookup-text" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Paste a transaction hash or explorer link" />
           <button id="lookup" type="submit">Check transaction</button>
         </form>
-        <div class="lookup-meta">
-          <p id="lookup-note" class="note"></p>
-          <button id="example-lookup" type="button" class="text-button">Try a live example</button>
-        </div>
+        <p id="lookup-note" class="note lookup-note"></p>
         <div class="saved">
-          <p class="note">Or try a saved example. Each was recorded from the Stellar test network and is replayed here without contacting it, so it remains usable after public servers stop keeping the transaction.</p>
-          <div id="saved-examples" class="examples"></div>
+          <p class="saved-label">Try one</p>
+          <div class="examples">
+            <div id="saved-examples" class="examples-inline"></div>
+            <button id="example-lookup" type="button" class="quiet chip live">Live: an Ethereum Sepolia proof</button>
+          </div>
+          <p class="note">The first three are recorded from the Stellar test network and replayed here without contacting it, so they keep working after public servers drop the transaction. The live one asks a public Sepolia RPC now.</p>
         </div>
         <details id="network-settings" class="settings">
           <summary>Network: <span id="network-summary">Ethereum Sepolia</span></summary>
@@ -51,15 +59,15 @@
         <h2 id="report-heading">Your transaction, explained</h2>
         <p id="recorded-note" class="recorded" hidden></p>
         <p id="rerun-result" hidden></p>
-        <h3 class="panel-heading">What happened</h3>
-        <p id="plain" class="plain" hidden></p>
         <dl class="verdicts">
           <div id="status-cell" class="verdict" hidden><dt>Read from the network</dt><dd id="fact-status"></dd><dd id="status-note" class="detail"></dd></div>
           <div class="verdict"><dt>Proof check</dt><dd id="fact-proof"></dd><dd id="proof-detail" class="detail"></dd></div>
           <div class="verdict"><dt>Settlement</dt><dd id="fact-settlement"></dd><dd id="settlement-detail" class="detail"></dd></div>
         </dl>
+        <h3 class="panel-heading">What happened</h3>
+        <p id="plain" class="plain" hidden></p>
         <div id="proves-block" class="panel"><h3 class="panel-heading">What this proves</h3><ul id="proves"></ul></div>
-        <div id="unknown-block" class="panel"><h3 class="panel-heading">What remains unknown</h3><ul id="unknown"></ul></div>
+        <div id="unknown-block" class="panel unknown"><h3 class="panel-heading">What remains unknown</h3><ul id="unknown"></ul></div>
         <div class="result-actions">
           <button id="share" type="button" class="quiet" hidden>Copy result link</button>
           <button id="download" type="button" class="quiet" hidden>Download evidence</button>

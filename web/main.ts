@@ -441,7 +441,7 @@ async function runSaved(example: SavedExample): Promise<void> {
 for (const example of SAVED_EXAMPLES) {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'quiet';
+  button.className = 'quiet chip';
   button.id = `saved-${example.id}`;
   button.textContent = example.label;
   button.addEventListener('click', () => void busy('Replaying the saved example and checking any proof on this device…', () => runSaved(example)));
