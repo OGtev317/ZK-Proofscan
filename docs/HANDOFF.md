@@ -1,5 +1,60 @@
 # LumenLenz handoff
 
+## Start here: state on 2026-10-15 (end of day)
+
+Checked live before writing: `main` at `5561d90`, CI green; the page at
+<https://akashi.zatrix.xyz/> answers; npm has `lumenlenz` 0.1.0 as `latest`.
+
+**What it is.** LumenLenz (formerly ZK-Proofscan; the repository keeps that
+name, because the Stellar grant application cites it) re-checks
+zero-knowledge proofs on the user's device, alone or found in Ethereum and
+Stellar transactions, and says in plain words what a proof establishes, what
+it does not, and what rests on the network provider's word. It never signs,
+sends or holds keys.
+
+**Where it runs.**
+
+| Surface | State |
+| --- | --- |
+| Page | GitHub Pages on the custom domain, deployed by CI's `deploy` job after the test, browser and arkworks jobs pass on `main`. |
+| npm | `lumenlenz` 0.1.0, experimental, tag `v0.1.0` (commit `3344022`). Everything below added after it is on the page only, until a new release is approved. |
+| Command line | `lumenlenz`, `lumenlenz-mcp` (agent tool server), `stellar-lumenlenz` (runs as `stellar lumenlenz`). |
+| Checks | `npm test` (301 unit), `npm run test:e2e` (70 browser, Chromium and WebKit), `npm run release:check` (packaging, fresh install; also in CI). |
+
+**Added since 0.1.0, on the page.** A black starfield with a slowly turning
+galaxy (CSS only; pauses with the motion switch and for reduced motion); the
+LumenLenz logo, white on transparent, in the header and as the site icon;
+Stellar testnet as the default network; a short "What happened" summary and
+a Copy summary button; and the product lenses below (transaction stories for
+Stellar, a narrow Soroswap-compatible swap decoder, provider history windows,
+proof profiles, the circuit directory, and inspection of an unsigned Stellar
+transaction on the device).
+
+**Removed by the owner's decision (2026-10-15).** The page's built-in archive
+provider (`archive-rpc.lightsail.network`) and every form of simulating an
+unsigned transaction. Neither had approval to send data to a provider. Do not
+bring them back without a new, specific approval.
+
+**Rules that still hold.** The repository is public: no machine paths, no
+names of the owner's other projects, no secrets, keys or witness values, and
+no notes saying which tools wrote what. Each new outside service, network,
+write, deployment target or release needs the owner's specific approval; a
+generic "continue" is not one. Approved outside services are listed under
+"Approvals given" below.
+
+**Open, for the owner.**
+
+- Release 0.1.1 or 0.2.0 to npm with the additions above? Not approved yet.
+- The site icon is white on transparent, as asked; it is hard to see on light
+  browser tabs. A black-square variant is a one-line change if wanted.
+- Accessibility follow-ups from the 2026-10-15 review, not yet done: the
+  search box text is under 16px (phones zoom on tap), the warning and
+  privacy text was made small, and pass or fail is shown mostly by colour.
+- The swap decoder has been tested only on synthetic data; check it against
+  a real Soroswap transaction before advertising it.
+- The Stellar Private Payments review packet is written and not sent.
+- No explanation has a qualified review; every one says NOT REVIEWED.
+
 ## Product lenses (2026-10-15)
 
 Transaction stories, a narrow Soroswap-compatible decoder, provider retention
