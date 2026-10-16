@@ -1,5 +1,5 @@
 import { realpath, stat, readFile } from 'node:fs/promises';
-import { isAbsolute, relative, resolve } from 'node:path';
+import { isAbsolute, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { checkProof, stop } from '../../../dist/index.js';
 import { prepareWalletReview } from '../../../dist/integrations/wallet-review.js';
@@ -15,7 +15,7 @@ export async function checkFixture(options, workspace) {
     if (typeof name !== 'string' || !name || isAbsolute(name) || name.includes('\0')) throw new Error('Invalid fixture path');
     const path = await realpath(resolve(root, name));
     const rel = relative(root, path);
-    if (rel === '..' || rel.startsWith('../') || isAbsolute(rel)) throw new Error('Fixture must stay inside workspace');
+    if (rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) throw new Error('Fixture must stay inside workspace');
     const info = await stat(path);
     if (!info.isFile() || info.size > 5_000_000) throw new Error('Fixture must be a bounded regular file');
     return readFile(path, 'utf8');
