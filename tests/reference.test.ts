@@ -5,7 +5,7 @@ import { CHAINS } from '../src/chain/rpc.js';
 import type { ChainSource } from '../src/chain/source.js';
 import { STELLAR_NETWORKS } from '../src/chain/stellar.js';
 import { plainWords } from '../src/plain.js';
-import type { Report } from '../src/report.js';
+import { TOOL, type Report } from '../src/report.js';
 
 const EVM = '0xca718b1f6cd0eb1d4bc47cd95a73d085bd0077cfc7553de6e61ae5d80669c787';
 const STELLAR = 'cd1d09c950ff598c329ea4a55578fea38ad674a749bd9808d8316c823cdfb6fc';
@@ -76,7 +76,7 @@ describe('the summary in plain words', () => {
     kind: 'stellar-transaction', provider: 'soroban-testnet.stellar.org', network: 'stellar-testnet', transaction: STELLAR, ledger: 1, contract: `C${'A'.repeat(55)}`,
     contractCode: '0'.repeat(64), status: 'succeeded', call: 'stellar-private-payments.transact', keyFrom: 'code', keyContract: `C${'B'.repeat(55)}`, keyContractCode: '0'.repeat(64), keyLastChanged: 0,
   };
-  const base = { reportVersion: 3, tool: { name: 'lumenlenz', version: '0.1.0' }, input: { sha256: '0' } } as const;
+  const base = { reportVersion: 3, tool: TOOL, input: { sha256: '0' } } as const;
 
   it('never calls an unchecked or rejected proof valid', () => {
     expect(plainWords({ ...base, outcome: 'unsupported', reason: 'it is not a proof' } as Report)).toBe('This proof was not checked: it is not a proof. That says nothing about whether it is valid.');

@@ -1,6 +1,6 @@
 # Using LumenLenz as a developer
 
-Version 0.1.0, an experimental release. This source requires Node >=22.12. Unaudited:
+Version 0.2.0, an experimental release. Requires Node >=22.12. Unaudited:
 reports and interfaces may change, and no result should be relied on for
 a decision with real value at stake. Read the README's status and the
 release review first.
@@ -93,10 +93,12 @@ and output, with tools `check_proof`, `write_evidence_export`,
 
 ## What to read before relying on a result
 
-Added after 0.1.0, so not in the published package yet: transaction stories,
-guarded swap decoding, provider history, proof profiles and offline unsigned
-transaction inspection (`lumenlenz inspect`). See
-[Product lenses](PRODUCT_LENSES.md).
+New in 0.2.0: transaction stories, guarded swap decoding, provider history,
+proof profiles and offline unsigned transaction inspection
+(`lumenlenz inspect`), described in [Product lenses](PRODUCT_LENSES.md); the
+`lumenlenz/browser` and `lumenlenz/review` subpaths, described in
+[Integrations](INTEGRATIONS.md). Version 0.2.0 needs Node 22.12 or later
+(0.1.0 accepted any Node 22).
 
 - [The lookup notes](LOOKUP.md): coverage, and exactly what the provider
   is trusted for.

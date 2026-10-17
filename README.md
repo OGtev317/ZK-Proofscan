@@ -25,7 +25,7 @@ proves and what remains unknown, with a link to share the result. A
 transaction with no proof the tool can read is described instead (who sent
 it, what it did, whether it succeeded, and on Ethereum chains the tokens it
 moved and any allowance it granted, flagging unlimited ones). The code is
-unaudited. Version 0.1.0 is an **experimental release** for developers to
+unaudited. Version 0.2.0 is an **experimental release** for developers to
 try: its reports and interfaces may change, and no result from it should
 be relied on for a decision with real value at stake.
 
@@ -59,7 +59,7 @@ read through an RPC the operator chooses; no proof has been found there yet
 
 Developers: install, the command line, the Stellar CLI plugin
 (`stellar lumenlenz …`), the library and the agent tool server are in
-[the developer guide](docs/DEVELOPERS.md). Version 0.1.0 is
+[the developer guide](docs/DEVELOPERS.md). Version 0.2.0 is
 on npm as an experimental release: `npm install -g lumenlenz`.
 
 Read [the charter](docs/PROJECT_CHARTER.md), [the handoff](docs/HANDOFF.md)

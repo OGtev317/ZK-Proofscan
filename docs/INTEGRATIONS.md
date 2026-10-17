@@ -6,10 +6,8 @@ recover private witnesses, or authorize a transaction. A local review is not a s
 
 ## Display a report in any frontend
 
-The repository now provides `lumenlenz/browser` and `lumenlenz/review` subpaths.
-**These additions have not been published to npm.** Build from this commit with
-Node >=22.12: `npm ci && npm run build`, then `npm pack` and install that tarball
-in your app. The public npm 0.1.0 package must not be assumed to contain these changes.
+The `lumenlenz/browser` and `lumenlenz/review` subpaths are in version 0.2.0 and
+later (`npm install lumenlenz`; Node >=22.12). Version 0.1.0 does not have them.
 
 ```ts
 import { defineLumenLenzReport } from 'lumenlenz/browser';
