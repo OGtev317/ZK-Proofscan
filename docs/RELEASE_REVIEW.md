@@ -82,6 +82,8 @@ the blockers below were cleared; the page says it is an unaudited prototype.
   release, as `lumenlenz` (published 2026-10-15). A review of the Stellar Private Payments explanation has been
   prepared for its authors ([the review packet](review/stellar-private-payments.md))
   and is not yet sent.
+- Decided 2026-10-16: version 0.2.0 is published to npm as an experimental
+  release (tag `v0.2.0`). The blockers above still apply to it.
 - Whether exports should bundle the key file and adapter so a rerun does not
   depend on having the same version of the tool.
 - Which further circuits or programs get an explanation. Each one needs its

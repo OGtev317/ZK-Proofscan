@@ -1,5 +1,29 @@
 # LumenLenz handoff
 
+## Release 0.2.0 (2026-10-16)
+
+`lumenlenz` 0.2.0 is on npm as `latest`, published by the owner from commit
+`9b14ee3` (tag `v0.2.0`; npm records the same commit as its `gitHead`). It is
+experimental, like 0.1.0. It is a minor release rather than 0.1.1 because it
+needs Node 22.12 or later where 0.1.0 accepted any Node 22. It contains
+everything in the sections below that was "not in the published package": the
+product lenses (stories, the Soroswap decoder, provider history, proof
+profiles, `lumenlenz inspect`), the `lumenlenz/browser` and
+`lumenlenz/review` subpaths, Stellar SDK 16.3.1 and the short summary. No
+simulation and no built-in archive provider, as the owner decided.
+
+Checked before publishing: `npm run release:check` (build, 309 unit tests,
+versions, notices, packed contents, a fresh install checking real proofs from
+all three commands, the agent tool server answering), 90 browser tests, CI
+green. Checked after: a fresh install of 0.2.0 from npm runs `lumenlenz` and
+`stellar-lumenlenz` on a valid proof (exit 0), the library returns `valid`
+and reports tool version 0.2.0, and the new subpaths and exports load.
+
+Also on 2026-10-16, on the page: text fields at 16px (phones no longer zoom),
+larger warning, provider and footer text, a check, cross or exclamation mark
+beside the proof outcome as well as its colour, and the site icon white on a
+black rounded square so it shows on light tabs.
+
 ## Integration update after the end-of-day baseline
 
 Source additions, approved for commit/push to `main`: display-only
